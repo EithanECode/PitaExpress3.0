@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/LanguageContext';
+import { useFontSize } from '@/lib/FontSizeContext';
 import { useClientContext } from '@/lib/ClientContext';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -51,6 +52,7 @@ interface ConfigurationContentProps {
 }
 
 export default function ConfigurationContent({ role, onUserImageUpdate }: ConfigurationContentProps) {
+  const { fontSize, setFontSize } = useFontSize();
   const MAX_FIELD_LENGTH = 50; // Límite requerido para nombre, email y contraseñas
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -900,7 +902,7 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
                       <Separator />
                       <div className="space-y-2">
                         <Label>{t('admin.configuration.preferences.theme.fontSize')}</Label>
-                        <Select defaultValue="medium">
+                        <Select value={fontSize} onValueChange={(value) => setFontSize(value as 'small' | 'medium' | 'large')}>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecciona el tamaño" />
                           </SelectTrigger>
@@ -910,6 +912,15 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
                             <SelectItem value="large">{t('admin.configuration.preferences.theme.fontSizes.large')}</SelectItem>
                           </SelectContent>
                         </Select>
+                        {mounted && (
+                          <p className="text-xs text-slate-600 dark:text-slate-400">
+                            {t('admin.configuration.preferences.theme.currentFontSize', { fallback: 'Tamaño actual' })}: {
+                              fontSize === 'small' ? t('admin.configuration.preferences.theme.fontSizes.small') :
+                              fontSize === 'large' ? t('admin.configuration.preferences.theme.fontSizes.large') :
+                              t('admin.configuration.preferences.theme.fontSizes.medium')
+                            }
+                          </p>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

@@ -316,11 +316,18 @@ body, html, * {
 }
 
 /* Prevent layout shift when vertical scrollbar appears/disappears */
+:root {
+  /* Default text scale variable */
+  --text-scale: 1;
+  /* Base font size */
+  --base-font-size: 16px;
+}
+
 html {
   /* Reserve gutter space so content width stays stable as pages become scrollable (right side only) */
   scrollbar-gutter: stable;
-  /* Set base font-size in rem using the global scale var so typography keeps proportions */
-  font-size: calc(100% * var(--text-scale));
+  /* Set base font-size - default to medium (16px) */
+  font-size: var(--base-font-size);
 }
 
 @layer base {
@@ -333,13 +340,18 @@ html {
 }
 
 /* Utility classes to scale all text proportionally. Apply on <html> in app/layout.tsx */
-@layer utilities {
-  .text-scale-90 { --text-scale: 0.90; }
-  .text-scale-95 { --text-scale: 0.95; }
-  .text-scale-100 { --text-scale: 1; }
-  .text-scale-105 { --text-scale: 1.05; }
-  .text-scale-110 { --text-scale: 1.10; }
-  .text-scale-115 { --text-scale: 1.15; }
-  .text-scale-120 { --text-scale: 1.20; }
-  .text-scale-125 { --text-scale: 1.25; }
+/* These classes modify the root font-size, which affects all rem-based text sizes */
+html.text-scale-80 { 
+  --text-scale: 0.80;
+  font-size: 12.8px !important; /* Pequeño: 80% del tamaño base (16px * 0.80) */
+}
+
+html.text-scale-100 { 
+  --text-scale: 1;
+  font-size: 16px !important; /* Mediano: 100% del tamaño base (16px * 1.00) */
+}
+
+html.text-scale-150 { 
+  --text-scale: 1.50;
+  font-size: 24px !important; /* Grande: 150% del tamaño base (16px * 1.50) */
 }

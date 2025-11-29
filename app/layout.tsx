@@ -2,6 +2,7 @@ import './shared/globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { LanguageProvider } from '@/lib/LanguageContext';
+import { FontSizeProvider } from '@/lib/FontSizeContext';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import RouteLoader from '@/components/shared/RouteLoader';
@@ -40,13 +41,15 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <LanguageProvider>
-            <Suspense fallback={null}>
-              <RouteLoader />
-            </Suspense>
-            <Suspense fallback={null}>
-              {children}
-            </Suspense>
-            <Toaster />
+            <FontSizeProvider>
+              <Suspense fallback={null}>
+                <RouteLoader />
+              </Suspense>
+              <Suspense fallback={null}>
+                {children}
+              </Suspense>
+              <Toaster />
+            </FontSizeProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>
