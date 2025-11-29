@@ -62,60 +62,40 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
     try {
       return useClientContext();
     } catch {
-      return { clientName: undefined, clientEmail: undefined, clientPhone: undefined, setClient: () => {} };
+      return { clientName: undefined, clientEmail: undefined, clientPhone: undefined, setClient: () => { } };
     }
   };
-  
+
   const clientContext = useClientContextSafe();
-  
+
   // Solo usar los valores si el rol es 'client'
-  const { clientName, clientEmail, clientPhone, setClient } = role === 'client' ? clientContext : { 
-    clientName: undefined, 
-    clientEmail: undefined, 
-    clientPhone: undefined, 
-    setClient: () => {} 
+  const { clientName, clientEmail, clientPhone, setClient } = role === 'client' ? clientContext : {
+    clientName: undefined,
+    clientEmail: undefined,
+    clientPhone: undefined,
+    setClient: () => { }
   };
   // Flag para saber si se guardó y evitar revert posterior accidental
   const didSaveRef = React.useRef(false);
   const { t } = useTranslation();
 
-  // Datos base (simulados) — se pueden adaptar por rol si hace falta más adelante
-  const roleData = (() => {
-    if (role === 'pagos') {
-      return {
-        nombre: 'Validador Pagos',
-        email: 'pagos@morna.com',
-        telefono: '+58 424-000-0000',
-        rol: 'pagos',
-        color: 'bg-blue-500'
-      };
-    }
-    return {
-      nombre: 'Administrador Principal',
-      email: 'admin@morna.com',
-      telefono: '+58 412-123-4567',
-      rol: role === 'admin' ? 'Administrador' : role,
-      color: 'bg-purple-500'
-    };
-  })();
-
   // Estados del formulario
   const [formData, setFormData] = useState({
-    nombre: roleData.nombre,
-    email: roleData.email,
-    telefono: roleData.telefono,
+    nombre: '',
+    email: '',
+    telefono: '',
     idioma: language,
     fotoPerfil: null as File | null,
-  fotoPreview: null as string | null,
-  fotoVersion: 0 // para controlar cache busting sólo cuando cambie
+    fotoPreview: null as string | null,
+    fotoVersion: 0
   });
   // Baseline para detectar cambios en perfil
-  const [profileBaseline, setProfileBaseline] = useState(() => ({
-    nombre: roleData.nombre,
-    email: roleData.email,
-    telefono: roleData.telefono,
+  const [profileBaseline, setProfileBaseline] = useState({
+    nombre: '',
+    email: '',
+    telefono: '',
     idioma: language as string
-  }));
+  });
 
   // Estados de contraseña
   const [passwordData, setPasswordData] = useState({
@@ -143,51 +123,78 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
   useEffect(() => {
     setMounted(true);
 
-    // Cargar imagen de perfil desde la base de datos
-    const loadUserImage = async () => {
+    const loadUserProfile = async () => {
       const supabase = getSupabaseBrowserClient();
       const { data: { user } } = await supabase.auth.getUser();
+
       if (user) {
-        const { data, error } = await supabase
+        // 1. Cargar imagen (común para todos)
+        const { data: levelData } = await supabase
           .from('userlevel')
           .select('user_image')
           .eq('id', user.id)
           .single();
 
-        if (data && data.user_image && !error) {
-          setFormData(prev => ({ ...prev, fotoPreview: data.user_image }));
-        } else {
-          setFormData(prev => ({ ...prev, fotoPreview: null }));
+        const userImage = levelData?.user_image || null;
+
+        // 2. Cargar datos personales según rol
+        let name = '';
+        let phone = (user.user_metadata?.phone as string) || '';
+
+        // Si es cliente, intentamos usar el contexto primero, si no, DB
+        if (role === 'client') {
+          if (clientName) name = clientName;
+          if (clientPhone) phone = clientPhone;
+          // Si no hay contexto (ej: recarga), buscar en tabla clients
+          if (!name) {
+            const { data } = await supabase.from('clients').select('name, telefono').eq('user_id', user.id).single();
+            if (data) {
+              name = data.name;
+              if (data.telefono) phone = data.telefono;
+            }
+          }
+        } else if (role === 'admin') {
+          const { data } = await supabase.from('administrators').select('name').eq('user_id', user.id).single();
+          if (data) name = data.name;
+        } else if (role === 'china' || role === 'venezuela' || role === 'pagos') {
+          // Empleados (china, venezuela, pagos) suelen estar en tabla employees
+          const { data } = await supabase.from('employees').select('name').eq('user_id', user.id).single();
+          if (data) name = data.name;
         }
+
+        // Fallback al metadata si no se encontró en tablas
+        if (!name) {
+          name = (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || '';
+        }
+
+        const initialData = {
+          nombre: name,
+          email: user.email || '',
+          telefono: phone,
+          idioma: language,
+          fotoPerfil: null,
+          fotoPreview: userImage,
+          fotoVersion: 0
+        };
+
+        setFormData(initialData);
+        setProfileBaseline({
+          nombre: name,
+          email: user.email || '',
+          telefono: phone,
+          idioma: language as string
+        });
       }
     };
 
-    loadUserImage();
-  }, []);
-
-  // Cargar datos del cliente si es rol cliente
-  useEffect(() => {
-    if (role === 'client' && clientName && clientEmail) {
-      setFormData(prev => ({
-        ...prev,
-        nombre: clientName,
-        email: clientEmail,
-        telefono: clientPhone || ''
-      }));
-      setProfileBaseline(prev => ({
-        ...prev,
-        nombre: clientName,
-        email: clientEmail,
-        telefono: clientPhone || ''
-      }));
-    }
-  }, [role, clientName, clientEmail, clientPhone]);
+    loadUserProfile();
+  }, [role, clientName, clientPhone, language]);
 
   // Inicializar idioma sólo al montar; no cambiar hasta guardar.
   useEffect(() => {
     setFormData(prev => ({ ...prev, idioma: language }));
     setProfileBaseline(prev => ({ ...prev, idioma: language }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleInputChange = (field: string, value: string) => {
@@ -200,7 +207,7 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
     }
     setFormData(prev => ({ ...prev, [field]: processed }));
 
-  // Cambio de idioma diferido hasta guardar
+    // Cambio de idioma diferido hasta guardar
   };
 
   const handlePasswordChange = (field: string, value: string) => {
@@ -233,24 +240,24 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
         passwordData.newPassword.length > MAX_FIELD_LENGTH ||
         passwordData.confirmPassword.length > MAX_FIELD_LENGTH
       ) {
-  toast({ title: t('common.error'), description: `Los campos de contraseña no pueden exceder ${MAX_FIELD_LENGTH} caracteres.`, variant: 'destructive', duration: 5000 });
+        toast({ title: t('common.error'), description: `Los campos de contraseña no pueden exceder ${MAX_FIELD_LENGTH} caracteres.`, variant: 'destructive', duration: 5000 });
         return;
       }
       if (!hasPasswordChanges) return; // No hay cambios reales
       if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-  toast({ title: t('common.error'), description: t('common.fillRequiredFields'), variant: 'destructive', duration: 5000 });
+        toast({ title: t('common.error'), description: t('common.fillRequiredFields'), variant: 'destructive', duration: 5000 });
         return;
       }
       if (passwordData.newPassword !== passwordData.confirmPassword) {
-  toast({ title: t('admin.configuration.messages.passwordMismatch'), description: '', variant: 'destructive', duration: 5000 });
+        toast({ title: t('admin.configuration.messages.passwordMismatch'), description: '', variant: 'destructive', duration: 5000 });
         return;
       }
       if (passwordData.newPassword.length < 6) {
-  toast({ title: t('common.error'), description: 'La nueva contraseña debe tener al menos 6 caracteres.', variant: 'destructive', duration: 5000 });
+        toast({ title: t('common.error'), description: 'La nueva contraseña debe tener al menos 6 caracteres.', variant: 'destructive', duration: 5000 });
         return;
       }
       if (passwordData.currentPassword === passwordData.newPassword) {
-  toast({ title: t('common.error'), description: 'La nueva contraseña debe ser diferente a la actual.', variant: 'destructive', duration: 5000 });
+        toast({ title: t('common.error'), description: 'La nueva contraseña debe ser diferente a la actual.', variant: 'destructive', duration: 5000 });
         return;
       }
 
@@ -258,7 +265,7 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
       const supabase = getSupabaseBrowserClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !user.email) {
-  toast({ title: t('common.error'), description: 'Usuario no autenticado.', variant: 'destructive', duration: 5000 });
+        toast({ title: t('common.error'), description: 'Usuario no autenticado.', variant: 'destructive', duration: 5000 });
         return;
       }
 
@@ -268,7 +275,7 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
         password: passwordData.currentPassword,
       });
       if (signInError) {
-  toast({ title: t('common.error'), description: 'La contraseña actual es incorrecta.', variant: 'destructive', duration: 5000 });
+        toast({ title: t('common.error'), description: 'La contraseña actual es incorrecta.', variant: 'destructive', duration: 5000 });
         return;
       }
 
@@ -277,7 +284,7 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
         password: passwordData.newPassword,
       });
       if (updateError) {
-  toast({ title: t('common.error'), description: `No se pudo actualizar la contraseña: ${updateError.message}`, variant: 'destructive', duration: 5000 });
+        toast({ title: t('common.error'), description: `No se pudo actualizar la contraseña: ${updateError.message}`, variant: 'destructive', duration: 5000 });
         return;
       }
 
@@ -290,9 +297,9 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
         showNewPassword: false,
         showConfirmPassword: false,
       });
-  toast({ title: t('admin.configuration.messages.passwordUpdated'), description: t('admin.configuration.messages.passwordUpdatedDesc'), variant: 'default', duration: 5000 });
+      toast({ title: t('admin.configuration.messages.passwordUpdated'), description: t('admin.configuration.messages.passwordUpdatedDesc'), variant: 'default', duration: 5000 });
     } catch (e: any) {
-  toast({ title: t('common.error'), description: e?.message || 'Error al actualizar la contraseña.', variant: 'destructive', duration: 5000 });
+      toast({ title: t('common.error'), description: e?.message || 'Error al actualizar la contraseña.', variant: 'destructive', duration: 5000 });
     } finally {
       setChangingPassword(false);
     }
@@ -327,13 +334,13 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
     const supabase = getSupabaseBrowserClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-  toast({ title: 'Error', description: 'Usuario no autenticado.', variant: 'destructive', duration: 5000 });
+      toast({ title: 'Error', description: 'Usuario no autenticado.', variant: 'destructive', duration: 5000 });
       return;
     }
 
     const jpegBlob = await convertToJPEG(file);
     if (!jpegBlob) {
-  toast({ title: 'Error', description: 'No se pudo convertir la imagen.', variant: 'destructive', duration: 5000 });
+      toast({ title: 'Error', description: 'No se pudo convertir la imagen.', variant: 'destructive', duration: 5000 });
       return;
     }
 
@@ -343,7 +350,7 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
       .upload(fileName, jpegBlob, { upsert: true });
 
     if (error) {
-  toast({ title: 'Error', description: `No se pudo subir la imagen: ${error.message}` , variant: 'destructive', duration: 5000 });
+      toast({ title: 'Error', description: `No se pudo subir la imagen: ${error.message}`, variant: 'destructive', duration: 5000 });
       return;
     }
 
@@ -356,16 +363,16 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
       .eq('id', user.id);
 
     if (updateError) {
-  toast({ title: 'Error', description: `No se pudo guardar la URL: ${updateError.message}`, variant: 'destructive', duration: 5000 });
+      toast({ title: 'Error', description: `No se pudo guardar la URL: ${updateError.message}`, variant: 'destructive', duration: 5000 });
       return;
     }
 
-  // Estado local + callback al contenedor
-  setFormData(prev => ({ ...prev, fotoPreview: urlData.publicUrl, fotoVersion: prev.fotoVersion + 1 }));
+    // Estado local + callback al contenedor
+    setFormData(prev => ({ ...prev, fotoPreview: urlData.publicUrl, fotoVersion: prev.fotoVersion + 1 }));
     // Añadimos un query param único sólo para la versión global (Sidebar)
     onUserImageUpdate?.(`${urlData.publicUrl}?v=${Date.now()}`);
 
-  toast({ title: t('admin.configuration.messages.photoUpdated'), description: t('admin.configuration.messages.photoUpdatedDesc'), variant: 'default', duration: 5000 });
+    toast({ title: t('admin.configuration.messages.photoUpdated'), description: t('admin.configuration.messages.photoUpdatedDesc'), variant: 'default', duration: 5000 });
   };
 
   const handleDeletePhoto = async () => {
@@ -375,7 +382,7 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
       const supabase = getSupabaseBrowserClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-  toast({ title: 'Error', description: 'Usuario no autenticado.', variant: 'destructive', duration: 5000 });
+        toast({ title: 'Error', description: 'Usuario no autenticado.', variant: 'destructive', duration: 5000 });
         return;
       }
 
@@ -394,12 +401,12 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
       await supabase.from('userlevel').update({ user_image: null }).eq('id', user.id);
 
       // Estado local + callback
-  setFormData(prev => ({ ...prev, fotoPreview: null, fotoVersion: prev.fotoVersion + 1 }));
+      setFormData(prev => ({ ...prev, fotoPreview: null, fotoVersion: prev.fotoVersion + 1 }));
       onUserImageUpdate?.(undefined);
 
-  toast({ title: t('admin.configuration.messages.photoDeleted'), description: t('admin.configuration.messages.photoDeletedDesc'), variant: 'default', duration: 5000 });
+      toast({ title: t('admin.configuration.messages.photoDeleted'), description: t('admin.configuration.messages.photoDeletedDesc'), variant: 'default', duration: 5000 });
     } catch (err) {
-  toast({ title: 'Error', description: 'No se pudo eliminar la foto.', variant: 'destructive', duration: 5000 });
+      toast({ title: 'Error', description: 'No se pudo eliminar la foto.', variant: 'destructive', duration: 5000 });
     } finally {
       setDeletingPhoto(false);
     }
@@ -408,7 +415,7 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
   const handleSaveProfile = async () => {
     // Validaciones de longitud solo al guardar (el input ya está limitado, esto es por seguridad extra)
     if (formData.nombre.length > MAX_FIELD_LENGTH || formData.email.length > MAX_FIELD_LENGTH) {
-  toast({ title: t('common.error'), description: `Nombre y correo no pueden exceder ${MAX_FIELD_LENGTH} caracteres.`, variant: 'destructive', duration: 5000 });
+      toast({ title: t('common.error'), description: `Nombre y correo no pueden exceder ${MAX_FIELD_LENGTH} caracteres.`, variant: 'destructive', duration: 5000 });
       return;
     }
     if (!hasProfileChanges) return; // Nada que guardar
@@ -828,7 +835,7 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
                     <CardContent className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-slate-600 dark:text-slate-400">{t('admin.configuration.profile.accountInfo.role')}</span>
-                        <Badge className="bg-purple-500">{roleData.rol}</Badge>
+                        <Badge className="bg-purple-500">{role === 'admin' ? 'Administrador' : role.charAt(0).toUpperCase() + role.slice(1)}</Badge>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-slate-600 dark:text-slate-400">{t('admin.configuration.profile.accountInfo.accountStatus')}</span>
@@ -854,56 +861,56 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
               <div className="flex justify-center">
                 <div className="w-full max-w-2xl">
                   <Card className="bg-white/80 backdrop-blur-sm border-slate-200 dark:bg-slate-800/80 dark:border-slate-700">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Palette className="w-5 h-5" />
-                      {t('admin.configuration.preferences.theme.appearance')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>{t('admin.configuration.preferences.theme.title')}</Label>
-                      <div className="flex gap-2 flex-wrap">
-                        <Button
-                          variant={mounted && theme === 'light' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setTheme('light')}
-                          className="flex-1 min-w-0 flex items-center gap-2"
-                        >
-                          <Sun className="w-4 h-4" />
-                          {t('admin.configuration.preferences.theme.light')}
-                        </Button>
-                        <Button
-                          variant={mounted && theme === 'dark' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setTheme('dark')}
-                          className="flex-1 min-w-0 flex items-center gap-2"
-                        >
-                          <Moon className="w-4 h-4" />
-                          {t('admin.configuration.preferences.theme.dark')}
-                        </Button>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Palette className="w-5 h-5" />
+                        {t('admin.configuration.preferences.theme.appearance')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>{t('admin.configuration.preferences.theme.title')}</Label>
+                        <div className="flex gap-2 flex-wrap">
+                          <Button
+                            variant={mounted && theme === 'light' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setTheme('light')}
+                            className="flex-1 min-w-0 flex items-center gap-2"
+                          >
+                            <Sun className="w-4 h-4" />
+                            {t('admin.configuration.preferences.theme.light')}
+                          </Button>
+                          <Button
+                            variant={mounted && theme === 'dark' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setTheme('dark')}
+                            className="flex-1 min-w-0 flex items-center gap-2"
+                          >
+                            <Moon className="w-4 h-4" />
+                            {t('admin.configuration.preferences.theme.dark')}
+                          </Button>
+                        </div>
+                        {mounted && (
+                          <p className="text-xs text-slate-600 dark:text-slate-400">
+                            {t('admin.configuration.preferences.theme.currentTheme')}: {theme === 'light' ? t('admin.configuration.preferences.theme.light') : t('admin.configuration.preferences.theme.dark')}
+                          </p>
+                        )}
                       </div>
-                      {mounted && (
-                        <p className="text-xs text-slate-600 dark:text-slate-400">
-                          {t('admin.configuration.preferences.theme.currentTheme')}: {theme === 'light' ? t('admin.configuration.preferences.theme.light') : t('admin.configuration.preferences.theme.dark')}
-                        </p>
-                      )}
-                    </div>
-                    <Separator />
-                    <div className="space-y-2">
-                      <Label>{t('admin.configuration.preferences.theme.fontSize')}</Label>
-                      <Select defaultValue="medium">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona el tamaño" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="small">{t('admin.configuration.preferences.theme.fontSizes.small')}</SelectItem>
-                          <SelectItem value="medium">{t('admin.configuration.preferences.theme.fontSizes.medium')}</SelectItem>
-                          <SelectItem value="large">{t('admin.configuration.preferences.theme.fontSizes.large')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardContent>
+                      <Separator />
+                      <div className="space-y-2">
+                        <Label>{t('admin.configuration.preferences.theme.fontSize')}</Label>
+                        <Select defaultValue="medium">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona el tamaño" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="small">{t('admin.configuration.preferences.theme.fontSizes.small')}</SelectItem>
+                            <SelectItem value="medium">{t('admin.configuration.preferences.theme.fontSizes.medium')}</SelectItem>
+                            <SelectItem value="large">{t('admin.configuration.preferences.theme.fontSizes.large')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
                   </Card>
                 </div>
               </div>
@@ -961,13 +968,12 @@ function AdminReviewsSection() {
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            className={`w-4 h-4 ${
-              star <= rating
-                ? 'text-yellow-400 fill-yellow-400'
-                : mounted && theme === 'dark'
+            className={`w-4 h-4 ${star <= rating
+              ? 'text-yellow-400 fill-yellow-400'
+              : mounted && theme === 'dark'
                 ? 'text-slate-600'
                 : 'text-slate-300'
-            }`}
+              }`}
           />
         ))}
       </div>
@@ -1001,11 +1007,10 @@ function AdminReviewsSection() {
             {reviews.map((review) => (
               <div
                 key={review.id}
-                className={`p-4 rounded-lg border ${
-                  mounted && theme === 'dark'
-                    ? 'bg-slate-700/50 border-slate-600'
-                    : 'bg-slate-50 border-slate-200'
-                }`}
+                className={`p-4 rounded-lg border ${mounted && theme === 'dark'
+                  ? 'bg-slate-700/50 border-slate-600'
+                  : 'bg-slate-50 border-slate-200'
+                  }`}
               >
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="flex-1">
@@ -1029,9 +1034,8 @@ function AdminReviewsSection() {
                   </div>
                 </div>
                 {review.reviewText && (
-                  <div className={`mt-3 p-3 rounded ${
-                    mounted && theme === 'dark' ? 'bg-slate-800 text-slate-200' : 'bg-white text-slate-800'
-                  }`}>
+                  <div className={`mt-3 p-3 rounded ${mounted && theme === 'dark' ? 'bg-slate-800 text-slate-200' : 'bg-white text-slate-800'
+                    }`}>
                     <p className="text-sm whitespace-pre-wrap">{review.reviewText}</p>
                   </div>
                 )}
