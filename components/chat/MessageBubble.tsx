@@ -3,7 +3,7 @@
 import { memo, useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Check, CheckCheck, FileText, Download, MoreHorizontal, Pencil, Trash2, X } from 'lucide-react';
+import { Check, CheckCheck, FileText, Download, MoreHorizontal, Pencil, Trash2, X, Languages, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
     DropdownMenu,
@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
+import { useLanguage } from '@/lib/LanguageContext';
 
 interface MessageBubbleProps {
     id: string;
@@ -47,13 +48,54 @@ export const MessageBubble = memo(function MessageBubble({
     const isImage = fileType?.startsWith('image/');
     const isPDF = fileType === 'application/pdf';
     const { theme } = useTheme();
+    const { language } = useLanguage();
     const [mounted, setMounted] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(message || '');
 
+    // Estados de traducción
+    const [translatedText, setTranslatedText] = useState<string | null>(null);
+    const [isTranslating, setIsTranslating] = useState(false);
+    const [showOriginal, setShowOriginal] = useState(false);
+
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Efecto para traducir mensajes entrantes
+    useEffect(() => {
+        const translateMessage = async () => {
+            // Solo traducir mensajes de texto entrantes que no estén vacíos
+            if (!message || isSent || !language) return;
+
+            try {
+                setIsTranslating(true);
+                const response = await fetch('/api/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: message,
+                        targetLang: language
+                    })
+                });
+
+                if (!response.ok) throw new Error('Translation failed');
+
+                const data = await response.json();
+
+                // Solo mostrar traducción si es diferente al original (y no es error)
+                if (data.translated && data.translated.toLowerCase() !== message.toLowerCase()) {
+                    setTranslatedText(data.translated);
+                }
+            } catch (error) {
+                console.error('Error translating message:', error);
+            } finally {
+                setIsTranslating(false);
+            }
+        };
+
+        translateMessage();
+    }, [message, isSent, language]);
 
     const handleSaveEdit = () => {
         if (onEdit && editContent.trim() !== message) {
@@ -185,10 +227,37 @@ export const MessageBubble = memo(function MessageBubble({
                             </div>
                         ) : (
                             message && (
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap break-all">
-                                    {message}
-                                    {isEdited && <span className="text-[10px] opacity-70 ml-1">(editado)</span>}
-                                </p>
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-all">
+                                        {translatedText && !showOriginal ? translatedText : message}
+                                        {isEdited && <span className="text-[10px] opacity-70 ml-1">(editado)</span>}
+                                    </p>
+
+                                    {/* Indicador de traducción */}
+                                    {(translatedText || isTranslating) && !isSent && (
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <button
+                                                onClick={() => setShowOriginal(!showOriginal)}
+                                                className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded-full transition-colors ${mounted && theme === 'dark'
+                                                        ? 'bg-slate-700/50 hover:bg-slate-700 text-slate-300'
+                                                        : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
+                                                    }`}
+                                            >
+                                                {isTranslating ? (
+                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                ) : (
+                                                    <Languages className="w-3 h-3" />
+                                                )}
+                                                <span>
+                                                    {isTranslating
+                                                        ? 'Traduciendo...'
+                                                        : (showOriginal ? 'Ver traducción' : 'Traducido automáticamente')
+                                                    }
+                                                </span>
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             )
                         )}
 
