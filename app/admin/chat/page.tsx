@@ -18,6 +18,7 @@ import { MessageSquare, ArrowLeft, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { ChatMessage } from '@/lib/types/chat';
 import { useTheme } from 'next-themes';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function AdminChatPage() {
     const [sidebarExpanded, setSidebarExpanded] = useState(true);
@@ -25,8 +26,9 @@ export default function AdminChatPage() {
     const { adminId } = useAdminContext();
     const router = useRouter();
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const [mounted, setMounted] = useState(false);
-    
+
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -50,6 +52,8 @@ export default function AdminChatPage() {
         sending,
         sendMessage,
         addMessage,
+        editMessage,
+        deleteMessage,
     } = useChatMessages({
         conversationUserId: selectedUserId,
         currentUserId: adminId ?? null,
@@ -123,8 +127,8 @@ export default function AdminChatPage() {
                 <Header
                     notifications={unreadCount}
                     onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    title={view === 'list' ? '💬 Chat' : `Chat con ${selectedUserName}`}
-                    subtitle={view === 'list' ? 'Gestiona tus conversaciones con usuarios de China' : 'Usuario China'}
+                    title={view === 'list' ? t('chat.list.title') : t('chat.china.title', { name: selectedUserName })}
+                    subtitle={view === 'list' ? t('chat.list.subtitle') : t('chat.china.subtitle')}
                     notificationsItems={notificationsList}
                     onMarkAllAsRead={async () => {
                         await markAllAsRead();
@@ -144,10 +148,10 @@ export default function AdminChatPage() {
                                         <div>
                                             <CardTitle className={`text-lg md:text-xl font-semibold flex items-center gap-2 ${mounted && theme === 'dark' ? 'text-white' : ''}`}>
                                                 <Users className={`h-5 w-5 ${mounted && theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
-                                                Conversaciones Activas
+                                                {t('chat.list.activeConversations')}
                                             </CardTitle>
                                             <p className={`text-xs md:text-sm mt-1 ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                                                Selecciona una conversación para comenzar a chatear
+                                                {t('chat.list.selectConversation')}
                                             </p>
                                         </div>
                                     </div>
@@ -185,7 +189,7 @@ export default function AdminChatPage() {
                                         </div>
                                         <div>
                                             <CardTitle className={`text-base font-semibold ${mounted && theme === 'dark' ? 'text-white' : ''}`}>{selectedUserName}</CardTitle>
-                                            <p className={`text-xs ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>Usuario China</p>
+                                            <p className={`text-xs ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{t('chat.china.subtitle')}</p>
                                         </div>
                                     </div>
                                 </CardHeader>
@@ -197,6 +201,8 @@ export default function AdminChatPage() {
                                             isOtherUserTyping={isOtherUserTyping}
                                             otherUserName={selectedUserName}
                                             loading={loading}
+                                            onEditMessage={editMessage}
+                                            onDeleteMessage={deleteMessage}
                                         />
                                         <ChatInput
                                             onSendMessage={handleSendMessage}
