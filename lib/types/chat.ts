@@ -19,6 +19,7 @@ export interface ChatMessage {
   is_edited?: boolean;
   deleted_by_sender?: boolean;
   deleted_by_receiver?: boolean;
+  is_deleted?: boolean;
 }
 
 export interface ChatConversation {

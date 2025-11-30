@@ -338,7 +338,7 @@ export function ChatList({ onSelectConversation, selectedUserId, currentUserId }
                                             )}
                                         </div>
 
-                                        <div className="flex-1 min-w-0">
+                                        <div className="flex-1 min-w-0 overflow-hidden">
                                             <div className="flex items-center justify-between mb-1">
                                                 <h3 className={`font-semibold truncate transition-colors ${mounted && theme === 'dark' ? 'text-white group-hover:text-blue-300' : 'text-slate-800 group-hover:text-blue-600'}`}>
                                                     {conv.user_name}
@@ -351,19 +351,16 @@ export function ChatList({ onSelectConversation, selectedUserId, currentUserId }
 
                                             {/* Mensaje con hora inline */}
                                             {conv.last_message && (
-                                                <p className={`text-sm truncate flex items-center gap-2 ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                                                    <span className="flex-1 truncate">
+                                                <div className={`text-sm grid grid-cols-[1fr_auto] gap-2 items-center ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                                                    <span className="truncate">
                                                         {conv.last_file_url ? '📎 Archivo adjunto' : conv.last_message}
                                                     </span>
                                                     {conv.last_message_time && (
-                                                        <>
-                                                            <span className={mounted && theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}>•</span>
-                                                            <span className={`text-xs shrink-0 ${mounted && theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                                                                {format(new Date(conv.last_message_time), 'HH:mm', { locale: es })}
-                                                            </span>
-                                                        </>
+                                                        <span className={`text-xs whitespace-nowrap ${mounted && theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                            {format(new Date(conv.last_message_time), 'HH:mm', { locale: es })}
+                                                        </span>
                                                     )}
-                                                </p>
+                                                </div>
                                             )}
                                         </div>
                                     </div>

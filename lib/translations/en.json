@@ -702,6 +702,7 @@
     "profile": "Profile",
     "logout": "Log out",
     "chat": "Chat",
+    "messageDeleted": "🚫 This message was deleted",
     "dashboardAdmin": "Admin Dashboard",
     "dashboardClient": "Client Dashboard",
     "dashboardChina": "China Dashboard",
@@ -2976,6 +2977,7 @@
       "title": "Administrator not found",
       "message": "Could not connect with the administrator"
     },
-    "loading": "Loading chat..."
+    "loading": "Loading chat...",
+    "messageDeleted": "🚫 This message was deleted"
   }
 }

@@ -3,7 +3,7 @@
 import { memo, useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Check, CheckCheck, FileText, Download, MoreHorizontal, Pencil, Trash2, X, Languages, Loader2 } from 'lucide-react';
+import { Check, CheckCheck, FileText, Download, MoreHorizontal, Pencil, Trash2, X, Languages, Loader2, Ban } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
     DropdownMenu,
@@ -11,10 +11,21 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useTheme } from 'next-themes';
 import { useLanguage } from '@/lib/LanguageContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface MessageBubbleProps {
     id: string;
@@ -29,6 +40,7 @@ interface MessageBubbleProps {
     isEdited?: boolean;
     onEdit?: (id: string, newContent: string) => void;
     onDelete?: (id: string) => void;
+    isDeleted?: boolean;
 }
 
 export const MessageBubble = memo(function MessageBubble({
@@ -44,14 +56,17 @@ export const MessageBubble = memo(function MessageBubble({
     isEdited,
     onEdit,
     onDelete,
+    isDeleted,
 }: MessageBubbleProps) {
     const isImage = fileType?.startsWith('image/');
     const isPDF = fileType === 'application/pdf';
     const { theme } = useTheme();
     const { language } = useLanguage();
+    const { t } = useTranslation();
     const [mounted, setMounted] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(message || '');
+    const [showDeleteAlert, setShowDeleteAlert] = useState(false);
 
     // Estados de traducción
     const [translatedText, setTranslatedText] = useState<string | null>(null);
@@ -129,7 +144,7 @@ export const MessageBubble = memo(function MessageBubble({
 
                 <div className="relative flex items-center gap-2">
                     {/* Menú de acciones (solo para mis mensajes y si no estoy editando) */}
-                    {isSent && !isEditing && onEdit && onDelete && (
+                    {isSent && !isEditing && !isDeleted && onEdit && onDelete && (
                         <div className="opacity-0 group-hover/message:opacity-100 transition-opacity">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -142,7 +157,7 @@ export const MessageBubble = memo(function MessageBubble({
                                         <Pencil className="mr-2 h-3.5 w-3.5" />
                                         Editar
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onDelete(id)} className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer">
+                                    <DropdownMenuItem onClick={() => setShowDeleteAlert(true)} className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer">
                                         <Trash2 className="mr-2 h-3.5 w-3.5" />
                                         Eliminar
                                     </DropdownMenuItem>
@@ -208,7 +223,12 @@ export const MessageBubble = memo(function MessageBubble({
                         )}
 
                         {/* Mensaje de texto o Edición */}
-                        {isEditing ? (
+                        {isDeleted ? (
+                            <div className={`flex items-center gap-2 italic text-sm ${isSent ? 'text-white/90' : 'text-slate-500 dark:text-slate-400'}`}>
+                                <Ban className="w-4 h-4" />
+                                <span>{t('chat.messageDeleted')}</span>
+                            </div>
+                        ) : isEditing ? (
                             <div className="flex flex-col gap-2">
                                 <Input
                                     value={editContent}
@@ -239,8 +259,8 @@ export const MessageBubble = memo(function MessageBubble({
                                             <button
                                                 onClick={() => setShowOriginal(!showOriginal)}
                                                 className={`text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded-full transition-colors ${mounted && theme === 'dark'
-                                                        ? 'bg-slate-700/50 hover:bg-slate-700 text-slate-300'
-                                                        : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
+                                                    ? 'bg-slate-700/50 hover:bg-slate-700 text-slate-300'
+                                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-500'
                                                     }`}
                                             >
                                                 {isTranslating ? (
@@ -279,6 +299,29 @@ export const MessageBubble = memo(function MessageBubble({
                     </div>
                 </div>
             </div>
+
+            <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{t('chat.deleteConfirmation.title')}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {t('chat.deleteConfirmation.description')}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>{t('chat.deleteConfirmation.cancel')}</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                if (onDelete) onDelete(id);
+                                setShowDeleteAlert(false);
+                            }}
+                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                        >
+                            {t('chat.deleteConfirmation.confirm')}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 });

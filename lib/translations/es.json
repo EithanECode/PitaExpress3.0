@@ -3019,6 +3019,13 @@
       "title": "No se encontró el administrador",
       "message": "No se pudo conectar con el administrador"
     },
-    "loading": "Cargando chat..."
+    "loading": "Cargando chat...",
+    "messageDeleted": "Este mensaje fue eliminado",
+    "deleteConfirmation": {
+      "title": "¿Eliminar mensaje?",
+      "description": "Esta acción no se puede deshacer. El mensaje será eliminado para todos.",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar"
+    }
   }
 }

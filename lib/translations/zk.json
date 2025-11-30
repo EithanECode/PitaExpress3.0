@@ -698,6 +698,7 @@
     "profile": "个人资料",
     "logout": "退出登录",
     "chat": "聊天",
+    "messageDeleted": "🚫 此消息已删除",
     "dashboardAdmin": "管理员面板",
     "dashboardClient": "客户面板",
     "dashboardChina": "中国面板",

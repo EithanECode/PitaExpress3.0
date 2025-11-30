@@ -92,6 +92,7 @@ export function ChatMessages({
                             isEdited={msg.is_edited}
                             onEdit={onEditMessage}
                             onDelete={onDeleteMessage}
+                            isDeleted={msg.is_deleted}
                         />
                     </div>
                 ))}

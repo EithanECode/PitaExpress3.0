@@ -169,30 +169,40 @@ export function useChatMessages({ conversationUserId, currentUserId, currentUser
         }
     }, [supabase, loadMessages]);
 
-    // Eliminar mensaje (para mí)
+    // Eliminar mensaje
     const deleteMessage = useCallback(async (messageId: string) => {
         if (!currentUserId) return false;
 
         try {
-            // Optimista: quitar de la lista
-            setMessages(prev => prev.filter(msg => msg.id !== messageId));
-
             const msg = messages.find(m => m.id === messageId);
             if (!msg) return false;
 
-            const updateData: any = {};
+            // Si soy el remitente, soft delete (para todos)
+            // Si soy el receptor, delete for me (ocultar)
             if (msg.sender_id === currentUserId) {
-                updateData.deleted_by_sender = true;
+                // Optimista: marcar como eliminado
+                setMessages(prev => prev.map(m =>
+                    m.id === messageId ? { ...m, is_deleted: true } : m
+                ));
+
+                const { error } = await supabase
+                    .from('chat_messages')
+                    .update({ is_deleted: true })
+                    .eq('id', messageId);
+
+                if (error) throw error;
             } else {
-                updateData.deleted_by_receiver = true;
+                // Optimista: quitar de la lista
+                setMessages(prev => prev.filter(msg => msg.id !== messageId));
+
+                const { error } = await supabase
+                    .from('chat_messages')
+                    .update({ deleted_by_receiver: true })
+                    .eq('id', messageId);
+
+                if (error) throw error;
             }
 
-            const { error } = await supabase
-                .from('chat_messages')
-                .update(updateData)
-                .eq('id', messageId);
-
-            if (error) throw error;
             return true;
         } catch (err) {
             console.error('Error deleting message:', err);
