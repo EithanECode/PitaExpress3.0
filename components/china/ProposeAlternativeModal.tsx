@@ -181,7 +181,7 @@ export default function ProposeAlternativeModal({
                                 {t('chinese.ordersPage.modals.proposeAlternative.rejectionReasonTitle', { defaultValue: 'Motivo del rechazo anterior:' })}
                             </p>
                             <p className="text-sm text-red-700 dark:text-red-200 italic">
-                                "{pedido.alternativeRejectionReason}"
+                                &quot;{pedido.alternativeRejectionReason}&quot;
                             </p>
                         </div>
                     )}
