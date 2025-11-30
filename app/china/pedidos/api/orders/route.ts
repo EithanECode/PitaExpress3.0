@@ -60,6 +60,7 @@ async function getOrdersWithClientName() {
     } else if (rejectedAlt) {
       alternativeStatus = 'rejected';
       rejectionReason = rejectedAlt.client_response_notes;
+      console.log(`Order ${order.id}: Found rejected alternative. Notes: ${rejectionReason}`);
     }
 
     return {

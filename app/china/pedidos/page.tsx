@@ -251,6 +251,7 @@ export default function PedidosChina() {
               numericState: typeof order.state === 'number' ? order.state : undefined,
               hasAlternative: order.hasAlternative,
               alternativeStatus: order.alternativeStatus,
+              alternativeRejectionReason: order.alternativeRejectionReason,
             } as Pedido;
           })
       );
