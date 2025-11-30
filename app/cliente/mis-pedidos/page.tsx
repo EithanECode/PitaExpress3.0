@@ -98,6 +98,7 @@ interface Order {
   tracking_company?: string | null;
   arrive_date?: string | null;
   tracking_link?: string | null; // NUEVO: link de tracking del contenedor
+  imageUrl?: string | null; // URL de la imagen del producto
 }
 
 const normalizeOrderId = (id: string | number) => String(id).trim();
@@ -476,7 +477,7 @@ export default function MisPedidosPage() {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('id, productName, description, estimatedBudget, totalQuote, unitQuote, shippingPrice, state, created_at, pdfRoutes, quantity, box_id')
+        .select('id, productName, description, estimatedBudget, totalQuote, unitQuote, shippingPrice, state, created_at, pdfRoutes, quantity, box_id, imgs')
         .eq('client_id', clientId)
         .order('created_at', { ascending: false });
       if (error) {
@@ -563,6 +564,20 @@ export default function MisPedidosPage() {
         const calcAmount = Number(unit || 0) + Number(ship || 0);
         const status = mapStateToStatus(row.state as number | null);
 
+        // Extract first image if available
+        let imgUrl = null;
+        if (Array.isArray(row.imgs) && row.imgs.length > 0) {
+          imgUrl = row.imgs[0];
+        } else if (typeof row.imgs === 'string') {
+          // Handle case where it might be a JSON string or single URL
+          try {
+            const parsed = JSON.parse(row.imgs);
+            if (Array.isArray(parsed) && parsed.length > 0) imgUrl = parsed[0];
+          } catch {
+            imgUrl = row.imgs;
+          }
+        }
+
         return {
           id: String(row.id),
           product: row.productName || 'Pedido',
@@ -585,6 +600,7 @@ export default function MisPedidosPage() {
           tracking_company: tc,
           arrive_date: ad,
           tracking_link: tl,
+          imageUrl: imgUrl,
         };
       });
       setOrders(mapped);
@@ -3507,7 +3523,7 @@ export default function MisPedidosPage() {
         originalProduct={{
           name: selectedOrderForAlternative?.product || '',
           description: selectedOrderForAlternative?.description,
-          imageUrl: selectedOrderForAlternative?.pdfRoutes || undefined,
+          imageUrl: selectedOrderForAlternative?.imageUrl || undefined,
         }}
         onSuccess={handleAlternativeSuccess}
       />

@@ -29,18 +29,32 @@ async function getOrdersWithClientName() {
     .select('user_id, name');
   if (clientsError) throw clientsError;
 
-  // Traer alternativas pendientes
+  // Traer TODAS las alternativas (no solo pendientes) para mostrar historial
   const { data: alternatives, error: alternativesError } = await supabase
     .from('product_alternatives')
-    .select('order_id')
-    .eq('status', 'pending');
+    .select('order_id, status')
+    .order('created_at', { ascending: false }); // Ordenar por fecha para tomar la más reciente si hay varias
 
   if (alternativesError) console.error('Error fetching alternatives:', alternativesError);
 
   // Join manual en JS
   return orders.map(order => {
     const client = clients.find(c => c.user_id === order.client_id);
-    const hasAlternative = alternatives?.some(a => a.order_id === order.id);
+
+    // Buscar alternativas para este pedido
+    const orderAlternatives = alternatives?.filter(a => a.order_id === order.id) || [];
+
+    // Determinar el estado de la alternativa a mostrar
+    // Prioridad: 1. Pending (hay una activa) -> 2. Accepted (se aceptó una) -> 3. Rejected (se rechazó la última)
+    let alternativeStatus: 'pending' | 'accepted' | 'rejected' | null = null;
+
+    if (orderAlternatives.some(a => a.status === 'pending')) {
+      alternativeStatus = 'pending';
+    } else if (orderAlternatives.some(a => a.status === 'accepted')) {
+      alternativeStatus = 'accepted';
+    } else if (orderAlternatives.some(a => a.status === 'rejected')) {
+      alternativeStatus = 'rejected';
+    }
 
     return {
       id: order.id,
@@ -55,7 +69,8 @@ async function getOrdersWithClientName() {
       specifications: order.description,
       pdfRoutes: order.pdfRoutes ?? '',
       totalQuote: order.totalQuote ?? null,
-      hasAlternative: hasAlternative || false,
+      hasAlternative: alternativeStatus === 'pending', // Mantener compatibilidad
+      alternativeStatus: alternativeStatus, // Nuevo campo con el estado específico
     };
   });
 }

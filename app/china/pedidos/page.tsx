@@ -84,6 +84,7 @@ interface Pedido {
   long?: number | null;
   weight?: number | null;
   hasAlternative?: boolean;
+  alternativeStatus?: 'pending' | 'accepted' | 'rejected' | null;
 }
 
 interface BoxItem {
@@ -213,8 +214,14 @@ export default function PedidosChina() {
         setLoading(false);
         return;
       }
-      console.debug('[PedidosChina] fetched raw orders count:', data.length);
-      console.debug('[PedidosChina] Orders with alternatives:', data.filter((o: any) => o.hasAlternative).map((o: any) => o.id));
+      // DEBUG: Log alternative statuses
+      console.log('Orders loaded:', data.length);
+      data.forEach((p: any) => {
+        if (p.alternativeStatus) {
+          console.log(`Order ${p.id} has alternative status: ${p.alternativeStatus}`);
+        }
+      });
+
       setPedidos(
         data
           .map((order: any) => {
@@ -241,6 +248,7 @@ export default function PedidosChina() {
               totalQuote: order.totalQuote ?? null,
               numericState: typeof order.state === 'number' ? order.state : undefined,
               hasAlternative: order.hasAlternative,
+              alternativeStatus: order.alternativeStatus,
             } as Pedido;
           })
       );
@@ -1796,11 +1804,35 @@ export default function PedidosChina() {
                             <div className="flex flex-wrap items-center gap-2">
                               <h3 className={`font-semibold text-sm sm:text-base ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>#ORD-{pedido.id}</h3>
                               {/* Badge estado principal: forzamos 'Pendiente' explícito para state 2 */}
-                              {pedido.numericState === 2 ? (
-                                <Badge className={`hidden sm:inline-block border ${mounted && theme === 'dark' ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700' : 'bg-yellow-100 text-yellow-800 border-yellow-200'}`}>{t('chinese.ordersPage.filters.pending')}</Badge>
-                              ) : (
-                                <Badge className={`hidden sm:inline-block ${getOrderBadge(pedido.numericState).className}`}>{getOrderBadge(pedido.numericState).label}</Badge>
-                              )}
+                              {/* Badge estado principal: Prioridad a Alternativas */}
+                              {(() => {
+                                if (pedido.alternativeStatus === 'pending') {
+                                  return (
+                                    <Badge className="hidden sm:inline-block bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
+                                      Alternativa Enviada
+                                    </Badge>
+                                  );
+                                }
+                                if (pedido.alternativeStatus === 'accepted') {
+                                  return (
+                                    <Badge className="hidden sm:inline-block bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700">
+                                      Alternativa Aceptada
+                                    </Badge>
+                                  );
+                                }
+                                if (pedido.alternativeStatus === 'rejected') {
+                                  return (
+                                    <Badge className="hidden sm:inline-block bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700">
+                                      Alternativa Rechazada
+                                    </Badge>
+                                  );
+                                }
+                                // Default status
+                                if (pedido.numericState === 2) {
+                                  return <Badge className={`hidden sm:inline-block border ${mounted && theme === 'dark' ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700' : 'bg-yellow-100 text-yellow-800 border-yellow-200'}`}>{t('chinese.ordersPage.filters.pending')}</Badge>;
+                                }
+                                return <Badge className={`hidden sm:inline-block ${getOrderBadge(pedido.numericState).className}`}>{getOrderBadge(pedido.numericState).label}</Badge>;
+                              })()}
                             </div>
                             <p className={`text-xs sm:text-sm truncate max-w-full ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{pedido.producto}</p>
                             <div className={`flex flex-wrap gap-x-4 gap-y-1 text-[11px] sm:text-xs ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -1899,15 +1931,8 @@ export default function PedidosChina() {
                               <span className="hidden sm:inline">{t('chinese.ordersPage.orders.view')}</span>
                             </Button>
                             {pedido.estado === 'pendiente' && (() => {
-                              console.log('[DEBUG China Page] Pedido:', pedido.id, 'estado:', pedido.estado, 'numericState:', pedido.numericState);
-
-                              if (pedido.hasAlternative) {
-                                return (
-                                  <Badge className="bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
-                                    Alternativa Enviada
-                                  </Badge>
-                                );
-                              }
+                              // Ocultar botones si hay una alternativa pendiente
+                              if (pedido.alternativeStatus === 'pending') return null;
 
                               return (!pedido.numericState || pedido.numericState < 9) ? (
                                 <>
@@ -1934,15 +1959,17 @@ export default function PedidosChina() {
                                     <Calculator className="h-4 w-4" />
                                     <span className="hidden sm:inline">{t('chinese.ordersPage.orders.quote')}</span>
                                   </Button>
-                                  <Button
-                                    onClick={() => setModalPropAlternativa({ open: true, pedido })}
-                                    size="sm"
-                                    className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700"
-                                    title="Proponer alternativa"
-                                  >
-                                    <Send className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Alternativa</span>
-                                  </Button>
+                                  {pedido.alternativeStatus !== 'accepted' && (
+                                    <Button
+                                      onClick={() => setModalPropAlternativa({ open: true, pedido })}
+                                      size="sm"
+                                      className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700"
+                                      title="Proponer alternativa"
+                                    >
+                                      <Send className="h-4 w-4" />
+                                      <span className="hidden sm:inline">Alternativa</span>
+                                    </Button>
+                                  )}
                                 </>
                               ) : null;
                             })()}

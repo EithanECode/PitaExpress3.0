@@ -177,6 +177,7 @@ export async function PATCH(
                         order_id: alternative.order_id,
                         alternative_id: id,
                         alternative_product: alternative.alternative_product_name,
+                        client_notes: client_response_notes, // Include client notes
                     },
                     read: false,
                 });
