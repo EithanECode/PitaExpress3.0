@@ -32,7 +32,7 @@ async function getOrdersWithClientName() {
   // Traer TODAS las alternativas (no solo pendientes) para mostrar historial
   const { data: alternatives, error: alternativesError } = await supabase
     .from('product_alternatives')
-    .select('order_id, status')
+    .select('order_id, status, client_response_notes')
     .order('created_at', { ascending: false }); // Ordenar por fecha para tomar la más reciente si hay varias
 
   if (alternativesError) console.error('Error fetching alternatives:', alternativesError);
@@ -47,13 +47,19 @@ async function getOrdersWithClientName() {
     // Determinar el estado de la alternativa a mostrar
     // Prioridad: 1. Pending (hay una activa) -> 2. Accepted (se aceptó una) -> 3. Rejected (se rechazó la última)
     let alternativeStatus: 'pending' | 'accepted' | 'rejected' | null = null;
+    let rejectionReason: string | null = null;
 
-    if (orderAlternatives.some(a => a.status === 'pending')) {
+    const pendingAlt = orderAlternatives.find(a => a.status === 'pending');
+    const acceptedAlt = orderAlternatives.find(a => a.status === 'accepted');
+    const rejectedAlt = orderAlternatives.find(a => a.status === 'rejected');
+
+    if (pendingAlt) {
       alternativeStatus = 'pending';
-    } else if (orderAlternatives.some(a => a.status === 'accepted')) {
+    } else if (acceptedAlt) {
       alternativeStatus = 'accepted';
-    } else if (orderAlternatives.some(a => a.status === 'rejected')) {
+    } else if (rejectedAlt) {
       alternativeStatus = 'rejected';
+      rejectionReason = rejectedAlt.client_response_notes;
     }
 
     return {
@@ -71,6 +77,7 @@ async function getOrdersWithClientName() {
       totalQuote: order.totalQuote ?? null,
       hasAlternative: alternativeStatus === 'pending', // Mantener compatibilidad
       alternativeStatus: alternativeStatus, // Nuevo campo con el estado específico
+      alternativeRejectionReason: rejectionReason, // Razón del rechazo si aplica
     };
   });
 }

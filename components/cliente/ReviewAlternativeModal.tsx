@@ -38,19 +38,30 @@ export default function ReviewAlternativeModal({
     onSuccess,
 }: ReviewAlternativeModalProps) {
     const [clientNotes, setClientNotes] = useState('');
-    const [processing, setProcessing] = useState(false);
+    const [processingAction, setProcessingAction] = useState<'accept' | 'reject' | null>(null);
+    const [isClosing, setIsClosing] = useState(false);
     const { updateAlternative } = useProductAlternatives({ enabled: false });
 
     const handleClose = () => {
-        setClientNotes('');
-        onClose();
+        setIsClosing(true);
+        setTimeout(() => {
+            setClientNotes('');
+            setIsClosing(false);
+            onClose();
+        }, 300);
+    };
+
+    const handleBackdropClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+            handleClose();
+        }
     };
 
     const handleAccept = async () => {
         if (!alternative) return;
 
         try {
-            setProcessing(true);
+            setProcessingAction('accept');
             await updateAlternative(alternative.id, {
                 status: 'accepted',
                 client_response_notes: clientNotes.trim() || undefined,
@@ -69,7 +80,7 @@ export default function ReviewAlternativeModal({
                 description: error.message || 'No se pudo aceptar la alternativa'
             });
         } finally {
-            setProcessing(false);
+            setProcessingAction(null);
         }
     };
 
@@ -77,7 +88,7 @@ export default function ReviewAlternativeModal({
         if (!alternative) return;
 
         try {
-            setProcessing(true);
+            setProcessingAction('reject');
             await updateAlternative(alternative.id, {
                 status: 'rejected',
                 client_response_notes: clientNotes.trim() || undefined,
@@ -96,17 +107,26 @@ export default function ReviewAlternativeModal({
                 description: error.message || 'No se pudo rechazar la alternativa'
             });
         } finally {
-            setProcessing(false);
+            setProcessingAction(null);
         }
     };
 
-    if (!isOpen || !alternative) return null;
+    if (!isOpen && !isClosing) return null;
+    if (!alternative) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div
+            className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'animate-in fade-in'}`}
+            onClick={handleBackdropClick}
+        >
+            <div
+                className={`bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transition-all duration-300 ${isClosing
+                    ? 'translate-y-full scale-95 opacity-0'
+                    : 'animate-in slide-in-from-bottom-4 zoom-in-95'}`}
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
-                <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-t-2xl">
+                <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-t-2xl z-10">
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-2xl font-bold">Alternativa de Producto</h2>
@@ -208,17 +228,17 @@ export default function ReviewAlternativeModal({
                     <Button
                         variant="outline"
                         onClick={handleClose}
-                        disabled={processing}
+                        disabled={!!processingAction}
                         className="flex-1"
                     >
                         Cerrar
                     </Button>
                     <Button
                         onClick={handleReject}
-                        disabled={processing}
+                        disabled={!!processingAction}
                         className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                     >
-                        {processing ? (
+                        {processingAction === 'reject' ? (
                             <>
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                                 Procesando...
@@ -232,10 +252,10 @@ export default function ReviewAlternativeModal({
                     </Button>
                     <Button
                         onClick={handleAccept}
-                        disabled={processing}
+                        disabled={!!processingAction}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                     >
-                        {processing ? (
+                        {processingAction === 'accept' ? (
                             <>
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                                 Procesando...

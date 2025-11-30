@@ -15,6 +15,7 @@ interface ProposeAlternativeModalProps {
         id: number;
         producto: string;
         cliente: string;
+        alternativeRejectionReason?: string | null;
     } | null;
     onSuccess?: () => void;
 }
@@ -27,7 +28,7 @@ export default function ProposeAlternativeModal({
 }: ProposeAlternativeModalProps) {
     const [altProductName, setAltProductName] = useState('');
     const [altDescription, setAltDescription] = useState('');
-    const [altPrice, setAltPrice] = useState('');
+
     const [altImageFile, setAltImageFile] = useState<File | null>(null);
     const [creating, setCreating] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
@@ -38,7 +39,8 @@ export default function ProposeAlternativeModal({
         setTimeout(() => {
             setAltProductName('');
             setAltDescription('');
-            setAltPrice('');
+            setAltDescription('');
+            setAltImageFile(null);
             setAltImageFile(null);
             setIsClosing(false);
             onClose();
@@ -106,7 +108,6 @@ export default function ProposeAlternativeModal({
                     alternative_product_name: altProductName.trim(),
                     alternative_description: altDescription.trim() || null,
                     alternative_image_url: imageUrl || null,
-                    alternative_price: altPrice ? parseFloat(altPrice) : null,
                     proposed_by_china_id: user?.id || null,
                 }),
             });
@@ -165,6 +166,18 @@ export default function ProposeAlternativeModal({
 
                 {/* Content */}
                 <div className="p-6 space-y-6">
+                    {/* Alerta de Rechazo Previo */}
+                    {pedido?.alternativeRejectionReason && (
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 animate-in slide-in-from-top-2">
+                            <p className="text-sm font-bold text-red-800 dark:text-red-300 mb-1">
+                                Motivo del rechazo anterior:
+                            </p>
+                            <p className="text-sm text-red-700 dark:text-red-200 italic">
+                                "{pedido.alternativeRejectionReason}"
+                            </p>
+                        </div>
+                    )}
+
                     {/* Producto Original */}
                     <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
                         <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">Producto original solicitado:</p>
@@ -198,20 +211,7 @@ export default function ProposeAlternativeModal({
                         <p className="text-xs text-slate-500">Opcional: Ayuda al cliente a entender por qué esta es una buena alternativa</p>
                     </div>
 
-                    {/* Precio */}
-                    <div className="space-y-2">
-                        <Label className="text-sm font-semibold">Precio Estimado (USD)</Label>
-                        <Input
-                            type="number"
-                            value={altPrice}
-                            onChange={(e) => setAltPrice(e.target.value)}
-                            placeholder="0.00"
-                            step="0.01"
-                            min="0"
-                            className="h-12"
-                        />
-                        <p className="text-xs text-slate-500">Opcional: Precio estimado del producto alternativo</p>
-                    </div>
+
 
                     {/* Imagen */}
                     <div className="space-y-2">

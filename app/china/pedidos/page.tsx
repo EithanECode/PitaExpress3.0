@@ -85,6 +85,7 @@ interface Pedido {
   weight?: number | null;
   hasAlternative?: boolean;
   alternativeStatus?: 'pending' | 'accepted' | 'rejected' | null;
+  alternativeRejectionReason?: string | null;
 }
 
 interface BoxItem {
@@ -3280,6 +3281,7 @@ export default function PedidosChina() {
           id: modalPropAlternativa.pedido.id,
           producto: modalPropAlternativa.pedido.producto,
           cliente: modalPropAlternativa.pedido.cliente,
+          alternativeRejectionReason: modalPropAlternativa.pedido.alternativeRejectionReason,
         } : null}
         onSuccess={() => {
           setModalPropAlternativa({ open: false });
