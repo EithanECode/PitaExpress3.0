@@ -143,7 +143,7 @@ export default function PedidosChina() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 8;
   // Mapear state numérico a texto usado en China
   function mapStateToEstado(state: number): Pedido['estado'] {
     // Rango solicitado para la vista China:
@@ -348,11 +348,19 @@ export default function PedidosChina() {
   const [deletingBox, setDeletingBox] = useState(false);
   const [ordersByBox, setOrdersByBox] = useState<Pedido[]>([]);
   const [ordersByBoxLoading, setOrdersByBoxLoading] = useState(false);
+  // Paginación Cajas
+  const [currentBoxPage, setCurrentBoxPage] = useState(1);
+  const [totalBoxPages, setTotalBoxPages] = useState(1);
+  const [totalBoxes, setTotalBoxes] = useState(0);
 
   // Contenedores
   const [creatingContainer, setCreatingContainer] = useState(false);
   const [containers, setContainers] = useState<ContainerItem[]>([]);
   const [containersLoading, setContainersLoading] = useState(false);
+  // Paginación Contenedores
+  const [currentContainerPage, setCurrentContainerPage] = useState(1);
+  const [totalContainerPages, setTotalContainerPages] = useState(1);
+  const [totalContainers, setTotalContainers] = useState(0);
   const [deletingContainer, setDeletingContainer] = useState(false);
   const [boxesByContainer, setBoxesByContainer] = useState<BoxItem[]>([]);
   const [boxesByContainerLoading, setBoxesByContainerLoading] = useState(false);
@@ -807,25 +815,29 @@ export default function PedidosChina() {
   };
 
   // Cargar lista de cajas
-  async function fetchBoxes() {
+  async function fetchBoxes(page: number = 1) {
     setBoxesLoading(true);
+    setCurrentBoxPage(page);
     try {
+      const from = (page - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
       const supabase = getSupabaseBrowserClient();
-      const { data, error } = await supabase
+      const { data, count, error } = await supabase
         .from('boxes')
-        .select('*');
+        .select('*', { count: 'exact' })
+        .range(from, to)
+        .order('creation_date', { ascending: false });
+
       if (error) {
         console.error('Error al obtener cajas:', error);
         toast({ title: t('chinese.ordersPage.toasts.loadBoxesErrorTitle'), description: t('chinese.ordersPage.toasts.tryAgainLater') });
         return;
       }
+
+      setTotalBoxes(count || 0);
+      setTotalBoxPages(Math.ceil((count || 0) / ITEMS_PER_PAGE));
+
       const list = (data || []) as BoxItem[];
-      // Ordenar por fecha (creation_date o created_at) descendente
-      list.sort((a, b) => {
-        const da = new Date((a.creation_date ?? a.created_at ?? '') as string).getTime() || 0;
-        const db = new Date((b.creation_date ?? b.created_at ?? '') as string).getTime() || 0;
-        return db - da;
-      });
       setBoxes(list);
 
       // Calcular conteo de pedidos por caja para la lista principal
@@ -898,24 +910,29 @@ export default function PedidosChina() {
   };
 
   // Cargar lista de contenedores
-  async function fetchContainers() {
+  async function fetchContainers(page: number = 1) {
     setContainersLoading(true);
+    setCurrentContainerPage(page);
     try {
+      const from = (page - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
       const supabase = getSupabaseBrowserClient();
-      const { data, error } = await supabase
+      const { data, count, error } = await supabase
         .from('containers')
-        .select('*');
+        .select('*', { count: 'exact' })
+        .range(from, to)
+        .order('creation_date', { ascending: false });
+
       if (error) {
         console.error('Error al obtener contenedores:', error);
         toast({ title: t('chinese.ordersPage.toasts.loadContainersErrorTitle'), description: t('chinese.ordersPage.toasts.tryAgainLater') });
         return;
       }
+
+      setTotalContainers(count || 0);
+      setTotalContainerPages(Math.ceil((count || 0) / ITEMS_PER_PAGE));
+
       const list = (data || []) as ContainerItem[];
-      list.sort((a, b) => {
-        const da = new Date((a.creation_date ?? a.created_at ?? '') as string).getTime() || 0;
-        const db = new Date((b.creation_date ?? b.created_at ?? '') as string).getTime() || 0;
-        return db - da;
-      });
       setContainers(list);
     } finally {
       setContainersLoading(false);
@@ -1782,12 +1799,12 @@ export default function PedidosChina() {
                           <SelectValue placeholder="Estado" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="todos">{t('chinese.ordersPage.filters.all')}</SelectItem>
-                          <SelectItem value="pendiente">{t('chinese.ordersPage.filters.pending')}</SelectItem>
-                          <SelectItem value="cotizado">{t('chinese.ordersPage.filters.quoted')}</SelectItem>
-                          <SelectItem value="procesando">{t('chinese.ordersPage.filters.processing')}</SelectItem>
-                          <SelectItem value="enviado">{t('chinese.ordersPage.filters.shipped')}</SelectItem>
-                          <SelectItem value="cancelado">{t('chinese.ordersPage.filters.cancelled', { defaultValue: 'Cancelado' })}</SelectItem>
+                          <SelectItem value="todos">{t('chinese.ordersPage.filters.status.all')}</SelectItem>
+                          <SelectItem value="pendiente">{t('chinese.ordersPage.filters.status.pending')}</SelectItem>
+                          <SelectItem value="cotizado">{t('chinese.ordersPage.filters.status.quoted')}</SelectItem>
+                          <SelectItem value="procesando">{t('chinese.ordersPage.filters.status.processing')}</SelectItem>
+                          <SelectItem value="enviado">{t('chinese.ordersPage.filters.status.shipped')}</SelectItem>
+                          <SelectItem value="cancelado">{t('chinese.ordersPage.filters.status.cancelled', { defaultValue: 'Cancelado' })}</SelectItem>
                         </SelectContent>
                       </Select>
                     </>
@@ -1874,7 +1891,7 @@ export default function PedidosChina() {
                                 }
                                 // Default status
                                 if (pedido.numericState === 2) {
-                                  return <Badge className={`hidden sm:inline-block border ${mounted && theme === 'dark' ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700' : 'bg-yellow-100 text-yellow-800 border-yellow-200'}`}>{t('chinese.ordersPage.filters.pending')}</Badge>;
+                                  return <Badge className={`hidden sm:inline-block border ${mounted && theme === 'dark' ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700' : 'bg-yellow-100 text-yellow-800 border-yellow-200'}`}>{t('chinese.ordersPage.filters.status.pending')}</Badge>;
                                 }
                                 return <Badge className={`hidden sm:inline-block ${getOrderBadge(pedido.numericState).className}`}>{getOrderBadge(pedido.numericState).label}</Badge>;
                               })()}
@@ -2258,6 +2275,47 @@ export default function PedidosChina() {
                       })}
                     </div>
                   )}
+
+                  {/* Paginación Cajas */}
+                  {boxes.length > 0 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+                      <p className={`text-sm ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {t('chinese.ordersPage.pagination.showing', {
+                          start: (currentBoxPage - 1) * ITEMS_PER_PAGE + 1,
+                          end: Math.min(currentBoxPage * ITEMS_PER_PAGE, totalBoxes),
+                          total: totalBoxes,
+                          defaultValue: `Mostrando ${(currentBoxPage - 1) * ITEMS_PER_PAGE + 1} - ${Math.min(currentBoxPage * ITEMS_PER_PAGE, totalBoxes)} de ${totalBoxes} cajas`
+                        })}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fetchBoxes(currentBoxPage - 1)}
+                          disabled={currentBoxPage === 1 || boxesLoading}
+                          className={mounted && theme === 'dark' ? 'border-slate-700 hover:bg-slate-800' : ''}
+                        >
+                          {t('chinese.ordersPage.pagination.previous', { defaultValue: 'Anterior' })}
+                        </Button>
+                        <span className={`text-sm font-medium ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                          {t('chinese.ordersPage.pagination.pageInfo', {
+                            current: currentBoxPage,
+                            total: totalBoxPages,
+                            defaultValue: `Página ${currentBoxPage} de ${totalBoxPages}`
+                          })}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fetchBoxes(currentBoxPage + 1)}
+                          disabled={currentBoxPage >= totalBoxPages || boxesLoading}
+                          className={mounted && theme === 'dark' ? 'border-slate-700 hover:bg-slate-800' : ''}
+                        >
+                          {t('chinese.ordersPage.pagination.next', { defaultValue: 'Siguiente' })}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   {boxesLoading && (
                     <p className={`text-center text-sm mt-4 ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{t('chinese.ordersPage.boxes.loading')}</p>
                   )}
@@ -2369,6 +2427,47 @@ export default function PedidosChina() {
                           </div>
                         );
                       })}
+                    </div>
+                  )}
+
+                  {/* Paginación Contenedores */}
+                  {containers.length > 0 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+                      <p className={`text-sm ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {t('chinese.ordersPage.pagination.showing', {
+                          start: (currentContainerPage - 1) * ITEMS_PER_PAGE + 1,
+                          end: Math.min(currentContainerPage * ITEMS_PER_PAGE, totalContainers),
+                          total: totalContainers,
+                          defaultValue: `Mostrando ${(currentContainerPage - 1) * ITEMS_PER_PAGE + 1} - ${Math.min(currentContainerPage * ITEMS_PER_PAGE, totalContainers)} de ${totalContainers} contenedores`
+                        })}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fetchContainers(currentContainerPage - 1)}
+                          disabled={currentContainerPage === 1 || containersLoading}
+                          className={mounted && theme === 'dark' ? 'border-slate-700 hover:bg-slate-800' : ''}
+                        >
+                          {t('chinese.ordersPage.pagination.previous', { defaultValue: 'Anterior' })}
+                        </Button>
+                        <span className={`text-sm font-medium ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                          {t('chinese.ordersPage.pagination.pageInfo', {
+                            current: currentContainerPage,
+                            total: totalContainerPages,
+                            defaultValue: `Página ${currentContainerPage} de ${totalContainerPages}`
+                          })}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fetchContainers(currentContainerPage + 1)}
+                          disabled={currentContainerPage >= totalContainerPages || containersLoading}
+                          className={mounted && theme === 'dark' ? 'border-slate-700 hover:bg-slate-800' : ''}
+                        >
+                          {t('chinese.ordersPage.pagination.next', { defaultValue: 'Siguiente' })}
+                        </Button>
+                      </div>
                     </div>
                   )}
                   {containersLoading && (

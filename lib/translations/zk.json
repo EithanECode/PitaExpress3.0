@@ -2552,13 +2552,15 @@
         "searchClientPlaceholder": "按客户搜索...",
         "searchBoxPlaceholder": "按箱 (ID) 搜索...",
         "searchContainerPlaceholder": "按集装箱 (ID) 搜索...",
-        "status": "状态",
-        "all": "全部",
-        "pending": "待处理",
-        "quoted": "已报价",
-        "processing": "处理中",
-        "shipped": "已发货",
-        "cancelled": "已取消"
+        "status": {
+          "label": "状态",
+          "all": "全部",
+          "pending": "待处理",
+          "quoted": "已报价",
+          "processing": "处理中",
+          "shipped": "已发货",
+          "cancelled": "已取消"
+        }
       },
       "orders": {
         "listTitle": "订单列表",
