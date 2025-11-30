@@ -12,14 +12,14 @@ import Header from '@/components/layout/Header';
 import { useAdminOrders } from '@/hooks/use-admin-orders';
 import { useAdminOrdersList, type AdminOrderListItem } from '@/hooks/use-admin-orders-list';
 import { useClientsInfo } from '@/hooks/use-clients-info';
-import { 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  ChevronLeft, 
+import {
+  Search,
+  Filter,
+  MoreVertical,
+  Eye,
+  Edit,
+  Trash2,
+  ChevronLeft,
   ChevronRight,
   Plus,
   Download,
@@ -47,7 +47,8 @@ import {
   MessageSquare,
   ArrowLeft,
   ArrowRight,
-  Check
+  Check,
+  Send
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -64,6 +65,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import VenezuelaOrdersTabContent from '@/components/venezuela/VenezuelaOrdersTabContent';
 import ChinaOrdersTabContent from '@/components/china/ChinaOrdersTabContent';
+import ProposeAlternativeModal from '@/components/china/ProposeAlternativeModal';
 
 // jsPDF se importará dinámicamente para evitar errores de SSR
 // html2canvas se importará dinámicamente para evitar errores de SSR
@@ -97,6 +99,9 @@ interface Order {
   pdfUrl?: string | null;
   // Estado numérico (1..13) para progreso
   stateNum?: number;
+  hasAlternative?: boolean;
+  alternativeStatus?: 'pending' | 'accepted' | 'rejected' | null;
+  alternativeRejectionReason?: string | null;
 }
 
 interface NewOrderData {
@@ -325,12 +330,12 @@ const useOrdersFilter = (orders: Order[]) => {
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
-  const idStr = String(order.id || '');
-  const clientStr = String(order.client || '');
-  const descStr = String(order.description || '');
-  const matchesSearch = idStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            clientStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            descStr.toLowerCase().includes(searchTerm.toLowerCase());
+      const idStr = String(order.id || '');
+      const clientStr = String(order.client || '');
+      const descStr = String(order.description || '');
+      const matchesSearch = idStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        clientStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        descStr.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -374,7 +379,7 @@ const useOrdersFilter = (orders: Order[]) => {
     paginatedOrders,
     totalPages,
     startIndex,
-  visiblePages,
+    visiblePages,
     stats
   };
 };
@@ -440,8 +445,11 @@ export default function PedidosPage() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [stepDirection, setStepDirection] = useState<'next' | 'prev'>('next');
+
   const modalRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<string>('admin');
+  const [isProposeModalOpen, setIsProposeModalOpen] = useState(false);
+  const [selectedOrderForAlternative, setSelectedOrderForAlternative] = useState<Order | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -463,9 +471,12 @@ export default function PedidosPage() {
         daysElapsed,
         description: o.description || o.productName || '',
         priority: 'media',
-  createdAt: o.created_at || undefined,
+        createdAt: o.created_at || undefined,
         pdfUrl: o.pdfRoutes ?? null,
         stateNum: typeof o.state === 'number' ? o.state : (o.state ? Number(o.state) : undefined),
+        hasAlternative: o.hasAlternative,
+        alternativeStatus: o.alternativeStatus,
+        alternativeRejectionReason: o.alternativeRejectionReason,
       };
     });
     setOrders(mapped);
@@ -483,7 +494,7 @@ export default function PedidosPage() {
     paginatedOrders,
     totalPages,
     startIndex,
-  visiblePages,
+    visiblePages,
     stats
   } = useOrdersFilter(orders);
 
@@ -568,9 +579,9 @@ export default function PedidosPage() {
     switch (currentStep) {
       case 1:
         if (!newOrderData.client_id) return false;
-  if (!newOrderData.productName || !newOrderData.description) return false;
-  if (newOrderData.productName.length > NAME_MAX) return false;
-  if (newOrderData.description.length > DESCRIPTION_MAX) return false;
+        if (!newOrderData.productName || !newOrderData.description) return false;
+        if (newOrderData.productName.length > NAME_MAX) return false;
+        if (newOrderData.description.length > DESCRIPTION_MAX) return false;
         if (!isValidQuantity(newOrderData.quantity)) return false;
         if (newOrderData.requestType === 'link') {
           if (!newOrderData.productUrl || !isValidUrl(newOrderData.productUrl)) return false;
@@ -612,16 +623,16 @@ export default function PedidosPage() {
     const yyyy = fechaObj.getFullYear();
     const fechaPedidoLegible = `${dd}-${mm}-${yyyy}`;
     const numeroPedido = Date.now();
-  // Construir nombre de archivo seguro para Storage
-  const safeProduct = sanitizePathSegment(newOrderData.productName);
-  const safeClient = sanitizePathSegment(newOrderData.client_id);
-  const safeDeliveryVzla = sanitizePathSegment(newOrderData.deliveryVenezuela);
-  const safeBase = sanitizePathSegment(`${safeProduct}_${fechaPedidoLegible}_${numeroPedido}_${safeClient}_${safeDeliveryVzla}`);
-  const nombrePDF = `${safeBase}.pdf`;
+    // Construir nombre de archivo seguro para Storage
+    const safeProduct = sanitizePathSegment(newOrderData.productName);
+    const safeClient = sanitizePathSegment(newOrderData.client_id);
+    const safeDeliveryVzla = sanitizePathSegment(newOrderData.deliveryVenezuela);
+    const safeBase = sanitizePathSegment(`${safeProduct}_${fechaPedidoLegible}_${numeroPedido}_${safeClient}_${safeDeliveryVzla}`);
+    const nombrePDF = `${safeBase}.pdf`;
 
-  // Opcional: si luego se usa una carpeta (p. ej. deliveryType), sanitizarla también
-  // const safeFolder = sanitizePathSegment(newOrderData.deliveryType || 'misc');
-  // const storagePath = `${safeFolder}/${nombrePDF}`; // usar storagePath en el upload
+    // Opcional: si luego se usa una carpeta (p. ej. deliveryType), sanitizarla también
+    // const safeFolder = sanitizePathSegment(newOrderData.deliveryType || 'misc');
+    // const storagePath = `${safeFolder}/${nombrePDF}`; // usar storagePath en el upload
 
     (async () => {
       try {
@@ -662,10 +673,10 @@ export default function PedidosPage() {
         doc.rect(0, 0, pageWidth, 35, 'F');
         doc.setFontSize(24);
         doc.setTextColor(255, 255, 255);
-  doc.text(t('admin.orders.pdf.summaryTitle'), pageWidth / 2, 22, { align: 'center' });
+        doc.text(t('admin.orders.pdf.summaryTitle'), pageWidth / 2, 22, { align: 'center' });
         doc.setFontSize(10);
-  doc.text(`${t('admin.orders.pdf.order')}: #${numeroPedido}`, pageWidth - margin, 15, { align: 'right' });
-  doc.text(`${t('admin.orders.pdf.date')}: ${fechaPedidoLegible}`, pageWidth - margin, 21, { align: 'right' });
+        doc.text(`${t('admin.orders.pdf.order')}: #${numeroPedido}`, pageWidth - margin, 15, { align: 'right' });
+        doc.text(`${t('admin.orders.pdf.date')}: ${fechaPedidoLegible}`, pageWidth - margin, 21, { align: 'right' });
 
         let currentY = 50;
 
@@ -721,7 +732,7 @@ export default function PedidosPage() {
         doc.setTextColor(44, 62, 80);
         doc.text(`${t('admin.orders.pdf.generatedAt')}: ${new Date().toLocaleString()}`, 15, footerY + 13);
 
-        
+
         // Subir PDF a Supabase Storage
         const pdfBlob = doc.output('blob');
         let folder: string = String(newOrderData.deliveryType);
@@ -772,7 +783,7 @@ export default function PedidosPage() {
             const j = await apiRes.json();
             if (j?.error) errMsg += ` - ${j.error}`;
             if (j?.details) errMsg += ` | ${Array.isArray(j.details) ? j.details.join(', ') : j.details}`;
-          } catch {}
+          } catch { }
           console.error('Error creando pedido vía API:', errMsg, payload);
           alert(t('admin.orders.messages.createError') + `\n${errMsg}`);
           return;
@@ -798,7 +809,7 @@ export default function PedidosPage() {
         }, 1200);
         refetchOrders();
         refetchStats();
-      } catch (e:any) {
+      } catch (e: any) {
         console.error('Excepción creando pedido:', e);
         alert(t('admin.orders.messages.createError'));
       }
@@ -811,8 +822,8 @@ export default function PedidosPage() {
     pdfContent.style.width = '210mm';
     pdfContent.style.padding = '10mm';
 
-  const title = document.createElement('h1');
-  title.innerText = t('admin.orders.export.reportTitle');
+    const title = document.createElement('h1');
+    title.innerText = t('admin.orders.export.reportTitle');
     title.style.fontSize = '24px';
     title.style.marginBottom = '20px';
     pdfContent.appendChild(title);
@@ -820,7 +831,7 @@ export default function PedidosPage() {
     const table = document.createElement('table');
     table.style.width = '100%';
     table.style.borderCollapse = 'collapse';
-    
+
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     const headers = [
@@ -854,9 +865,9 @@ export default function PedidosPage() {
         order.id,
         order.client,
         order.description,
-  t(`admin.orders.status.${order.status}`),
-  t(`admin.orders.assigned.${order.assignedTo}`),
-  t('admin.orders.table.daysElapsed', { count: order.daysElapsed })
+        t(`admin.orders.status.${order.status}`),
+        t(`admin.orders.assigned.${order.assignedTo}`),
+        t('admin.orders.table.daysElapsed', { count: order.daysElapsed })
       ];
 
       rowData.forEach(text => {
@@ -874,30 +885,30 @@ export default function PedidosPage() {
 
     document.body.appendChild(pdfContent);
 
-            const html2canvas = (await import('html2canvas')).default;
-        const canvas = await html2canvas(pdfContent, { scale: 2 });
-    
+    const html2canvas = (await import('html2canvas')).default;
+    const canvas = await html2canvas(pdfContent, { scale: 2 });
+
     document.body.removeChild(pdfContent);
 
     const imgData = canvas.toDataURL('image/png');
-            const { jsPDF } = await import('jspdf');
-        const pdf = new jsPDF('p', 'mm', 'a4');
+    const { jsPDF } = await import('jspdf');
+    const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    
+
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
     const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-    
+
     const finalWidth = imgWidth * ratio;
     const finalHeight = imgHeight * ratio;
-    
+
     const x = (pdfWidth - finalWidth) / 2;
     const y = 10;
-    
+
     pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
-    
-  pdf.save(t('admin.orders.export.fileName'));
+
+    pdf.save(t('admin.orders.export.fileName'));
   }, [filteredOrders]);
 
   // Funciones para manejo de modales y datos
@@ -910,13 +921,13 @@ export default function PedidosPage() {
   const handleUpdateOrder = async () => {
     if (!editFormData) return;
     try {
-  // Mapear estado UI -> state numérico usando mapping central
-  const mappedState = UI_STATE_TO_NUMERIC[editFormData.status];
+      // Mapear estado UI -> state numérico usando mapping central
+      const mappedState = UI_STATE_TO_NUMERIC[editFormData.status];
       const body: any = {
         description: editFormData.description,
       };
-  // Solo enviar state si está en el rango 1..13 (incluyendo fallback cancelado si aplica)
-  if (typeof mappedState === 'number' && mappedState >= 1 && mappedState <= 13) {
+      // Solo enviar state si está en el rango 1..13 (incluyendo fallback cancelado si aplica)
+      if (typeof mappedState === 'number' && mappedState >= 1 && mappedState <= 13) {
         body.state = mappedState;
       }
 
@@ -930,7 +941,7 @@ export default function PedidosPage() {
         try {
           const json = await res.json();
           if (json?.error) message += ` - ${json.error}`;
-        } catch {}
+        } catch { }
         throw new Error(`${t('admin.orders.messages.updateError')}: ${message}`);
       }
 
@@ -949,7 +960,7 @@ export default function PedidosPage() {
 
   const handleDeleteOrder = async () => {
     if (!selectedOrder) return;
-  const confirm = window.confirm(t('admin.orders.messages.deleteConfirm', { id: selectedOrder.id }));
+    const confirm = window.confirm(t('admin.orders.messages.deleteConfirm', { id: selectedOrder.id }));
     if (!confirm) return;
 
     try {
@@ -1086,7 +1097,7 @@ export default function PedidosPage() {
         return `${dd}/${mm}/${yyyy}`;
       };
       return (
-        <tr 
+        <tr
           key={order.id}
           className={`border-b border-slate-100 hover:bg-blue-100 dark:hover:bg-blue-800/40 transition-all duration-200 group text-slate-900 dark:text-white`}
         >
@@ -1109,6 +1120,21 @@ export default function PedidosPage() {
               <StatusIcon className="w-3 h-3 mr-1" />
               {t(`admin.orders.status.${order.status}`)}
             </Badge>
+            {order.alternativeStatus === 'pending' && (
+              <Badge className="ml-2 bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
+                {t('chinese.ordersPage.badges.alternativeSent', { defaultValue: 'Alt. Enviada' })}
+              </Badge>
+            )}
+            {order.alternativeStatus === 'accepted' && (
+              <Badge className="ml-2 bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700">
+                {t('chinese.ordersPage.badges.alternativeAccepted', { defaultValue: 'Alt. Aceptada' })}
+              </Badge>
+            )}
+            {order.alternativeStatus === 'rejected' && (
+              <Badge className="ml-2 bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700">
+                {t('chinese.ordersPage.badges.alternativeRejected', { defaultValue: 'Alt. Rechazada' })}
+              </Badge>
+            )}
           </td>
           <td className="py-4 px-6">
             <Badge className={`${assigned.color} border text-slate-900 dark:text-white`}>
@@ -1129,8 +1155,8 @@ export default function PedidosPage() {
           </td>
           <td className="py-4 px-6">
             <div className="flex items-center space-x-2">
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 variant="outline"
                 className="bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
                 onClick={() => setSelectedOrder(order)}
@@ -1164,16 +1190,16 @@ export default function PedidosPage() {
       case 7: return 62; // listo envío
       case 8: return 72; // enviado
       case 9: return 80; // en tránsito
-      case 10:return 86; // aduana
-      case 11:return 92; // almacén vzla
-      case 12:return 98; // listo entrega
-      case 13:return 100; // entregado
+      case 10: return 86; // aduana
+      case 11: return 92; // almacén vzla
+      case 12: return 98; // listo entrega
+      case 13: return 100; // entregado
       default: return 0;
     }
   };
 
   // Paso actual (etiquetas similares a Cliente > Mis pedidos)
-  const STEP_KEYS = ['created','processing','shipped','in-transit','customs','delivered'] as const;
+  const STEP_KEYS = ['created', 'processing', 'shipped', 'in-transit', 'customs', 'delivered'] as const;
   type StepKey = typeof STEP_KEYS[number];
   const adminStateToStepKey = (state?: number | null): StepKey => {
     const s = typeof state === 'number' ? state : 0;
@@ -1203,17 +1229,17 @@ export default function PedidosPage() {
       }
     >
       {/* Sidebar */}
-      <Sidebar 
-        isExpanded={sidebarExpanded} 
+      <Sidebar
+        isExpanded={sidebarExpanded}
         setIsExpanded={setSidebarExpanded}
         isMobileMenuOpen={isMobileMenuOpen}
         onMobileMenuClose={() => setIsMobileMenuOpen(false)}
-        userRole="admin" 
+        userRole="admin"
       />
 
       {/* Main Content */}
       <main className={`flex-1 transition-all duration-300 min-w-0 ${sidebarExpanded ? 'lg:ml-72 lg:w-[calc(100%-18rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}>
-        <Header 
+        <Header
           notifications={3}
           onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           title={t('admin.orders.title')}
@@ -1249,194 +1275,194 @@ export default function PedidosPage() {
               {statsCards}
               {/* Table Card existente */}
               <Card className={mounted && theme === 'dark' ? 'shadow-lg border-0 bg-slate-800/80 backdrop-blur-sm' : 'shadow-lg border-0 bg-white/70 backdrop-blur-sm'}>
-            <CardHeader>
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <CardHeader>
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
                       <CardTitle className={`text-lg md:text-xl font-bold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t('admin.orders.listTitle')}</CardTitle>
                       <CardDescription className={`text-sm md:text-base ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-{t('admin.orders.listDescription', { count: totalPedidos })}
+                        {t('admin.orders.listDescription', { count: totalPedidos })}
                       </CardDescription>
                     </div>
-            <div className="w-full lg:w-auto flex items-center justify-end gap-2 md:gap-3 flex-wrap">
-                        <Input
-                          placeholder={t('admin.orders.search')}
-                          value={searchTerm}
-                          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              className={`${mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-400' : 'bg-white/50 border-slate-200'} h-10 w-full sm:w-64 px-3`}
-                        />
-                        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
-              <SelectTrigger className={`h-10 w-full sm:w-56 px-3 whitespace-nowrap truncate ${mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white/50 border-slate-200'}`}>
-                            <SelectValue placeholder={t('admin.orders.filters.status')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">{t('admin.orders.filters.allStates')}</SelectItem>
-                            <SelectItem value="pendiente-china">{t('admin.orders.status.pendiente-china')}</SelectItem>
-                            <SelectItem value="pendiente-vzla">{t('admin.orders.status.pendiente-vzla')}</SelectItem>
-                            <SelectItem value="esperando-pago">{t('admin.orders.status.esperando-pago')}</SelectItem>
-                            <SelectItem value="en-transito">{t('admin.orders.status.en-transito')}</SelectItem>
-                            <SelectItem value="entregado">{t('admin.orders.status.entregado')}</SelectItem>
-                            <SelectItem value="cancelado">{t('admin.orders.status.cancelado')}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div className="w-full lg:w-auto flex items-center justify-end gap-2 md:gap-3 flex-wrap">
+                      <Input
+                        placeholder={t('admin.orders.search')}
+                        value={searchTerm}
+                        onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                        className={`${mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-400' : 'bg-white/50 border-slate-200'} h-10 w-full sm:w-64 px-3`}
+                      />
+                      <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
+                        <SelectTrigger className={`h-10 w-full sm:w-56 px-3 whitespace-nowrap truncate ${mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white/50 border-slate-200'}`}>
+                          <SelectValue placeholder={t('admin.orders.filters.status')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">{t('admin.orders.filters.allStates')}</SelectItem>
+                          <SelectItem value="pendiente-china">{t('admin.orders.status.pendiente-china')}</SelectItem>
+                          <SelectItem value="pendiente-vzla">{t('admin.orders.status.pendiente-vzla')}</SelectItem>
+                          <SelectItem value="esperando-pago">{t('admin.orders.status.esperando-pago')}</SelectItem>
+                          <SelectItem value="en-transito">{t('admin.orders.status.en-transito')}</SelectItem>
+                          <SelectItem value="entregado">{t('admin.orders.status.entregado')}</SelectItem>
+                          <SelectItem value="cancelado">{t('admin.orders.status.cancelado')}</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  
-            </CardHeader>
-            <CardContent>
-              {/* Vista Desktop - Tabla */}
-              <div className="hidden lg:block overflow-x-auto">
-                <table className={mounted && theme === 'dark' ? 'w-full bg-slate-800' : 'w-full'}>
-                  <colgroup>
-                    <col className="w-44" />
-                    <col className="w-[22rem]" />
-                    <col className="w-40" />
-                    <col className="w-40" />
-                    <col className="w-28" />
-                    <col className="w-28" />
-                    <col className="w-28" />
-                  </colgroup>
-                  <thead>
-                    <tr className={mounted && theme === 'dark' ? 'border-b border-slate-700' : 'border-b border-slate-200'}>
-                      <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.id')}</th>
-                      <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.client')}</th>
-                      <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.status')}</th>
-                      <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.assignedTo')}</th>
-                      <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.date')}</th>
-                      <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.time')}</th>
-                      <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableRows}
-                  </tbody>
-                </table>
-              </div>
+                  </div>
 
-              {/* Vista Mobile/Tablet - Cards */}
-              <div className="lg:hidden space-y-3 md:space-y-4">
-                {paginatedOrders.map((order) => {
-                  const status = statusConfig[order.status];
-                  const assigned = assignedConfig[order.assignedTo];
-                  const StatusIcon = status.icon;
-                  const formatOrderId = (raw: string) => {
-                    const base = String(raw ?? '');
-                    const tail = base.replace(/[^0-9]/g, '').slice(-3) || base.slice(-3);
-                    const code = (tail || '001').toString().padStart(3, '0');
-                    return `#PED-${code}`;
-                  };
-                  const formatDate = (iso?: string) => {
-                    if (!iso) return '—';
-                    const d = new Date(iso);
-                    if (isNaN(d.getTime())) return '—';
-                    const dd = String(d.getDate()).padStart(2, '0');
-                    const mm = String(d.getMonth() + 1).padStart(2, '0');
-                    const yyyy = d.getFullYear();
-                    return `${dd}/${mm}/${yyyy}`;
-                  };
-                  
-                  return (
-                                         <div
-                       key={order.id}
-                       className={`bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200 p-4 md:p-5 hover:shadow-lg transition-all duration-300 group cursor-pointer ${mounted && theme === 'dark' ? 'bg-slate-800/80 border-slate-700' : ''}`}
-                       onClick={() => setSelectedOrder(order)}
-                     >
-                       <div className="flex flex-col gap-3 md:gap-4">
-                         <div className="flex items-center gap-3 md:gap-4">
-                           <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                             <Package className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                           </div>
-                           <div className="min-w-0 flex-1">
-                            <div className="font-semibold text-slate-900 group-hover:text-blue-900 transition-colors text-sm md:text-base dark:text-white">{formatOrderId(order.id)}</div>
-                            <div className="mt-1 flex items-center gap-1 text-[11px] md:text-xs text-slate-500 dark:text-slate-400">
-                              <Calendar className="w-3 h-3" />
-                              <span>{formatDate(order.createdAt)}</span>
+                </CardHeader>
+                <CardContent>
+                  {/* Vista Desktop - Tabla */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table className={mounted && theme === 'dark' ? 'w-full bg-slate-800' : 'w-full'}>
+                      <colgroup>
+                        <col className="w-44" />
+                        <col className="w-[22rem]" />
+                        <col className="w-40" />
+                        <col className="w-40" />
+                        <col className="w-28" />
+                        <col className="w-28" />
+                        <col className="w-28" />
+                      </colgroup>
+                      <thead>
+                        <tr className={mounted && theme === 'dark' ? 'border-b border-slate-700' : 'border-b border-slate-200'}>
+                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.id')}</th>
+                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.client')}</th>
+                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.status')}</th>
+                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.assignedTo')}</th>
+                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.date')}</th>
+                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.time')}</th>
+                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tableRows}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Vista Mobile/Tablet - Cards */}
+                  <div className="lg:hidden space-y-3 md:space-y-4">
+                    {paginatedOrders.map((order) => {
+                      const status = statusConfig[order.status];
+                      const assigned = assignedConfig[order.assignedTo];
+                      const StatusIcon = status.icon;
+                      const formatOrderId = (raw: string) => {
+                        const base = String(raw ?? '');
+                        const tail = base.replace(/[^0-9]/g, '').slice(-3) || base.slice(-3);
+                        const code = (tail || '001').toString().padStart(3, '0');
+                        return `#PED-${code}`;
+                      };
+                      const formatDate = (iso?: string) => {
+                        if (!iso) return '—';
+                        const d = new Date(iso);
+                        if (isNaN(d.getTime())) return '—';
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                        const yyyy = d.getFullYear();
+                        return `${dd}/${mm}/${yyyy}`;
+                      };
+
+                      return (
+                        <div
+                          key={order.id}
+                          className={`bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200 p-4 md:p-5 hover:shadow-lg transition-all duration-300 group cursor-pointer ${mounted && theme === 'dark' ? 'bg-slate-800/80 border-slate-700' : ''}`}
+                          onClick={() => setSelectedOrder(order)}
+                        >
+                          <div className="flex flex-col gap-3 md:gap-4">
+                            <div className="flex items-center gap-3 md:gap-4">
+                              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Package className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="font-semibold text-slate-900 group-hover:text-blue-900 transition-colors text-sm md:text-base dark:text-white">{formatOrderId(order.id)}</div>
+                                <div className="mt-1 flex items-center gap-1 text-[11px] md:text-xs text-slate-500 dark:text-slate-400">
+                                  <Calendar className="w-3 h-3" />
+                                  <span>{formatDate(order.createdAt)}</span>
+                                </div>
+                                <div className="text-xs md:text-sm text-slate-600 dark:text-slate-300 mt-1">{order.client}</div>
+                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{order.description}</div>
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
+                                <Clock className="w-3 h-3" />
+                                <span>{t('admin.orders.time.days', { count: order.daysElapsed })}</span>
+                              </div>
                             </div>
-                             <div className="text-xs md:text-sm text-slate-600 dark:text-slate-300 mt-1">{order.client}</div>
-                             <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{order.description}</div>
-                           </div>
-                           <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
-                             <Clock className="w-3 h-3" />
-                             <span>{t('admin.orders.time.days', { count: order.daysElapsed })}</span>
-                           </div>
-                         </div>
-                         <div className="flex items-center gap-2 flex-wrap">
-                           <Badge className={`${status.color} border text-xs`}>
-                             <StatusIcon className="w-3 h-3 mr-1" />
-                             {t(`admin.orders.status.${order.status}`)}
-                           </Badge>
-                           <Badge className={`${assigned.color} border text-xs`}>
-                            {t(`admin.orders.assigned.${order.assignedTo}`)}
-                           </Badge>
-                         </div>
-                       </div>
-                     </div>
-                  );
-                })}
-              </div>
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t ${mounted && theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
-                  <div className={`text-xs md:text-sm ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                    {t('admin.orders.pagination.results', {
-                      from: filteredOrders.length === 0 ? 0 : startIndex + 1,
-                      to: startIndex + paginatedOrders.length,
-                      total: filteredOrders.length
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge className={`${status.color} border text-xs`}>
+                                <StatusIcon className="w-3 h-3 mr-1" />
+                                {t(`admin.orders.status.${order.status}`)}
+                              </Badge>
+                              <Badge className={`${assigned.color} border text-xs`}>
+                                {t(`admin.orders.assigned.${order.assignedTo}`)}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      );
                     })}
                   </div>
-                  <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end w-full sm:w-auto">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                      className={mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
-                    >
-                      <ChevronLeft className="w-4 h-4 mr-1" />
-                      {t('admin.orders.pagination.previous')}
-                    </Button>
-                    {/* Compact indicator on mobile */}
-                    <div className={`flex items-center gap-2 sm:hidden ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                      <span className="text-xs">{currentPage} / {totalPages}</span>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t ${mounted && theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
+                      <div className={`text-xs md:text-sm ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                        {t('admin.orders.pagination.results', {
+                          from: filteredOrders.length === 0 ? 0 : startIndex + 1,
+                          to: startIndex + paginatedOrders.length,
+                          total: filteredOrders.length
+                        })}
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end w-full sm:w-auto">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                          disabled={currentPage === 1}
+                          className={mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
+                        >
+                          <ChevronLeft className="w-4 h-4 mr-1" />
+                          {t('admin.orders.pagination.previous')}
+                        </Button>
+                        {/* Compact indicator on mobile */}
+                        <div className={`flex items-center gap-2 sm:hidden ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                          <span className="text-xs">{currentPage} / {totalPages}</span>
+                        </div>
+                        {/* Full pagination with ellipses on sm+ */}
+                        <div className="hidden sm:flex items-center space-x-1">
+                          {visiblePages.map((p, idx) => {
+                            if (p === 'ellipsis-left' || p === 'ellipsis-right') {
+                              return (
+                                <span key={`${p}-${idx}`} className={`${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'} px-2`}>…</span>
+                              );
+                            }
+                            const page = p as number;
+                            return (
+                              <Button
+                                key={page}
+                                variant={currentPage === page ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => setCurrentPage(page)}
+                                className={currentPage === page
+                                  ? 'bg-blue-600 text-white'
+                                  : mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
+                              >
+                                {page}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                          disabled={currentPage === totalPages}
+                          className={mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
+                        >
+                          {t('admin.orders.pagination.next')}
+                          <ChevronRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </div>
                     </div>
-                    {/* Full pagination with ellipses on sm+ */}
-                    <div className="hidden sm:flex items-center space-x-1">
-                      {visiblePages.map((p, idx) => {
-                        if (p === 'ellipsis-left' || p === 'ellipsis-right') {
-                          return (
-                            <span key={`${p}-${idx}`} className={`${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'} px-2`}>…</span>
-                          );
-                        }
-                        const page = p as number;
-                        return (
-                          <Button
-                            key={page}
-                            variant={currentPage === page ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setCurrentPage(page)}
-                            className={currentPage === page
-                              ? 'bg-blue-600 text-white'
-                              : mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
-                          >
-                            {page}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                      className={mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
-                    >
-                      {t('admin.orders.pagination.next')}
-                      <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent
@@ -1463,11 +1489,11 @@ export default function PedidosPage() {
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur-xl opacity-20"></div>
               <DialogTitle className="relative text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-{t('admin.orders.actions.create')}
+                {t('admin.orders.actions.create')}
               </DialogTitle>
             </div>
             <DialogDescription className="text-lg text-slate-600 mt-2">
-{t('admin.orders.form.description')}
+              {t('admin.orders.form.description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -1522,9 +1548,9 @@ export default function PedidosPage() {
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold text-slate-700 flex items-center">
                     <Package className="w-4 h-4 mr-2 text-blue-600" />
-{t('admin.orders.form.productNameLabel')}
+                    {t('admin.orders.form.productNameLabel')}
                   </Label>
-                  <Input 
+                  <Input
                     value={newOrderData.productName}
                     onChange={(e) => setNewOrderData({ ...newOrderData, productName: e.target.value.slice(0, NAME_MAX) })}
                     placeholder={t('admin.orders.form.productNamePlaceholder')}
@@ -1536,9 +1562,9 @@ export default function PedidosPage() {
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold text-slate-700 flex items-center">
                     <FileText className="w-4 h-4 mr-2 text-blue-600" />
-{t('admin.orders.form.productDescription')}
+                    {t('admin.orders.form.productDescription')}
                   </Label>
-                  <Textarea 
+                  <Textarea
                     value={newOrderData.description}
                     onChange={(e) => setNewOrderData({ ...newOrderData, description: e.target.value.slice(0, DESCRIPTION_MAX) })}
                     rows={4}
@@ -1551,11 +1577,11 @@ export default function PedidosPage() {
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold text-slate-700 flex items-center">
                     <Hash className="w-4 h-4 mr-2 text-blue-600" />
-{t('admin.orders.form.quantity')}
+                    {t('admin.orders.form.quantity')}
                   </Label>
-                  <Input 
-                    type="number" 
-                    min={QTY_MIN} 
+                  <Input
+                    type="number"
+                    min={QTY_MIN}
                     max={QTY_MAX}
                     value={newOrderData.quantity === 0 ? '' : newOrderData.quantity}
                     onChange={(e) => {
@@ -1713,7 +1739,7 @@ export default function PedidosPage() {
                       <p className="font-medium">{newOrderData.client_name} ({newOrderData.client_id})</p>
                     </div>
                     <div>
-                                           <p className="text-sm text-slate-600">{t('admin.orders.summary.product')}</p>
+                      <p className="text-sm text-slate-600">{t('admin.orders.summary.product')}</p>
                       <p className="font-medium">{newOrderData.productName}</p>
                     </div>
                     <div>
@@ -1727,7 +1753,7 @@ export default function PedidosPage() {
                         {newOrderData.deliveryType === 'air' && t('admin.orders.deliveryTypes.air')}
                         {newOrderData.deliveryType === 'maritime' && t('admin.orders.deliveryTypes.maritime')}
                       </p>
-                                       </div>
+                    </div>
                     <div>
                       <p className="text-sm text-slate-600">{t('admin.orders.summary.estimatedBudget')}</p>
                       <p className="font-medium">${newOrderData.estimatedBudget}</p>
@@ -1889,14 +1915,14 @@ export default function PedidosPage() {
               {/* Sección derecha - Historial y Acciones */}
               <div className={mounted && theme === 'dark' ? 'md:w-1/3 p-4 md:p-6 lg:p-8 bg-slate-800 flex flex-col' : 'md:w-1/3 p-4 md:p-6 lg:p-8 bg-gray-50 flex flex-col'}>
                 <div className="flex flex-col space-y-2">
-                  <Button 
+                  <Button
                     className={mounted && theme === 'dark' ? 'w-full bg-blue-600 text-white hover:bg-blue-700' : 'w-full bg-blue-600 text-white hover:bg-blue-700'}
                     onClick={() => handleOpenEditModal(selectedOrder)}
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     {t('admin.orders.modal.buttons.update')}
                   </Button>
-                  <Button 
+                  <Button
                     className={mounted && theme === 'dark' ? 'w-full bg-red-600 text-white hover:bg-red-700' : 'w-full bg-red-600 text-white hover:bg-red-700'}
                     onClick={handleDeleteOrder}
                   >
@@ -1924,6 +1950,19 @@ export default function PedidosPage() {
                     <Truck className="w-4 h-4 mr-2" />
                     {t('tracking')}
                   </Button>
+                  {selectedOrder.status === 'pendiente-china' && selectedOrder.alternativeStatus !== 'accepted' && selectedOrder.alternativeStatus !== 'pending' && (
+                    <Button
+                      className={mounted && theme === 'dark' ? 'w-full bg-indigo-600 text-white hover:bg-indigo-700' : 'w-full bg-indigo-600 text-white hover:bg-indigo-700'}
+                      onClick={() => {
+                        setSelectedOrderForAlternative(selectedOrder);
+                        setIsProposeModalOpen(true);
+                        setSelectedOrder(null);
+                      }}
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      {t('chinese.ordersPage.orders.proposeAlternative', { defaultValue: 'Proponer Alternativa' })}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -1998,7 +2037,7 @@ export default function PedidosPage() {
           </DialogContent>
         )}
       </Dialog>
-      
+
       {/* Modal para Actualizar Pedido */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         {editFormData && (
@@ -2012,8 +2051,8 @@ export default function PedidosPage() {
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="client" className={mounted && theme === 'dark' ? 'text-right text-slate-200' : 'text-right'}>{t('admin.orders.editModal.client')}</Label>
-                <Input 
-                  id="client" 
+                <Input
+                  id="client"
                   value={editFormData.client}
                   maxLength={NAME_MAX}
                   onChange={(e) => setEditFormData({ ...editFormData, client: e.target.value.slice(0, NAME_MAX) })}
@@ -2022,8 +2061,8 @@ export default function PedidosPage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="description" className={mounted && theme === 'dark' ? 'text-right text-slate-200' : 'text-right'}>{t('admin.orders.editModal.descriptionLabel')}</Label>
-                <Input 
-                  id="description" 
+                <Input
+                  id="description"
                   value={editFormData.description}
                   onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
                   className={`col-span-3 ${mounted && theme === 'dark' ? 'bg-slate-800 border-slate-600 text-slate-100' : ''}`}
@@ -2031,7 +2070,7 @@ export default function PedidosPage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="status" className={mounted && theme === 'dark' ? 'text-right text-slate-200' : 'text-right'}>{t('admin.orders.editModal.status')}</Label>
-                <Select 
+                <Select
                   value={editFormData.status}
                   onValueChange={(value) => setEditFormData({ ...editFormData, status: value as Order['status'] })}
                 >
@@ -2047,7 +2086,7 @@ export default function PedidosPage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="assignedTo" className={mounted && theme === 'dark' ? 'text-right text-slate-200' : 'text-right'}>{t('admin.orders.editModal.assignedTo')}</Label>
-                <Select 
+                <Select
                   value={editFormData.assignedTo}
                   onValueChange={(value) => setEditFormData({ ...editFormData, assignedTo: value as Order['assignedTo'] })}
                 >
@@ -2104,6 +2143,27 @@ export default function PedidosPage() {
           </DialogContent>
         )}
       </Dialog>
+
+      {/* Modal Proponer Alternativa */}
+      <ProposeAlternativeModal
+        isOpen={isProposeModalOpen}
+        onClose={() => {
+          setIsProposeModalOpen(false);
+          setSelectedOrderForAlternative(null);
+        }}
+        pedido={selectedOrderForAlternative ? {
+          id: Number(selectedOrderForAlternative.id),
+          producto: selectedOrderForAlternative.description, // Using description as product name since Order interface merges them
+          cliente: selectedOrderForAlternative.client,
+          alternativeRejectionReason: selectedOrderForAlternative.alternativeRejectionReason
+        } : null}
+        onSuccess={() => {
+          setIsProposeModalOpen(false);
+          setSelectedOrderForAlternative(null);
+          // Refetch orders if possible, or wait for realtime update
+          // useAdminOrdersList handles realtime updates automatically
+        }}
+      />
     </div>
   );
 }

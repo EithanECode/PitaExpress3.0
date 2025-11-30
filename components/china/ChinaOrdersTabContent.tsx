@@ -51,6 +51,9 @@ interface Pedido {
   shippingType?: string;
   totalQuote?: number | null;
   numericState?: number;
+  hasAlternative?: boolean;
+  alternativeStatus?: 'pending' | 'accepted' | 'rejected' | null;
+  alternativeRejectionReason?: string | null;
 }
 interface BoxItem { boxes_id?: number | string; id?: number | string; box_id?: number | string; container_id?: number | string | null; state?: number; creation_date?: string; created_at?: string; name?: string }
 interface ContainerItem { containers_id?: number | string; id?: number | string; container_id?: number | string; state?: number; creation_date?: string; created_at?: string; name?: string }
@@ -430,6 +433,9 @@ export default function ChinaOrdersTabContent() {
           shippingType: order.shippingType || '',
           totalQuote: order.totalQuote ?? null,
           numericState: typeof order.state === 'number' ? order.state : undefined,
+          hasAlternative: order.hasAlternative,
+          alternativeStatus: order.alternativeStatus,
+          alternativeRejectionReason: order.alternativeRejectionReason,
         }));
       setPedidos(mappedPedidos);
     } finally { setLoadingPedidos(false); }
@@ -1094,11 +1100,42 @@ export default function ChinaOrdersTabContent() {
                               )}
                               <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => { if (p.pdfRoutes) { const bust = p.pdfRoutes.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`; window.open(p.pdfRoutes + bust, '_blank', 'noopener,noreferrer'); } else toast({ title: t('admin.orders.china.orders.pdfMissingToastTitle') }); }}><Eye className="h-4 w-4" /></Button>
                               {(() => {
-                                console.log('[DEBUG] Pedido:', p.id, 'estado:', p.estado, 'numericState:', p.numericState);
+                                // Logic to show badges for alternatives
+                                if (p.alternativeStatus === 'pending') {
+                                  return (
+                                    <Badge className="bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700 mb-2">
+                                      {t('chinese.ordersPage.badges.alternativeSent', { defaultValue: 'Alternativa enviada' })}
+                                    </Badge>
+                                  );
+                                }
+                                if (p.alternativeStatus === 'accepted') {
+                                  return (
+                                    <Badge className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700 mb-2">
+                                      {t('chinese.ordersPage.badges.alternativeAccepted', { defaultValue: 'Alternativa aceptada' })}
+                                    </Badge>
+                                  );
+                                }
+                                if (p.alternativeStatus === 'rejected') {
+                                  return (
+                                    <Badge className="bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700 mb-2">
+                                      {t('chinese.ordersPage.badges.alternativeRejected', { defaultValue: 'Alternativa rechazada' })}
+                                    </Badge>
+                                  );
+                                }
+                                return null;
+                              })()}
+                              {(() => {
+                                // console.log('[DEBUG] Pedido:', p.id, 'estado:', p.estado, 'numericState:', p.numericState);
+
+                                // If alternative is pending, hide action buttons
+                                if (p.alternativeStatus === 'pending') return null;
+
                                 return p.estado === 'pendiente' ? (
                                   <>
                                     <Button size="sm" className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700" onClick={() => setModalCotizar({ open: true, pedido: p, precioUnitario: p.precio || 0, precioEnvio: 0, altura: 0, anchura: 0, largo: 0, peso: 0 })}><Calculator className="h-4 w-4" /></Button>
-                                    <Button size="sm" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700" onClick={() => setModalPropAlternativa({ open: true, pedido: p })} title="Proponer alternativa"><Send className="h-4 w-4" /></Button>
+                                    {p.alternativeStatus !== 'accepted' && (
+                                      <Button size="sm" className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700" onClick={() => setModalPropAlternativa({ open: true, pedido: p })} title="Proponer alternativa"><Send className="h-4 w-4" /></Button>
+                                    )}
                                   </>
                                 ) : (
                                   <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setModalCotizar({ open: true, pedido: p, precioUnitario: p.precio || 0, precioEnvio: 0, altura: 0, anchura: 0, largo: 0, peso: 0 })}><Pencil className="h-4 w-4" /></Button>

@@ -23,20 +23,52 @@ export async function GET() {
 
     const clientMap = new Map((clients ?? []).map((c: any) => [c.user_id, c.name]));
 
-    const result = (orders ?? []).map((o: any) => ({
-      id: o.id,
-      state: o.state,
-      productName: o.productName ?? '',
-      description: o.description ?? '',
-      client_id: o.client_id,
-      clientName: clientMap.get(o.client_id) ?? null,
-      asignedEVzla: o.asignedEVzla ?? null,
-      asignedEChina: o.asignedEChina ?? null,
-      created_at: o.created_at,
-      estimatedBudget: o.estimatedBudget ?? null,
-      reputation: o.reputation ?? null,
-      pdfRoutes: o.pdfRoutes ?? null,
-    }));
+    const orderIds = (orders ?? []).map((o: any) => o.id);
+    const { data: alternatives, error: alternativesError } = await supabase
+      .from('product_alternatives')
+      .select('order_id, status, client_response_notes')
+      .in('order_id', orderIds)
+      .order('created_at', { ascending: false });
+
+    if (alternativesError) console.error('Error fetching alternatives:', alternativesError);
+
+    const result = (orders ?? []).map((o: any) => {
+      // Logic to determine alternative status
+      const orderAlternatives = alternatives?.filter((a: any) => a.order_id === o.id) || [];
+      let alternativeStatus: 'pending' | 'accepted' | 'rejected' | null = null;
+      let rejectionReason: string | null = null;
+
+      const pendingAlt = orderAlternatives.find((a: any) => a.status === 'pending');
+      const acceptedAlt = orderAlternatives.find((a: any) => a.status === 'accepted');
+      const rejectedAlt = orderAlternatives.find((a: any) => a.status === 'rejected');
+
+      if (pendingAlt) {
+        alternativeStatus = 'pending';
+      } else if (acceptedAlt) {
+        alternativeStatus = 'accepted';
+      } else if (rejectedAlt) {
+        alternativeStatus = 'rejected';
+        rejectionReason = rejectedAlt.client_response_notes;
+      }
+
+      return {
+        id: o.id,
+        state: o.state,
+        productName: o.productName ?? '',
+        description: o.description ?? '',
+        client_id: o.client_id,
+        clientName: clientMap.get(o.client_id) ?? null,
+        asignedEVzla: o.asignedEVzla ?? null,
+        asignedEChina: o.asignedEChina ?? null,
+        created_at: o.created_at,
+        estimatedBudget: o.estimatedBudget ?? null,
+        reputation: o.reputation ?? null,
+        pdfRoutes: o.pdfRoutes ?? null,
+        hasAlternative: alternativeStatus === 'pending',
+        alternativeStatus: alternativeStatus,
+        alternativeRejectionReason: rejectionReason,
+      };
+    });
 
     return NextResponse.json(result, { status: 200, headers: { 'Cache-Control': 'no-store' } });
   } catch (err: any) {
@@ -92,7 +124,7 @@ export async function POST(req: NextRequest) {
       } catch { /* ignore and keep raw */ }
       // Remover caracteres potencialmente no permitidos (solo dejar un subconjunto seguro)
       raw = raw.replace(/[^A-Za-z0-9._~:/#?&=+\-]/g, '-');
-      if (raw.length > 255) raw = raw.slice(0,255);
+      if (raw.length > 255) raw = raw.slice(0, 255);
       // Validación final simple
       if (!/^https?:\/\/[A-Za-z0-9./_~:=+\-]+$/i.test(raw)) return null;
       return raw;
@@ -100,7 +132,7 @@ export async function POST(req: NextRequest) {
     const safeImgs = Array.isArray(imgs) ? imgs.map(sanitizeUrl).filter(Boolean) : [];
     const safeLinksRaw = Array.isArray(links) ? links.map(sanitizeUrl).filter(Boolean) : [];
     // Si el constraint exige máx 1 link, recortar.
-    const safeLinks = safeLinksRaw.slice(0,1);
+    const safeLinks = safeLinksRaw.slice(0, 1);
 
     const insertPayload: Record<string, any> = {
       client_id,
@@ -119,7 +151,7 @@ export async function POST(req: NextRequest) {
       asignedEVzla: null,
     };
 
-  let { data, error } = await supabase
+    let { data, error } = await supabase
       .from('orders')
       .insert([insertPayload])
       .select('*')
@@ -171,36 +203,36 @@ export async function POST(req: NextRequest) {
 
       // Si el estado inicial requiere cotización (3), notificar a China
 
-        // Siempre notificar a China que hay nuevo pedido para gestionar/cotizar
-        const notifChina = NotificationsFactory.china.newOrderForQuote({ orderId: String(data.id) });
+      // Siempre notificar a China que hay nuevo pedido para gestionar/cotizar
+      const notifChina = NotificationsFactory.china.newOrderForQuote({ orderId: String(data.id) });
+      await supabase.from('notifications').insert([
+        {
+          audience_type: 'role',
+          audience_value: 'china',
+          title: notifChina.title,
+          description: notifChina.description,
+          href: notifChina.href,
+          severity: notifChina.severity,
+          order_id: String(data.id),
+        },
+      ]);
+
+      // Notificar a Pagos solo cuando entre en validación (estado 4) – creación inicial no
+      if (data?.state === 4) {
+        const notifPagos = NotificationsFactory.pagos.newAssignedOrder({ orderId: String(data.id) });
         await supabase.from('notifications').insert([
           {
             audience_type: 'role',
-            audience_value: 'china',
-            title: notifChina.title,
-            description: notifChina.description,
-            href: notifChina.href,
-            severity: notifChina.severity,
+            audience_value: 'pagos',
+            title: notifPagos.title,
+            description: notifPagos.description,
+            href: notifPagos.href,
+            severity: notifPagos.severity,
+            unread: true,
             order_id: String(data.id),
           },
         ]);
-
-        // Notificar a Pagos solo cuando entre en validación (estado 4) – creación inicial no
-        if (data?.state === 4) {
-          const notifPagos = NotificationsFactory.pagos.newAssignedOrder({ orderId: String(data.id) });
-          await supabase.from('notifications').insert([
-            {
-              audience_type: 'role',
-              audience_value: 'pagos',
-              title: notifPagos.title,
-              description: notifPagos.description,
-              href: notifPagos.href,
-              severity: notifPagos.severity,
-              unread: true,
-              order_id: String(data.id),
-            },
-          ]);
-        }
+      }
 
       // Si el estado inicial es 2 (pendiente para China), notificar a China
       if (data?.state === 2) {
