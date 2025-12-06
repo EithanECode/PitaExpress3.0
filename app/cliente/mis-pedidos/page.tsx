@@ -58,11 +58,16 @@ import {
   Eye,
   Plus,
   Star,
-  XCircle,
-  AlertTriangle,
   Layers,
-  Trash,
-  Send
+  ShoppingBag,
+  Trash2,
+  Send,
+  AlertTriangle,
+  XCircle,
+  CreditCard,
+  Banknote,
+  Wallet,
+  Coins
 } from 'lucide-react';
 
 // Rutas de animaciones Lottie (desde /public)
@@ -1626,7 +1631,7 @@ export default function MisPedidosPage() {
 
     // Animación y Reset
     toast({
-      title: "¡Añadido a la cola! 🚀",
+      title: "¡Añadido a la caja! 📦",
       description: `Tienes ${orderQueue.length + 1} pedidos listos para enviar.`,
       className: "bg-blue-600 text-white border-none"
     });
@@ -1637,12 +1642,29 @@ export default function MisPedidosPage() {
       client_id: clientId || '',
       client_name: clientName || ''
     });
-    setCurrentStep(1);
+
+    // Ir al paso 4 (Resumen / Caja)
+    setCurrentStep(4);
 
     // Scroll al top del modal
     if (modalRef.current) {
       modalRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  const handleRemoveFromQueue = (index: number) => {
+    setOrderQueue(prev => prev.filter((_, i) => i !== index));
+    toast({
+      title: "Eliminado",
+      description: "Item eliminado de la caja.",
+    });
+    // Si la cola queda vacía, ¿volvemos al paso 1? O nos quedamos en 4 vacío con opción de agregar?
+    // Mejor quedarse en 4, el usuario decidirá si agregar otro.
+  };
+
+  const handleAddNewItem = () => {
+    setCurrentStep(1);
+    setAttemptedStep1(false);
   };
 
   const handleProcessQueue = async () => {
@@ -1794,6 +1816,7 @@ export default function MisPedidosPage() {
       case 1: return t('client.recentOrders.newOrder.stepTitles.productInfo');
       case 2: return t('client.recentOrders.newOrder.stepTitles.shippingDetails');
       case 3: return t('client.recentOrders.newOrder.stepTitles.summaryConfirmation');
+      case 4: return 'Resumen de Solicitud'; // TODO: i18n
       default: return '';
     }
   };
@@ -1803,6 +1826,7 @@ export default function MisPedidosPage() {
       case 1: return t('client.recentOrders.newOrder.stepDescriptions.productInfo');
       case 2: return t('client.recentOrders.newOrder.stepDescriptions.shippingDetails');
       case 3: return t('client.recentOrders.newOrder.stepDescriptions.summaryConfirmation');
+      case 4: return 'Revisa los items antes de enviar.'; // TODO: i18n
       default: return '';
     }
   };
@@ -1902,7 +1926,7 @@ export default function MisPedidosPage() {
                     </div>
                     {/* Step Indicators */}
                     <div className="flex justify-between mt-2">
-                      {[1, 2, 3].map((step) => (
+                      {[1, 2, 3, 4].map((step) => (
                         <div key={step} className="flex flex-col items-center">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${step <= currentStep
                             ? 'bg-gradient-to-r from-blue-500 to-orange-500 text-white shadow-lg scale-110'
@@ -1912,7 +1936,7 @@ export default function MisPedidosPage() {
                           </div>
                           <span className={`text-xs mt-1 transition-colors duration-300 ${step <= currentStep ? (mounted && theme === 'dark' ? 'text-blue-400 font-medium' : 'text-blue-600 font-medium') : (mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500')
                             }`}>
-                            {step === 1 ? t('client.recentOrders.newOrder.productTab') : step === 2 ? t('client.recentOrders.newOrder.shippingTab') : t('client.recentOrders.newOrder.summaryTab')}
+                            {step === 1 ? t('client.recentOrders.newOrder.productTab') : step === 2 ? t('client.recentOrders.newOrder.shippingTab') : step === 3 ? t('client.recentOrders.newOrder.summaryTab') : 'Caja'}
                           </span>
                         </div>
                       ))}
@@ -2257,6 +2281,62 @@ export default function MisPedidosPage() {
                   )}
                 </div>
 
+
+                {/* Step 4: Caja / Resumen de Solicitud */}
+                {currentStep === 4 && (
+                  <div className="space-y-6">
+                    <div className={`rounded-lg p-6 ${mounted && theme === 'dark' ? 'bg-slate-700' : 'bg-slate-50'}`}>
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className={`font-semibold text-lg ${mounted && theme === 'dark' ? 'text-white' : ''}`}>Artículos en tu Caja ({orderQueue.length})</h4>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAddNewItem}
+                          className="text-blue-500 border-blue-500 hover:bg-blue-50"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Agregar Otro Producto
+                        </Button>
+                      </div>
+
+                      {orderQueue.length === 0 ? (
+                        <div className="text-center py-8 text-slate-500">
+                          <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                          Tu caja está vacía. Añade productos para enviar una solicitud.
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {orderQueue.map((item, index) => (
+                            <div key={index} className={`flex items-center gap-4 p-3 rounded-lg border ${mounted && theme === 'dark' ? 'bg-slate-800 border-slate-600' : 'bg-white border-slate-200'}`}>
+                              <div className="w-16 h-16 rounded-md overflow-hidden bg-slate-100 flex-shrink-0">
+                                {item.productImage ? (
+                                  <img src={URL.createObjectURL(item.productImage)} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                    <ImageIcon className="w-6 h-6" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`font-medium truncate ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{item.productName}</p>
+                                <p className="text-sm text-slate-500 truncate">{item.quantity} unidades • {item.deliveryType === 'air' ? 'Aéreo' : 'Marítimo'}</p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleRemoveFromQueue(index)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Enhanced Navigation Buttons */}
                 <div className={`flex justify-between pt-8 border-t ${mounted && theme === 'dark' ? 'border-slate-700' : 'border-slate-200/50'}`}>
                   <Button
@@ -2284,10 +2364,10 @@ export default function MisPedidosPage() {
                       <Button
                         onClick={handleAddToQueue}
                         variant="outline"
-                        className="border-blue-500 text-blue-600 hover:bg-blue-50 transition-all duration-300"
+                        className="bg-blue-600 text-white hover:bg-blue-700 border-transparent shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                       >
-                        <Layers className="w-4 h-4 mr-2" />
-                        Guardar y Crear Otro
+                        <ShoppingBag className="w-4 h-4 mr-2" />
+                        Añadir a la Caja
                       </Button>
                     )}
 
@@ -2309,25 +2389,28 @@ export default function MisPedidosPage() {
                           </>
                         )}
                       </Button>
-                    ) : (
-                      <Button
-                        onClick={handleSubmitOrder}
-                        disabled={creatingOrder}
-                        className="bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
-                      >
-                        {creatingOrder ? (
-                          <div className="flex items-center">
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                            {t('client.recentOrders.newOrder.creatingOrder')}
-                          </div>
-                        ) : (
-                          <>
-                            <Check className="w-4 h-4 mr-2" />
-                            {t('client.recentOrders.newOrder.createOrder')}
-                          </>
-                        )}
-                      </Button>
-                    )}
+                    ) : currentStep === 4 ? (
+                      <div className="flex gap-2">
+                        {/* Botón enviar lote */}
+                        <Button
+                          onClick={handleProcessQueue}
+                          disabled={processingQueue || orderQueue.length === 0}
+                          className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50"
+                        >
+                          {processingQueue ? (
+                            <div className="flex items-center">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                              Procesando...
+                            </div>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4 mr-2" />
+                              Enviar Solicitud ({orderQueue.length})
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </DialogContent>
