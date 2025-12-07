@@ -21,7 +21,7 @@ async function getOrdersWithClientName(page: number = 1, limit: number = 50, emp
   // Construir query base
   let query = supabase
     .from('orders')
-    .select('id, quantity, productName, deliveryType, shippingType, state, client_id, asignedEChina, created_at, description, pdfRoutes, totalQuote', { count: 'exact' })
+    .select('id, quantity, productName, deliveryType, shippingType, state, client_id, asignedEChina, created_at, description, pdfRoutes, totalQuote, batch_id', { count: 'exact' })
     .gte('state', 0); // Incluir cancelados (estado 0)
 
   // Filtrar por empleado si se proporciona
@@ -101,6 +101,7 @@ async function getOrdersWithClientName(page: number = 1, limit: number = 50, emp
       hasAlternative: alternativeStatus === 'pending',
       alternativeStatus: alternativeStatus,
       alternativeRejectionReason: rejectionReason,
+      batch_id: order.batch_id ?? null,
     };
   });
 

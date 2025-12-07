@@ -87,6 +87,7 @@ interface Pedido {
   hasAlternative?: boolean;
   alternativeStatus?: 'pending' | 'accepted' | 'rejected' | null;
   alternativeRejectionReason?: string | null;
+  batch_id?: string | null;
 }
 
 interface BoxItem {
@@ -148,41 +149,52 @@ function groupOrders(orders: Pedido[]): OrderGroup[] {
   );
 
   const groups: OrderGroup[] = [];
-  const TIME_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutos
+  const TIME_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutos (fallback time grouping)
 
   sorted.forEach((order) => {
-    // Intentar encontrar un grupo existente donde encaje
-    // Criterio: Mismo cliente Y diferencia de tiempo < 20 min con el último del grupo
     let added = false;
 
-    // Buscamos en los grupos existentes (idealmente los más recientes primero)
-    for (const group of groups) {
-      if (group.clientName !== order.cliente) continue;
+    // 1. Try to group by strict batch_id first
+    if (order.batch_id) {
+      const existingBatchGroup = groups.find(g =>
+        g.orders.some(o => o.batch_id === order.batch_id)
+      );
 
-      // Verificar tiempo con el último pedido añadido al grupo (que debería ser el más cercano temporalmente)
-      // Como iteramos sorted (desc), los grupos también se van llenando en orden.
-      // Pero ojo: al iterar sorted, 'order' es más viejo que los que ya están en 'groups' (si se crearon antes en el loop).
-      // Actually, sorted is DESC (newest first).
-      // So 'order' is OLDER than previous ones processed.
-      // We check if 'order' is close enough to the *oldest* (or any) order in the group?
-      // Let's stick to simple logic: compare with the first order of the group (which is the newest in that group).
+      if (existingBatchGroup) {
+        if (existingBatchGroup.clientName === order.cliente) { // Safety check
+          existingBatchGroup.orders.push(order);
+          existingBatchGroup.minId = Math.min(existingBatchGroup.minId, order.id);
+          existingBatchGroup.maxId = Math.max(existingBatchGroup.maxId, order.id);
+          added = true;
+        }
+      }
+    }
 
-      const referenceOrder = group.orders[0]; // El más reciente del grupo
-      const timeDiff = Math.abs(new Date(referenceOrder.fecha).getTime() - new Date(order.fecha).getTime());
+    // 2. If not added by batch_id, try time-based grouping (only for orders without batch_id)
+    if (!added && !order.batch_id) {
+      for (const group of groups) {
+        if (group.clientName !== order.cliente) continue;
 
-      if (timeDiff <= TIME_THRESHOLD_MS) {
-        group.orders.push(order);
-        // Actualizar min/max ID
-        group.minId = Math.min(group.minId, order.id);
-        group.maxId = Math.max(group.maxId, order.id);
-        added = true;
-        break;
+        // Skip groups that are explicitly formed by batch_id
+        const isBatchGroup = group.orders.some(o => !!o.batch_id);
+        if (isBatchGroup) continue;
+
+        const referenceOrder = group.orders[0];
+        const timeDiff = Math.abs(new Date(referenceOrder.fecha).getTime() - new Date(order.fecha).getTime());
+
+        if (timeDiff <= TIME_THRESHOLD_MS) {
+          group.orders.push(order);
+          group.minId = Math.min(group.minId, order.id);
+          group.maxId = Math.max(group.maxId, order.id);
+          added = true;
+          break;
+        }
       }
     }
 
     if (!added) {
       groups.push({
-        groupId: `${order.cliente}-${order.fecha}`,
+        groupId: order.batch_id ? `batch-${order.batch_id}` : `${order.cliente}-${order.fecha}`,
         clientName: order.cliente,
         date: order.fecha,
         orders: [order],
