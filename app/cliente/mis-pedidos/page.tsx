@@ -33,6 +33,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import ReviewAlternativeModal from '@/components/cliente/ReviewAlternativeModal';
 import { useProductAlternatives } from '@/hooks/use-product-alternatives';
+import { useCNYConversion } from '@/hooks/use-cny-conversion';
 import {
   Package,
   Link,
@@ -238,6 +239,8 @@ export default function MisPedidosPage() {
   // Supabase client (navegador)
   const supabase = getSupabaseBrowserClient();
   const { toast } = useToast();
+  // Hook para conversión CNY a USD
+  const { cnyRate } = useCNYConversion();
   // Estados básicos
   const [mounted, setMounted] = useState(false);
   const { theme } = useTheme();
@@ -578,7 +581,12 @@ export default function MisPedidosPage() {
 
         const unit = typeof row.unitQuote === 'number' ? row.unitQuote : (row.unitQuote ? Number(row.unitQuote) : 0);
         const ship = typeof row.shippingPrice === 'number' ? row.shippingPrice : (row.shippingPrice ? Number(row.shippingPrice) : 0);
-        const calcAmount = Number(unit || 0) + Number(ship || 0);
+        // Si existe totalQuote (ya en USD), usarlo. Si no, convertir de CNY a USD
+        const totalQuoteUSD = typeof row.totalQuote === 'number' ? row.totalQuote : (row.totalQuote ? Number(row.totalQuote) : null);
+        // Si no hay totalQuote, convertir de CNY a USD (unitQuote y shippingPrice están en CNY)
+        // Tasa CNY es USD/CNY, entonces USD = CNY / rate
+        const currentCnyRate = cnyRate || 7.25; // Usar tasa del hook o fallback
+        const calcAmountUSD = totalQuoteUSD !== null ? totalQuoteUSD : ((unit + ship) / currentCnyRate);
         const status = mapStateToStatus(row.state as number | null);
 
         // Extract first image if available
@@ -599,7 +607,7 @@ export default function MisPedidosPage() {
           id: String(row.id),
           product: row.productName || 'Pedido',
           description: row.description || '',
-          amount: `$${Number(calcAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`,
+          amount: `$${Number(calcAmountUSD || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           status,
           progress: mapStateToProgress(row.state as number | null),
           tracking: '',
@@ -696,10 +704,17 @@ export default function MisPedidosPage() {
     processing: orders.filter(o => o.status === 'processing').length,
     shipped: orders.filter(o => o.status === 'shipped').length,
     delivered: orders.filter(o => o.status === 'delivered').length,
-    // Total gastado: considerar pedidos en proceso/enviados/entregados y sumar unitQuote + shippingPrice (Opción A)
+    // Total gastado: considerar pedidos en proceso/enviados/entregados y usar totalQuote o convertir de CNY a USD
     totalSpent: orders
       .filter(o => o.status === 'processing' || o.status === 'shipped' || o.status === 'delivered')
-      .reduce((sum, o) => sum + Number(o.unitQuote ?? 0) + Number(o.shippingPrice ?? 0), 0)
+      .reduce((sum, o) => {
+        if (o.totalQuote !== null && o.totalQuote !== undefined) {
+          return sum + o.totalQuote;
+        }
+        // Si no hay totalQuote, convertir de CNY a USD
+        const totalCNY = Number(o.unitQuote ?? 0) + Number(o.shippingPrice ?? 0);
+        return sum + (totalCNY / (cnyRate || 7.25));
+      }, 0)
   };
 
   // Helpers específicos para el modal de tracking (colores simples)
@@ -1150,8 +1165,11 @@ export default function MisPedidosPage() {
           existingBatchGroup.minId = Math.min(Number(existingBatchGroup.minId), Number(order.id));
           existingBatchGroup.maxId = Math.max(Number(existingBatchGroup.maxId), Number(order.id));
           if (order.status === 'quoted' || order.stateNum === -1) {
-            const amount = (order.unitQuote ?? 0) + (order.shippingPrice ?? 0);
-            existingBatchGroup.totalAmount += amount;
+            // Calcular monto en USD
+            const amountUSD = order.totalQuote !== null && order.totalQuote !== undefined
+              ? order.totalQuote
+              : ((order.unitQuote ?? 0) + (order.shippingPrice ?? 0)) / (cnyRate || 7.25);
+            existingBatchGroup.totalAmount += amountUSD;
             existingBatchGroup.canPayAll = true;
           }
           added = true;
@@ -1175,8 +1193,11 @@ export default function MisPedidosPage() {
 
             // Update total amount if payable
             if (order.status === 'quoted' || order.stateNum === -1) {
-              const amount = (order.unitQuote ?? 0) + (order.shippingPrice ?? 0);
-              group.totalAmount += amount;
+              // Calcular monto en USD
+              const amountUSD = order.totalQuote !== null && order.totalQuote !== undefined
+                ? order.totalQuote
+                : ((order.unitQuote ?? 0) + (order.shippingPrice ?? 0)) / (cnyRate || 7.25);
+              group.totalAmount += amountUSD;
               group.canPayAll = true;
             }
             added = true;
@@ -1187,7 +1208,12 @@ export default function MisPedidosPage() {
 
       if (!added) {
         const isPayable = order.status === 'quoted' || order.stateNum === -1;
-        const amount = isPayable ? (order.unitQuote ?? 0) + (order.shippingPrice ?? 0) : 0;
+        // Calcular monto en USD
+        const amount = isPayable 
+          ? (order.totalQuote !== null && order.totalQuote !== undefined
+              ? order.totalQuote
+              : ((order.unitQuote ?? 0) + (order.shippingPrice ?? 0)) / (cnyRate || 7.25))
+          : 0;
 
         groups.push({
           groupId: order.batch_id ? `batch-${order.batch_id}` : `${order.id}-${order.createdAt}`,
@@ -1332,7 +1358,14 @@ export default function MisPedidosPage() {
       // Sum only selected orders
       const total = selectedGroupForPayment.orders
         .filter(o => selectedOrdersInModal.includes(o.id))
-        .reduce((sum, o) => sum + (o.unitQuote ?? 0) + (o.shippingPrice ?? 0), 0);
+        .reduce((sum, o) => {
+          if (o.totalQuote !== null && o.totalQuote !== undefined) {
+            return sum + o.totalQuote;
+          }
+          // Si no hay totalQuote, convertir de CNY a USD
+          const totalCNY = (o.unitQuote ?? 0) + (o.shippingPrice ?? 0);
+          return sum + (totalCNY / (cnyRate || 7.25));
+        }, 0);
       return total;
     }
     return 0;
@@ -2722,7 +2755,10 @@ export default function MisPedidosPage() {
                         />
                       ) : selectedOrder.status === 'quoted' ? (
                         <PriceDisplay
-                          amount={Number((selectedOrder.unitQuote ?? 0) + (selectedOrder.shippingPrice ?? 0))}
+                          amount={selectedOrder.totalQuote !== null && selectedOrder.totalQuote !== undefined 
+                            ? selectedOrder.totalQuote 
+                            : ((selectedOrder.unitQuote ?? 0) + (selectedOrder.shippingPrice ?? 0)) / (cnyRate || 7.25)
+                          }
                           currency="USD"
                           variant="card"
                           size="lg"
@@ -2731,7 +2767,18 @@ export default function MisPedidosPage() {
                           className={mounted && theme === 'dark' ? 'border-green-700' : 'border-green-200'}
                         />
                       ) : (
-                        <span className={mounted && theme === 'dark' ? 'text-green-400' : 'text-green-600'}>{selectedOrder.amount}</span>
+                        <PriceDisplay
+                          amount={selectedOrder.totalQuote !== null && selectedOrder.totalQuote !== undefined 
+                            ? selectedOrder.totalQuote 
+                            : ((selectedOrder.unitQuote ?? 0) + (selectedOrder.shippingPrice ?? 0)) / (cnyRate || 7.25)
+                          }
+                          currency="USD"
+                          variant="card"
+                          size="lg"
+                          emphasizeBolivars={true}
+                          showRefresh={true}
+                          className={mounted && theme === 'dark' ? 'border-green-700' : 'border-green-200'}
+                        />
                       )}
                     </div>
                   </div>
@@ -3071,7 +3118,10 @@ export default function MisPedidosPage() {
                               </div>
                             </div>
                             <div className="font-semibold text-right">
-                              ${Number((order.unitQuote ?? 0) + (order.shippingPrice ?? 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                              ${(order.totalQuote !== null && order.totalQuote !== undefined
+                                ? order.totalQuote
+                                : ((order.unitQuote ?? 0) + (order.shippingPrice ?? 0)) / (cnyRate || 7.25)
+                              ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
                         ))}

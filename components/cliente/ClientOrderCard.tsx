@@ -2,6 +2,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PriceDisplay } from '@/components/shared/PriceDisplay';
+import { useCNYConversion } from '@/hooks/use-cny-conversion';
 import {
     Star,
     AlertTriangle,
@@ -49,6 +50,19 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
     normalizeOrderId,
     handlers
 }) => {
+    // Hook para conversión CNY a USD
+    const { cnyRate } = useCNYConversion();
+    
+    // Calcular monto en USD: usar totalQuote si existe, sino convertir de CNY a USD
+    const getAmountInUSD = () => {
+        if (order.totalQuote !== null && order.totalQuote !== undefined) {
+            return order.totalQuote;
+        }
+        // Si no hay totalQuote, convertir de CNY a USD
+        const totalCNY = (order.unitQuote ?? 0) + (order.shippingPrice ?? 0);
+        return totalCNY / (cnyRate || 7.25);
+    };
+    
     return (
         <div className={`p-4 md:p-6 rounded-xl border hover:shadow-md transition-all duration-300 group ${mounted && theme === 'dark' ? 'bg-gradient-to-r from-slate-700 to-slate-600 border-slate-600' : 'bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200'}`}>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 mb-4">
@@ -128,7 +142,7 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                             />
                         ) : order.status === 'quoted' ? (
                             <PriceDisplay
-                                amount={Number((order.unitQuote ?? 0) + (order.shippingPrice ?? 0))}
+                                amount={getAmountInUSD()}
                                 currency="USD"
                                 variant="inline"
                                 size="lg"
@@ -136,7 +150,14 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                                 className={mounted && theme === 'dark' ? 'text-white' : 'text-slate-800'}
                             />
                         ) : (
-                            <span className={mounted && theme === 'dark' ? 'text-white' : 'text-slate-800'}>{order.amount}</span>
+                            <PriceDisplay
+                                amount={getAmountInUSD()}
+                                currency="USD"
+                                variant="inline"
+                                size="lg"
+                                emphasizeBolivars={true}
+                                className={mounted && theme === 'dark' ? 'text-white' : 'text-slate-800'}
+                            />
                         )}
                     </div>
                     <p className={`text-xs font-medium ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Tracking: {order.tracking || '-'}</p>

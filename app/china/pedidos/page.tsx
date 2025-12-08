@@ -1489,22 +1489,22 @@ export default function PedidosChina() {
     };
 
     return (
-      <div className="mb-6 border rounded-lg shadow-sm bg-white overflow-hidden">
+      <div className={`mb-6 border rounded-lg shadow-sm overflow-hidden ${mounted && theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
         {/* Header del Lote */}
         <div
-          className="p-4 bg-slate-50 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-100 transition-colors"
+          className={`p-4 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer transition-colors ${mounted && theme === 'dark' ? 'bg-slate-700/50 border-slate-600 hover:bg-slate-700' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}
           onClick={() => setExpanded(!expanded)}
         >
           <div className="flex items-start gap-4">
             {/* Icono / Avatar Cliente */}
-            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">
+            <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold shrink-0 ${mounted && theme === 'dark' ? 'bg-blue-900/30 text-blue-300' : 'bg-blue-100 text-blue-700'}`}>
               {group.clientName.charAt(0).toUpperCase()}
             </div>
 
             <div>
               {/* Título Principal: Rango de IDs */}
-              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <span className="font-mono text-blue-600">
+              <h3 className={`text-lg font-bold flex items-center gap-2 ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
+                <span className={`font-mono ${mounted && theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>
                   {group.orders.length > 1
                     ? `#ORD-${group.minId} - ${group.maxId}`
                     : `#ORD-${group.minId}`
@@ -1518,7 +1518,7 @@ export default function PedidosChina() {
               </h3>
 
               {/* Subtítulo: Cliente y Fecha */}
-              <div className="text-sm text-slate-500 flex items-center gap-2 mt-1">
+              <div className={`text-sm flex items-center gap-2 mt-1 ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                 <User className="h-3 w-3" />
                 <span className="font-medium">{group.clientName}</span>
                 <span>•</span>
@@ -1530,9 +1530,9 @@ export default function PedidosChina() {
 
           {/* Acciones Derecha */}
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button variant="ghost" size="sm" className={`h-8 w-8 p-0 ${mounted && theme === 'dark' ? 'hover:bg-slate-600' : ''}`}>
               <div className={`transform transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-slate-500">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                   <path d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
                 </svg>
               </div>
@@ -1544,9 +1544,9 @@ export default function PedidosChina() {
         {/* Lista de Pedidos (Acordeón) con Animación */}
         <div className={`grid transition-all duration-300 ease-in-out ${expanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
           <div className="overflow-hidden">
-            <div className="p-4 pl-8 space-y-3 bg-slate-50/50 border-t">
+            <div className={`p-4 pl-8 space-y-3 border-t ${mounted && theme === 'dark' ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50/50 border-slate-200'}`}>
               {group.orders.map((pedido) => (
-                <div key={pedido.id} className="bg-white border rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200">
+                <div key={pedido.id} className={`border rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 ${mounted && theme === 'dark' ? 'bg-slate-700/50 border-slate-600 hover:bg-slate-700' : 'bg-white border-slate-200'}`}>
                   {renderPedidoRow(pedido)}
                 </div>
               ))}

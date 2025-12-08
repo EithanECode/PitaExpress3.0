@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, ChevronDown, ChevronUp, DollarSign, Layers } from 'lucide-react';
 import { ClientOrderCard } from './ClientOrderCard';
 import { PriceDisplay } from '@/components/shared/PriceDisplay';
+import { useCNYConversion } from '@/hooks/use-cny-conversion';
 
 export interface ClientOrderGroupData {
     groupId: string;
@@ -54,6 +55,20 @@ export const ClientOrderGroup: React.FC<ClientOrderGroupProps> = ({
     handlers
 }) => {
     const [expanded, setExpanded] = useState(true);
+    // Hook para conversión CNY a USD
+    const { cnyRate } = useCNYConversion();
+    
+    // Calcular el total del grupo en USD
+    const getGroupTotalUSD = () => {
+        return group.orders.reduce((sum, order) => {
+            if (order.totalQuote !== null && order.totalQuote !== undefined) {
+                return sum + order.totalQuote;
+            }
+            // Si no hay totalQuote, convertir de CNY a USD
+            const totalCNY = (order.unitQuote ?? 0) + (order.shippingPrice ?? 0);
+            return sum + (totalCNY / (cnyRate || 7.25));
+        }, 0);
+    };
 
     const getTimeAgo = (dateStr: string) => {
         const diff = Date.now() - new Date(dateStr).getTime();
@@ -116,7 +131,7 @@ export const ClientOrderGroup: React.FC<ClientOrderGroupProps> = ({
                             <DollarSign className="h-4 w-4 mr-1" />
                             Pagar
                             <span className="ml-1 opacity-90 text-xs bg-black/10 px-1.5 py-0.5 rounded">
-                                ${group.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                ${getGroupTotalUSD().toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                         </Button>
                     )}
