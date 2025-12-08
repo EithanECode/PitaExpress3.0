@@ -26,12 +26,48 @@ interface UseCurrencyConverterReturn {
 }
 
 export function useCurrencyConverter(): UseCurrencyConverterReturn {
-  const [rate, setRate] = useState<number>(36.25); // Default fallback rate
+  // Intentar cargar tasa cacheada inmediatamente para mostrar sin delay
+  const [rate, setRate] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('pita-exchange-rate-cache');
+        if (cached) {
+          const { rate: cachedRate, timestamp } = JSON.parse(cached);
+          const age = Date.now() - timestamp;
+          // Usar tasa cacheada si tiene menos de 5 minutos
+          if (cachedRate && age < 5 * 60 * 1000) {
+            return cachedRate;
+          }
+        }
+      } catch (e) {
+        // Ignorar errores de localStorage
+      }
+    }
+    return 36.25; // Default fallback rate
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('pita-exchange-rate-cache');
+        if (cached) {
+          const { timestamp } = JSON.parse(cached);
+          return new Date(timestamp);
+        }
+      } catch (e) {
+        // Ignorar errores
+      }
+    }
+    return null;
+  });
   
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Log cuando el hook se inicializa
+  useEffect(() => {
+    console.warn('🚀 [CurrencyConverter] Hook inicializado, tasa inicial:', rate);
+  }, []);
 
     // Helper seguro para abortar con una razón explícita y limpiar
     const safeAbort = (reason: string) => {
@@ -52,8 +88,13 @@ export function useCurrencyConverter(): UseCurrencyConverterReturn {
 
   // Función para obtener la tasa de cambio actual
   const fetchCurrentRate = useCallback(async () => {
-    if (abortControllerRef.current) {
-    safeAbort('new-fetch');
+    // Cancelar petición anterior si existe (sin lanzar error)
+    if (abortControllerRef.current && !abortControllerRef.current.signal.aborted) {
+      try {
+        abortControllerRef.current.abort();
+      } catch (e) {
+        // Ignorar errores al abortar
+      }
     }
 
     abortControllerRef.current = new AbortController();
@@ -61,54 +102,59 @@ export function useCurrencyConverter(): UseCurrencyConverterReturn {
     setError(null);
 
     try {
-      // Primero verificar configuración desde localStorage (más confiable)
-      let autoUpdateEnabled = false;
-      
+      // SIEMPRE intentar obtener la tasa de la API primero (tasa más actualizada)
       try {
-        const savedConfig = localStorage.getItem('businessConfig');
-        if (savedConfig) {
-          const parsedConfig = JSON.parse(savedConfig);
-          autoUpdateEnabled = parsedConfig.autoUpdateExchangeRate || false;
-        }
-      } catch (e) {
-  console.debug('Warn reading localStorage config:', e);
-      }
-
-      // Si no hay localStorage, intentar API como fallback
-      if (!autoUpdateEnabled) {
-        try {
-          const configResponse = await fetch('/api/config', {
-            signal: abortControllerRef.current.signal
-          });
-
-          if (configResponse.ok) {
-            const configData = await configResponse.json();
-            if (configData.success && configData.config) {
-              autoUpdateEnabled = configData.config.autoUpdateExchangeRate || false;
-            }
-          }
-        } catch (e) {
-          console.debug('Warn fetching config from API:', e);
-        }
-      }
-
-      // Si auto-update está activo, usar API de exchange rate
-      if (autoUpdateEnabled) {
         const exchangeResponse = await fetch('/api/exchange-rate', {
-          signal: abortControllerRef.current.signal
+          signal: abortControllerRef.current.signal,
+          cache: 'no-store', // Evitar caché para obtener tasa actualizada
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
         });
 
         if (exchangeResponse.ok) {
           const exchangeData = await exchangeResponse.json();
-          if (exchangeData.success && exchangeData.rate) {
-            setRate(exchangeData.rate);
-            setLastUpdated(new Date(exchangeData.timestamp));
-            return;
+          console.log('[CurrencyConverter] Respuesta de API recibida:', exchangeData);
+          if (exchangeData.success && exchangeData.rate && !isNaN(exchangeData.rate) && exchangeData.rate > 0) {
+            const newRate = parseFloat(exchangeData.rate);
+            console.log('✅ [CurrencyConverter] Tasa obtenida de API:', newRate, 'Bs/USD - Fuente:', exchangeData.source);
+            setRate(newRate);
+            const updateTime = new Date(exchangeData.timestamp);
+            setLastUpdated(updateTime);
+            // Guardar en caché para uso inmediato en próximas cargas
+            if (typeof window !== 'undefined') {
+              try {
+                localStorage.setItem('pita-exchange-rate-cache', JSON.stringify({
+                  rate: newRate,
+                  timestamp: updateTime.getTime(),
+                  source: exchangeData.source
+                }));
+              } catch (e) {
+                // Ignorar errores de localStorage
+              }
+            }
+            setError(null); // Limpiar errores previos si la API funciona
+            setIsLoading(false);
+            return; // Éxito: usar tasa de la API
+          } else {
+            console.error('⚠️ [CurrencyConverter] Respuesta de API inválida:', exchangeData);
           }
+        } else {
+          const errorText = await exchangeResponse.text().catch(() => 'No se pudo leer el error');
+          console.error('❌ [CurrencyConverter] API respondió con error:', exchangeResponse.status, exchangeResponse.statusText, errorText);
         }
+      } catch (apiError: any) {
+        // Ignorar errores de abort (son normales cuando se cancela una petición anterior)
+        if (apiError.name === 'AbortError' || apiError.message === 'new-fetch' || apiError.message === 'component-unmount' || apiError.message?.includes('abort')) {
+          // No mostrar mensaje para abortos normales (son esperados durante el ciclo de vida del componente)
+          setIsLoading(false);
+          return; // Salir sin error, la nueva petición se hará
+        }
+        // Si la API falla por otra razón, continuar con fallback a tasa manual
+        console.warn('❌ [CurrencyConverter] API exchange-rate falló, usando fallback:', apiError.message || apiError);
       }
       
-      // Usar tasa de configuración si auto-update está desactivado o falla
+      // Fallback: Usar tasa de configuración manual si la API falla
       // Intentar obtener desde localStorage primero
       try {
         const savedConfig = localStorage.getItem('businessConfig');
@@ -124,7 +170,7 @@ export function useCurrencyConverter(): UseCurrencyConverterReturn {
   console.debug('Warn using localStorage config for rate:', e);
       }
 
-      // Fallback a API si localStorage no funciona
+      // Fallback a API de config si localStorage no funciona
       try {
         const configResponse = await fetch('/api/config', {
           signal: abortControllerRef.current.signal
@@ -142,7 +188,8 @@ export function useCurrencyConverter(): UseCurrencyConverterReturn {
         console.debug('Warn fetching fallback config:', e);
       }
 
-      throw new Error('Failed to fetch currency rate');
+      // Si todo falla, mantener el valor por defecto (36.25) pero mostrar error
+      throw new Error('No se pudo obtener la tasa de cambio. Usando tasa por defecto.');
     } catch (error: any) {
       if (error.name === 'AbortError') {
         return;
@@ -150,6 +197,7 @@ export function useCurrencyConverter(): UseCurrencyConverterReturn {
       
   console.debug('Error fetching currency rate (final fallback):', error);
       setError(error.message || 'Failed to fetch currency rate');
+      // Mantener la tasa actual (por defecto o última conocida) en lugar de lanzar error
     } finally {
       setIsLoading(false);
     }
@@ -189,10 +237,13 @@ export function useCurrencyConverter(): UseCurrencyConverterReturn {
 
   // Efecto para cargar la tasa al montar el componente
   useEffect(() => {
+    // Ejecutar inmediatamente al montar
     fetchCurrentRate();
 
     // Actualizar cada 5 minutos
-    const interval = setInterval(fetchCurrentRate, 5 * 60 * 1000);
+    const interval = setInterval(() => {
+      fetchCurrentRate();
+    }, 5 * 60 * 1000);
 
     return () => {
       clearInterval(interval);

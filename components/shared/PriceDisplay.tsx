@@ -29,13 +29,28 @@ export function PriceDisplay({
   className = '',
   emphasizeBolivars = true
 }: PriceDisplayProps) {
+  // Logs de debug removidos para producción (comentados para evitar ruido en consola)
+  // console.log('[PriceDisplay] Componente renderizado - amount:', amount, 'currency:', currency);
   const { convert, currentRate, isLoading, error, lastUpdated, refreshRate } = useCurrencyConverter();
+  // console.log('[PriceDisplay] Hook retornó - currentRate:', currentRate, 'isLoading:', isLoading, 'error:', error);
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Forzar actualización de tasa cuando el componente se monta
+    if (refreshRate) {
+      refreshRate();
+    }
+  }, [refreshRate]);
+  
+  // Si la tasa es la por defecto (36.25) y no está cargando, forzar actualización
+  useEffect(() => {
+    if (currentRate === 36.25 && !isLoading && refreshRate) {
+      // Silenciosamente forzar actualización sin mostrar warning
+      refreshRate();
+    }
+  }, [currentRate, isLoading, refreshRate]);
   
   const conversion = convert(amount, currency);
 

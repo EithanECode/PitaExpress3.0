@@ -655,12 +655,15 @@ const PaymentValidationDashboard: React.FC = () => {
           if (o.state === 4) estado = 'pendiente';
           else if (o.state === -1) estado = 'rechazado';
           else estado = 'completado';
+          // El monto debe venir SOLO de la cotización de China (totalQuote en USD)
+          // Si no hay cotización, usamos 0 y se mostrará como pendiente de cotización
+          const monto = o.totalQuote !== null && o.totalQuote !== undefined ? Number(o.totalQuote) : 0;
           return {
             id: String(o.id),
             usuario: clientMap.get(o.client_id) || 'Cliente',
             fecha: o.created_at || new Date().toISOString(),
             idProducto: o.productName ? `#${o.productName}` : `#ORD-${o.id}`,
-            monto: Number(o.totalQuote ?? o.estimatedBudget ?? 0),
+            monto: monto,
             referencia: `ORD-${o.id}`,
             estado,
             metodo: 'Transferencia',
