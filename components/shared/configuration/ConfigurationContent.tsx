@@ -947,6 +947,7 @@ function AdminReviewsSection() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null); // Filtro por estrellas
   const { toast } = useToast();
   const supabase = getSupabaseBrowserClient();
 
@@ -1049,6 +1050,11 @@ function AdminReviewsSection() {
     );
   };
 
+  // Filtrar reseñas según el rating seleccionado
+  const filteredReviews = ratingFilter === null 
+    ? reviews 
+    : reviews.filter(review => review.rating === ratingFilter);
+
   return (
     <Card className="bg-white/80 backdrop-blur-sm border-slate-200 dark:bg-slate-800/80 dark:border-slate-700">
       <CardHeader>
@@ -1099,8 +1105,69 @@ function AdminReviewsSection() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {reviews.map((review) => (
+          <>
+            {/* Filtro por estrellas */}
+            <div className="mb-6">
+              <Label className={`text-sm mb-3 block ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                {t('admin.configuration.reviews.filterByRating', { fallback: 'Filtrar por calificación' })}:
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={ratingFilter === null ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setRatingFilter(null)}
+                  className="gap-2"
+                >
+                  {t('admin.configuration.reviews.allRatings', { fallback: 'Todas' })}
+                  <Badge variant="secondary" className="ml-1">
+                    {reviews.length}
+                  </Badge>
+                </Button>
+                {[5, 4, 3, 2, 1].map((rating) => {
+                  const count = reviews.filter(r => r.rating === rating).length;
+                  return (
+                    <Button
+                      key={rating}
+                      variant={ratingFilter === rating ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setRatingFilter(rating)}
+                      className="gap-2"
+                      disabled={count === 0}
+                    >
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`w-3.5 h-3.5 ${star <= rating
+                              ? 'text-yellow-400 fill-yellow-400'
+                              : 'text-slate-400'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <Badge variant="secondary" className="ml-1">
+                        {count}
+                      </Badge>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Lista de reseñas filtradas */}
+            {filteredReviews.length === 0 ? (
+              <div className="text-center py-8">
+                <Star className={`w-12 h-12 mx-auto mb-4 ${mounted && theme === 'dark' ? 'text-slate-600' : 'text-slate-300'}`} />
+                <p className={mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>
+                  {ratingFilter !== null 
+                    ? `No hay reseñas con ${ratingFilter} ${ratingFilter === 1 ? 'estrella' : 'estrellas'}`
+                    : t('admin.configuration.reviews.noReviews', { fallback: 'No hay reseñas aún' })
+                  }
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredReviews.map((review) => (
               <div
                 key={review.id}
                 className={`p-4 rounded-lg border ${mounted && theme === 'dark'
@@ -1137,8 +1204,10 @@ function AdminReviewsSection() {
                   </div>
                 )}
               </div>
-            ))}
-          </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

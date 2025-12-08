@@ -886,8 +886,16 @@
         "title": "订单评价",
         "loading": "加载评价中...",
         "noReviews": "暂无评价",
+        "noFilteredReviews": "没有 {{rating}} {{stars}} 的评价",
         "order": "订单",
-        "client": "客户"
+        "client": "客户",
+        "refresh": "刷新",
+        "refreshing": "刷新中...",
+        "lastUpdate": "已更新",
+        "newReviewNotification": "收到新评价",
+        "refreshingList": "更新列表中...",
+        "filterByRating": "按评分筛选",
+        "allRatings": "全部"
       },
       "messages": {
         "profileUpdated": "资料已更新",

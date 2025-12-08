@@ -740,8 +740,16 @@
         "title": "Reseñas de Pedidos",
         "loading": "Cargando reseñas...",
         "noReviews": "No hay reseñas aún",
+        "noFilteredReviews": "No hay reseñas con {{rating}} {{stars}}",
         "order": "Pedido",
-        "client": "Cliente"
+        "client": "Cliente",
+        "refresh": "Actualizar",
+        "refreshing": "Actualizando...",
+        "lastUpdate": "Actualizado",
+        "newReviewNotification": "Nueva reseña recibida",
+        "refreshingList": "Actualizando lista...",
+        "filterByRating": "Filtrar por calificación",
+        "allRatings": "Todas"
       }
     }
   },

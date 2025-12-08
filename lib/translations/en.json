@@ -898,8 +898,16 @@
         "title": "Order Reviews",
         "loading": "Loading reviews...",
         "noReviews": "No reviews yet",
+        "noFilteredReviews": "No reviews with {{rating}} {{stars}}",
         "order": "Order",
-        "client": "Client"
+        "client": "Client",
+        "refresh": "Refresh",
+        "refreshing": "Refreshing...",
+        "lastUpdate": "Updated",
+        "newReviewNotification": "New review received",
+        "refreshingList": "Updating list...",
+        "filterByRating": "Filter by rating",
+        "allRatings": "All"
       },
       "messages": {
         "profileUpdated": "Profile updated",
