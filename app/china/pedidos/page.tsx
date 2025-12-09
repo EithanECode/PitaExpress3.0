@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from '@/hooks/useTranslation';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import Sidebar from '@/components/layout/Sidebar';
@@ -218,6 +218,8 @@ export default function PedidosChina() {
   const { uiItems: notificationsList, unreadCount, markAllAsRead, markOneAsRead } = useNotifications({ role: 'china', userId: chinaId, limit: 10, enabled: true });
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(false);
+  // Margen de ganancia desde configuración
+  const [profitMargin, setProfitMargin] = useState<number>(25); // Valor por defecto 25%
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -527,6 +529,30 @@ export default function PedidosChina() {
   useEffect(() => { modalVerPedidosContRefState.current = modalVerPedidosCont.open; }, [modalVerPedidosCont.open]);
   useEffect(() => { modalVerPedidosBoxIdRef.current = modalVerPedidos.boxId; }, [modalVerPedidos.boxId]);
   useEffect(() => { modalVerPedidosContIdRef.current = modalVerPedidosCont.containerId; }, [modalVerPedidosCont.containerId]);
+
+  // Función para obtener el margen de ganancia desde la configuración
+  const fetchProfitMargin = useCallback(async (): Promise<number> => {
+    try {
+      const response = await fetch('/api/config');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.config?.profit_margin !== undefined && data.config.profit_margin !== null) {
+          return Number(data.config.profit_margin);
+        }
+      }
+    } catch (error) {
+      console.error('Error obteniendo margen de ganancia:', error);
+    }
+    // Fallback al valor por defecto si hay error
+    return 25;
+  }, []);
+
+  // Cargar margen de ganancia al inicio
+  useEffect(() => {
+    fetchProfitMargin().then(margin => {
+      setProfitMargin(margin);
+    });
+  }, [fetchProfitMargin]);
 
   useEffect(() => {
     setMounted(true);
@@ -1810,13 +1836,21 @@ export default function PedidosChina() {
     const totalProductosCNY = Number(precioUnitario) * Number(pedido.cantidad || 0);
     const totalCNY = totalProductosCNY + Number(precioEnvio);
     const rate = cnyRate && cnyRate > 0 ? cnyRate : 7.25;
-    const totalUSD = totalCNY / rate;
+    const totalUSDBase = totalCNY / rate;
 
-    // 1) Actualizar totalQuote en la tabla orders (sin cambiar estado aquí)
+    // Obtener el margen de ganancia actual desde la configuración
+    const currentProfitMargin = await fetchProfitMargin();
+    setProfitMargin(currentProfitMargin); // Actualizar estado para referencia futura
+
+    // Aplicar margen de ganancia: precioConMargen = precioBase × (1 + margen/100)
+    // Ejemplo: $1000 × (1 + 25/100) = $1000 × 1.25 = $1250
+    const totalUSDConMargen = totalUSDBase * (1 + currentProfitMargin / 100);
+
+    // 1) Actualizar totalQuote en la tabla orders con el precio que incluye el margen
     const { error: updateError } = await supabase
       .from('orders')
       .update({
-        totalQuote: totalUSD,
+        totalQuote: totalUSDConMargen, // Guardar precio con margen aplicado
         unitQuote: precioUnitario,
         shippingPrice: precioEnvio,
         height: altura,
@@ -1842,7 +1876,7 @@ export default function PedidosChina() {
     }
 
     // Actualizar estado local y cerrar modal (sin PDF)
-    setPedidos(prev => prev.map(p => p.id === pedido.id ? { ...p, cotizado: true, estado: 'cotizado', precio: precioUnitario, totalQuote: totalUSD, numericState: 3 } : p));
+    setPedidos(prev => prev.map(p => p.id === pedido.id ? { ...p, cotizado: true, estado: 'cotizado', precio: precioUnitario, totalQuote: totalUSDConMargen, numericState: 3 } : p));
     setModalCotizar({ open: false });
     setIsModalCotizarClosing(false);
   };  // getStatusColor/Text ya no se usan; sustituido por getOrderBadge basado en estado numérico
