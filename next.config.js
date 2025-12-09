@@ -2,8 +2,8 @@ const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Fix for "inferred your workspace root" warning
-  outputFileTracingRoot: path.join(__dirname, '../../'),
+  // Fix for "inferred your workspace root" warning - removed as it breaks Vercel build
+  // outputFileTracingRoot: path.join(__dirname, '../../'),
   // NOTA: Para exportación estática, descomentar la siguiente línea
   // y comentar los redirects y otras funciones dinámicas
   // output: 'export',
