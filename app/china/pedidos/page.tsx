@@ -547,6 +547,23 @@ export default function PedidosChina() {
     return 25;
   }, []);
 
+  // Función para obtener la tarifa de envío aéreo desde la configuración
+  const fetchAirShippingRate = useCallback(async (): Promise<number> => {
+    try {
+      const response = await fetch('/api/config');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.config?.air_shipping_rate !== undefined && data.config.air_shipping_rate !== null) {
+          return Number(data.config.air_shipping_rate);
+        }
+      }
+    } catch (error) {
+      console.error('Error obteniendo tarifa de envío aéreo:', error);
+    }
+    // Fallback al valor por defecto si hay error
+    return 10; // $10 por kg por defecto
+  }, []);
+
   // Cargar margen de ganancia al inicio
   useEffect(() => {
     fetchProfitMargin().then(margin => {
@@ -1832,6 +1849,18 @@ export default function PedidosChina() {
     }
 
     const supabase = getSupabaseBrowserClient();
+    
+    // Obtener información completa del pedido para verificar el tipo de envío
+    const { data: orderData, error: orderFetchError } = await supabase
+      .from('orders')
+      .select('deliveryType, shippingType')
+      .eq('id', pedido.id)
+      .single();
+    
+    if (orderFetchError) {
+      console.error('Error obteniendo información del pedido:', orderFetchError);
+    }
+    
     // Entradas ahora en CNY (¥): convertir a USD para guardar en totalQuote
     const totalProductosCNY = Number(precioUnitario) * Number(pedido.cantidad || 0);
     const totalCNY = totalProductosCNY + Number(precioEnvio);
@@ -1844,13 +1873,29 @@ export default function PedidosChina() {
 
     // Aplicar margen de ganancia: precioConMargen = precioBase × (1 + margen/100)
     // Ejemplo: $1000 × (1 + 25/100) = $1000 × 1.25 = $1250
-    const totalUSDConMargen = totalUSDBase * (1 + currentProfitMargin / 100);
+    let totalUSDConMargen = totalUSDBase * (1 + currentProfitMargin / 100);
 
-    // 1) Actualizar totalQuote en la tabla orders con el precio que incluye el margen
+    // Si el pedido es aéreo, calcular y sumar el costo de envío aéreo
+    const isAirShipping = orderData?.deliveryType === 'air' || orderData?.shippingType === 'air' || pedido.deliveryType === 'air' || pedido.shippingType === 'air';
+    
+    if (isAirShipping && peso > 0) {
+      // Obtener la tarifa de envío aéreo desde la configuración
+      const airShippingRate = await fetchAirShippingRate();
+      
+      // Calcular costo de envío aéreo: peso × tarifa por kg
+      const costoEnvioAereo = Number(peso) * airShippingRate;
+      
+      // Sumar el costo de envío al precio con margen
+      totalUSDConMargen = totalUSDConMargen + costoEnvioAereo;
+      
+      console.log(`Pedido aéreo: peso=${peso}kg, tarifa=$${airShippingRate}/kg, costo envío=$${costoEnvioAereo}, precio final=$${totalUSDConMargen}`);
+    }
+
+    // 1) Actualizar totalQuote en la tabla orders con el precio que incluye el margen y envío aéreo (si aplica)
     const { error: updateError } = await supabase
       .from('orders')
       .update({
-        totalQuote: totalUSDConMargen, // Guardar precio con margen aplicado
+        totalQuote: totalUSDConMargen, // Guardar precio final: precioBase + margen + envío aéreo (si aplica)
         unitQuote: precioUnitario,
         shippingPrice: precioEnvio,
         height: altura,
