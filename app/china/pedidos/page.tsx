@@ -150,7 +150,7 @@ function groupOrders(orders: Pedido[]): OrderGroup[] {
   );
 
   const groups: OrderGroup[] = [];
-  const TIME_THRESHOLD_MS = 20 * 60 * 1000; // 20 minutos (fallback time grouping)
+  const TIME_THRESHOLD_MS = 3 * 60 * 1000; // 3 minutos (Exactamente igual que en Cliente)
 
   sorted.forEach((order) => {
     let added = false;
@@ -171,27 +171,7 @@ function groupOrders(orders: Pedido[]): OrderGroup[] {
       }
     }
 
-    // 2. If not added by batch_id, try time-based grouping (only for orders without batch_id)
-    if (!added && !order.batch_id) {
-      for (const group of groups) {
-        if (group.clientName !== order.cliente) continue;
-
-        // Skip groups that are explicitly formed by batch_id
-        const isBatchGroup = group.orders.some(o => !!o.batch_id);
-        if (isBatchGroup) continue;
-
-        const referenceOrder = group.orders[0];
-        const timeDiff = Math.abs(new Date(referenceOrder.fecha).getTime() - new Date(order.fecha).getTime());
-
-        if (timeDiff <= TIME_THRESHOLD_MS) {
-          group.orders.push(order);
-          group.minId = Math.min(group.minId, order.id);
-          group.maxId = Math.max(group.maxId, order.id);
-          added = true;
-          break;
-        }
-      }
-    }
+    // 2. Logic removed: Time-based grouping is disabled. Only strict batch_id grouping.
 
     if (!added) {
       groups.push({
@@ -347,6 +327,7 @@ export default function PedidosChina() {
               hasAlternative: order.hasAlternative,
               alternativeStatus: order.alternativeStatus,
               alternativeRejectionReason: order.alternativeRejectionReason,
+              batch_id: order.batch_id,
             } as Pedido;
           })
       );
@@ -1126,25 +1107,25 @@ export default function PedidosChina() {
         toast({ title: t('chinese.ordersPage.toasts.loadOrdersErrorTitle'), description: t('chinese.ordersPage.toasts.tryAgain') });
         return;
       }
-      
+
       // Obtener client_ids únicos
       const clientIds = Array.from(new Set((data || []).map((o: any) => o.client_id).filter(Boolean)));
-      
+
       // Obtener información de clientes y usuarios
       const clientProfileMap = new Map<string, string>();
-      
+
       if (clientIds.length > 0) {
         // Obtener clientes
         const { data: clientsData } = await supabase
           .from('clients')
           .select('user_id, name')
           .in('user_id', clientIds);
-        
+
         if (clientsData) {
           // Para cada cliente, intentar obtener el nombre del perfil desde la API
           for (const client of clientsData) {
             let profileName = client.name || '—';
-            
+
             // Intentar obtener el nombre del perfil desde user_metadata usando la API
             try {
               const response = await fetch(`/api/admin-name?uid=${client.user_id}`);
@@ -1158,15 +1139,15 @@ export default function PedidosChina() {
               // Si falla, usar el nombre de la tabla clients como fallback
               console.log('No se pudo obtener nombre del perfil, usando nombre de clients:', e);
             }
-            
+
             clientProfileMap.set(client.user_id, profileName);
           }
         }
       }
-      
+
       const mapped: Pedido[] = (data || []).map((order: any) => {
         const clientProfileName = order.client_id ? (clientProfileMap.get(order.client_id) || order.clientName || order.client || '—') : '—';
-        
+
         return {
           id: order.id,
           clientId: order.client_id,
@@ -1849,18 +1830,18 @@ export default function PedidosChina() {
     }
 
     const supabase = getSupabaseBrowserClient();
-    
+
     // Obtener información completa del pedido para verificar el tipo de envío
     const { data: orderData, error: orderFetchError } = await supabase
       .from('orders')
       .select('deliveryType, shippingType')
       .eq('id', pedido.id)
       .single();
-    
+
     if (orderFetchError) {
       console.error('Error obteniendo información del pedido:', orderFetchError);
     }
-    
+
     // Entradas ahora en CNY (¥): convertir a USD para guardar en totalQuote
     const totalProductosCNY = Number(precioUnitario) * Number(pedido.cantidad || 0);
     const totalCNY = totalProductosCNY + Number(precioEnvio);
@@ -1877,17 +1858,17 @@ export default function PedidosChina() {
 
     // Si el pedido es aéreo, calcular y sumar el costo de envío aéreo
     const isAirShipping = orderData?.deliveryType === 'air' || orderData?.shippingType === 'air' || pedido.deliveryType === 'air' || pedido.shippingType === 'air';
-    
+
     if (isAirShipping && peso > 0) {
       // Obtener la tarifa de envío aéreo desde la configuración
       const airShippingRate = await fetchAirShippingRate();
-      
+
       // Calcular costo de envío aéreo: peso × tarifa por kg
       const costoEnvioAereo = Number(peso) * airShippingRate;
-      
+
       // Sumar el costo de envío al precio con margen
       totalUSDConMargen = totalUSDConMargen + costoEnvioAereo;
-      
+
       console.log(`Pedido aéreo: peso=${peso}kg, tarifa=$${airShippingRate}/kg, costo envío=$${costoEnvioAereo}, precio final=$${totalUSDConMargen}`);
     }
 
@@ -3625,12 +3606,12 @@ export default function PedidosChina() {
                   <span className={`text-2xl ${mounted && theme === 'dark' ? 'text-white' : ''}`}>×</span>
                 </Button>
               </div>
-              
+
               {/* Mensaje destacado y muy visible */}
-              <div className={`mb-6 p-5 rounded-xl border-2 ${mounted && theme === 'dark' 
-                ? 'bg-gradient-to-r from-red-900/40 to-orange-900/40 border-red-500/50 shadow-lg shadow-red-500/20' 
+              <div className={`mb-6 p-5 rounded-xl border-2 ${mounted && theme === 'dark'
+                ? 'bg-gradient-to-r from-red-900/40 to-orange-900/40 border-red-500/50 shadow-lg shadow-red-500/20'
                 : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-400 shadow-lg shadow-red-200'
-              } animate-pulse`}>
+                } animate-pulse`}>
                 <div className="flex items-start gap-3">
                   <div className={`flex-shrink-0 p-2 rounded-full ${mounted && theme === 'dark' ? 'bg-red-500/20' : 'bg-red-100'}`}>
                     <AlertTriangle className={`h-6 w-6 ${mounted && theme === 'dark' ? 'text-red-400' : 'text-red-600'}`} />
@@ -3650,13 +3631,13 @@ export default function PedidosChina() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Indicador de descarga exitosa */}
               {labelDownloaded && (
-                <div className={`mb-4 p-3 rounded-lg border ${mounted && theme === 'dark' 
-                  ? 'bg-green-900/30 border-green-500/50' 
+                <div className={`mb-4 p-3 rounded-lg border ${mounted && theme === 'dark'
+                  ? 'bg-green-900/30 border-green-500/50'
                   : 'bg-green-50 border-green-300'
-                }`}>
+                  }`}>
                   <div className="flex items-center gap-2">
                     <CheckCircle className={`h-5 w-5 ${mounted && theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} />
                     <p className={`text-sm font-medium ${mounted && theme === 'dark' ? 'text-green-300' : 'text-green-700'}`}>
@@ -3672,17 +3653,17 @@ export default function PedidosChina() {
                   onClick={async () => {
                     if (!modalEtiqueta.pedidoId) return;
                     setGeneratingLabel(true);
-                    try { 
+                    try {
                       await handleGenerateOrderLabelPdf(modalEtiqueta.pedidoId);
-                    } finally { 
+                    } finally {
                       setGeneratingLabel(false);
                     }
                   }}
                   disabled={generatingLabel || labelDownloaded}
-                  className={`${labelDownloaded 
+                  className={`${labelDownloaded
                     ? (mounted && theme === 'dark' ? 'bg-green-900/30 border-green-500 text-green-300' : 'bg-green-50 border-green-300 text-green-700')
                     : (mounted && theme === 'dark' ? 'border-blue-500 text-blue-300 hover:bg-blue-900/30' : 'border-blue-500 text-blue-600 hover:bg-blue-50')
-                  } font-semibold ${!labelDownloaded ? 'shadow-md' : ''}`}
+                    } font-semibold ${!labelDownloaded ? 'shadow-md' : ''}`}
                 >
                   {labelDownloaded ? (
                     <>
@@ -3701,7 +3682,7 @@ export default function PedidosChina() {
                     </>
                   )}
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   onClick={() => { closeModalEtiqueta(); setTimeout(() => { setModalEmpaquetar(prev => ({ ...prev, open: true })); }, 350); }}
@@ -3710,13 +3691,13 @@ export default function PedidosChina() {
                 >
                   {t('chinese.ordersPage.modals.selectBoxForOrder.cancel', { defaultValue: 'Cancelar' })}
                 </Button>
-                
+
                 {/* Botón Aceptar - Deshabilitado hasta que se descargue la etiqueta */}
                 <Button
-                  className={`${labelDownloaded 
-                    ? 'bg-green-600 hover:bg-green-700' 
+                  className={`${labelDownloaded
+                    ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-slate-400 hover:bg-slate-500 cursor-not-allowed'
-                  } text-white font-semibold shadow-lg transition-all`}
+                    } text-white font-semibold shadow-lg transition-all`}
                   disabled={generatingLabel || !labelDownloaded}
                   onClick={async () => {
                     if (!modalEtiqueta.pedidoId || !modalEtiqueta.box) return;
@@ -3724,7 +3705,7 @@ export default function PedidosChina() {
                     try {
                       await handleSelectCajaForPedido(modalEtiqueta.pedidoId, modalEtiqueta.box);
                       closeModalEtiqueta();
-                    } finally { 
+                    } finally {
                       setGeneratingLabel(false);
                     }
                   }}

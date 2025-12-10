@@ -1177,35 +1177,8 @@ export default function MisPedidosPage() {
         }
       }
 
-      // 2. If not added by batch_id (or no batch_id), try time-based grouping (only for orders without batch_id to avoid mixing)
-      if (!added && !order.batch_id) {
-        for (const group of groups) {
-          // Skip groups that are explicitly formed by batch_id
-          const isBatchGroup = group.orders.some(o => !!o.batch_id);
-          if (isBatchGroup) continue;
-
-          const referenceOrder = group.orders[0];
-          const timeDiff = Math.abs(new Date(referenceOrder.createdAt).getTime() - new Date(order.createdAt).getTime());
-
-          if (timeDiff <= TIME_THRESHOLD_MS) {
-            group.orders.push(order);
-            group.minId = Math.min(Number(group.minId), Number(order.id));
-            group.maxId = Math.max(Number(group.maxId), Number(order.id));
-
-            // Update total amount if payable
-            if (order.status === 'quoted' || order.stateNum === -1) {
-              // Calcular monto en USD
-              const amountUSD = order.totalQuote !== null && order.totalQuote !== undefined
-                ? order.totalQuote
-                : ((order.unitQuote ?? 0) + (order.shippingPrice ?? 0)) / (cnyRate || 7.25);
-              group.totalAmount += amountUSD;
-              group.canPayAll = true;
-            }
-            added = true;
-            break;
-          }
-        }
-      }
+      // 2. Logic removed: Time-based grouping is disabled per user request. 
+      // Only strict batch_id grouping is allowed.
 
       if (!added) {
         const isPayable = order.status === 'quoted' || order.stateNum === -1;
