@@ -493,7 +493,7 @@ export default function MisPedidosPage() {
   };
 
   // Cargar pedidos del cliente autenticado
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     if (!clientId) return;
     try {
       const { data, error } = await supabase
@@ -639,12 +639,12 @@ export default function MisPedidosPage() {
     } catch (e) {
       console.error('Excepción cargando pedidos:', e);
     }
-  };
+  }, [clientId, cnyRate, supabase]);
 
   // Disparar carga cuando tengamos clientId
   useEffect(() => {
     if (clientId) fetchOrders();
-  }, [clientId]);
+  }, [clientId, fetchOrders]);
 
   // Agregar realtime para pedidos del cliente
   useEffect(() => {

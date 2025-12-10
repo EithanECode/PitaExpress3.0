@@ -4,7 +4,9 @@ import {
   getLatestValidExchangeRate,
   getLatestExchangeRate,
   isValidExchangeRate,
-  cleanupOldExchangeRates
+  cleanupOldExchangeRates,
+  type LatestRateResult,
+  type ExchangeRateRecord
 } from '@/lib/supabase/exchange-rates';
 
 // Función para obtener la tasa de cambio oficial del BCV
@@ -18,10 +20,12 @@ async function fetchExchangeRate(): Promise<number> {
         'User-Agent': 'MornaProject/1.0'
       },
       // Timeout reducido a 3s para evitar bloqueos largos
-      signal: AbortSignal.timeout(3000)
+      signal: AbortSignal.timeout(3000),
+      cache: 'no-store' // Evitar caché
     });
 
     if (!response.ok) {
+      // No lanzar error inmediatamente, intentar fallbacks primero
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
@@ -150,18 +154,28 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. APIs fallaron, intentar usar última tasa válida de BD
-
-    const lastValidRate = await getLatestValidExchangeRate();
+    let lastValidRate: LatestRateResult | null = null;
+    try {
+      lastValidRate = await getLatestValidExchangeRate();
+    } catch (dbError: any) {
+      console.error('[ExchangeRate] Error getting rate from database:', dbError);
+      // Continuar con el siguiente fallback
+    }
 
     if (lastValidRate) {
-
-
-      // Guardar registro de que usamos fallback
-      await saveExchangeRate(lastValidRate.rate, lastValidRate.source, true, {
-        fallback_reason: 'APIs failed',
-        original_error: apiError?.message,
-        age_minutes: lastValidRate.age_minutes
-      });
+      // Guardar registro de que usamos fallback (solo si no es muy antiguo)
+      if (lastValidRate.age_minutes < 1440) { // Solo si tiene menos de 24 horas
+        try {
+          await saveExchangeRate(lastValidRate.rate, lastValidRate.source, true, {
+            fallback_reason: 'APIs failed',
+            original_error: apiError?.message,
+            age_minutes: lastValidRate.age_minutes
+          });
+        } catch (saveError) {
+          console.warn('[ExchangeRate] Could not save fallback record:', saveError);
+          // Continuar aunque falle el guardado
+        }
+      }
 
       return NextResponse.json({
         success: true,
@@ -175,16 +189,19 @@ export async function GET(request: NextRequest) {
     }
 
     // 4. No hay tasa válida en BD, usar cualquier tasa (incluso fallback anterior)
+    let anyLastRate: ExchangeRateRecord | null = null;
+    try {
+      anyLastRate = await getLatestExchangeRate();
+    } catch (dbError: any) {
+      console.error('[ExchangeRate] Error getting any rate from database:', dbError);
+      // Continuar con el siguiente fallback
+    }
 
-    const anyLastRate = await getLatestExchangeRate();
-
-    if (anyLastRate) {
-
-
+    if (anyLastRate && isValidExchangeRate(anyLastRate.rate)) {
       return NextResponse.json({
         success: true,
         rate: anyLastRate.rate,
-        timestamp: anyLastRate.timestamp || new Date().toISOString(),
+        timestamp: anyLastRate.timestamp || anyLastRate.created_at || new Date().toISOString(),
         source: anyLastRate.source || 'Base de Datos',
         from_database: true,
         warning: 'Usando tasa de respaldo de la base de datos debido a errores en todas las APIs'
@@ -192,13 +209,19 @@ export async function GET(request: NextRequest) {
     }
 
     // 5. Último recurso: tasa por defecto y guardarla
-    console.error('[ExchangeRate] No rates available anywhere, using hardcoded default');
+    console.warn('[ExchangeRate] No rates available anywhere, using hardcoded default');
     const defaultRate = 166.58;
 
-    await saveExchangeRate(defaultRate, 'Hardcoded Default', true, {
-      fallback_reason: 'No rates available in APIs or database',
-      api_error: apiError?.message
-    });
+    // Intentar guardar la tasa por defecto, pero no fallar si no se puede
+    try {
+      await saveExchangeRate(defaultRate, 'Hardcoded Default', true, {
+        fallback_reason: 'No rates available in APIs or database',
+        api_error: apiError?.message
+      });
+    } catch (saveError) {
+      console.warn('[ExchangeRate] Could not save default rate:', saveError);
+      // Continuar aunque falle el guardado
+    }
 
     return NextResponse.json({
       success: true,
@@ -265,7 +288,12 @@ export async function POST(request: NextRequest) {
       });
     } catch (apiError: any) {
       // Si falla API, usar última tasa válida de BD
-      const lastValidRate = await getLatestValidExchangeRate();
+      let lastValidRate: LatestRateResult | null = null;
+      try {
+        lastValidRate = await getLatestValidExchangeRate();
+      } catch (dbError: any) {
+        console.error('[ExchangeRate] Error getting rate from database:', dbError);
+      }
 
       if (lastValidRate) {
         return NextResponse.json({

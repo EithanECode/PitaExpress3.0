@@ -2036,7 +2036,13 @@
         "profitMarginTitle": "Margen de Ganancia",
         "configurationAlert": "Tasas de cambio configuradas. Recuerda guardar los cambios en <strong>Guardar Configuración</strong> para aplicar todas las modificaciones.",
         "lastSaved": "Guardado:",
-        "changeMadeBy": "Cambios realizados por {{userName}} el {{date}}"
+        "changeMadeBy": "Cambios realizados por {{userName}} el {{date}}",
+        "rateUpdated": "Tasa actualizada",
+        "rateUpdatedDescription": "{{rate}} {{currency}} [API en vivo]",
+        "rateRecovered": "Tasa recuperada",
+        "rateRecoveredDescription": "{{rate}} {{currency}}{{age}}",
+        "rateRecoveredDescriptionNoAge": "{{rate}} {{currency}}",
+        "liveApi": "API en vivo"
       },
       "notifications": {
         "notificationSystem": "Sistema de notificaciones",

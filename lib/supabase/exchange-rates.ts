@@ -60,21 +60,38 @@ export async function getLatestValidExchangeRate(): Promise<LatestRateResult | n
   try {
     const supabase = getSupabaseServiceRoleClient();
 
+    // Usar query directa en lugar de RPC que no existe
     const { data, error } = await supabase
-      .rpc('get_latest_valid_exchange_rate');
+      .from('exchange_rates')
+      .select('rate, source, timestamp, created_at')
+      .eq('is_fallback', false)
+      .order('timestamp', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
     if (error) {
       console.error('Error getting latest valid exchange rate:', error);
       return null;
     }
 
-    if (!data || data.length === 0) {
+    if (!data) {
       console.warn('[ExchangeRate] No valid rates found in database');
       return null;
     }
 
-    const result = data[0] as LatestRateResult;
+    // Calcular edad en minutos
+    const timestamp = data.timestamp || data.created_at;
+    const ageMinutes = timestamp 
+      ? Math.floor((new Date().getTime() - new Date(timestamp).getTime()) / (1000 * 60))
+      : 0;
 
+    const result: LatestRateResult = {
+      rate: data.rate,
+      source: data.source,
+      timestamp: timestamp || new Date().toISOString(),
+      age_minutes: ageMinutes
+    };
 
     return result;
   } catch (error) {

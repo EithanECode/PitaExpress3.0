@@ -545,6 +545,23 @@ export default function PedidosChina() {
     return 10; // $10 por kg por defecto
   }, []);
 
+  // Función para obtener la tarifa de envío marítimo desde la configuración
+  const fetchSeaShippingRate = useCallback(async (): Promise<number> => {
+    try {
+      const response = await fetch('/api/config');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.config?.sea_shipping_rate !== undefined && data.config.sea_shipping_rate !== null) {
+          return Number(data.config.sea_shipping_rate);
+        }
+      }
+    } catch (error) {
+      console.error('Error obteniendo tarifa de envío marítimo:', error);
+    }
+    // Fallback al valor por defecto si hay error
+    return 180; // $180 por m³ por defecto
+  }, []);
+
   // Cargar margen de ganancia al inicio
   useEffect(() => {
     fetchProfitMargin().then(margin => {
@@ -1872,11 +1889,35 @@ export default function PedidosChina() {
       console.log(`Pedido aéreo: peso=${peso}kg, tarifa=$${airShippingRate}/kg, costo envío=$${costoEnvioAereo}, precio final=$${totalUSDConMargen}`);
     }
 
-    // 1) Actualizar totalQuote en la tabla orders con el precio que incluye el margen y envío aéreo (si aplica)
+    // Si el pedido es marítimo, calcular y sumar el costo de envío marítimo
+    const isSeaShipping = orderData?.deliveryType === 'maritime' || orderData?.shippingType === 'maritime' || orderData?.shippingType === 'sea' || pedido.deliveryType === 'maritime' || pedido.shippingType === 'maritime' || pedido.shippingType === 'sea';
+
+    if (isSeaShipping && altura > 0 && anchura > 0 && largo > 0) {
+      // Obtener la tarifa de envío marítimo desde la configuración
+      const seaShippingRate = await fetchSeaShippingRate();
+
+      // Convertir dimensiones de cm a metros
+      const alturaMetros = Number(altura) / 100;
+      const anchuraMetros = Number(anchura) / 100;
+      const largoMetros = Number(largo) / 100;
+
+      // Calcular volumen en metros cúbicos
+      const volumen = alturaMetros * anchuraMetros * largoMetros;
+
+      // Calcular costo de envío marítimo: volumen × tarifa por m³
+      const costoEnvioMaritimo = volumen * seaShippingRate;
+
+      // Sumar el costo de envío al precio con margen
+      totalUSDConMargen = totalUSDConMargen + costoEnvioMaritimo;
+
+      console.log(`Pedido marítimo: dimensiones=${altura}×${anchura}×${largo}cm (${volumen.toFixed(3)}m³), tarifa=$${seaShippingRate}/m³, costo envío=$${costoEnvioMaritimo.toFixed(2)}, precio final=$${totalUSDConMargen.toFixed(2)}`);
+    }
+
+    // 1) Actualizar totalQuote en la tabla orders con el precio que incluye el margen y envío aéreo/marítimo (si aplica)
     const { error: updateError } = await supabase
       .from('orders')
       .update({
-        totalQuote: totalUSDConMargen, // Guardar precio final: precioBase + margen + envío aéreo (si aplica)
+        totalQuote: totalUSDConMargen, // Guardar precio final: precioBase + margen + envío aéreo/marítimo (si aplica)
         unitQuote: precioUnitario,
         shippingPrice: precioEnvio,
         height: altura,
