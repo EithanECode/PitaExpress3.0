@@ -39,18 +39,21 @@
     "login": {
       "title": "Iniciar Sesión",
       "welcomeBack": "¡Bienvenido de Nuevo!",
+      "welcomeToCompany": "Bienvenido a Pita Express",
       "welcomeMessage": "Para mantenerte conectado, por favor inicia sesión con tu información personal.",
       "errorFallback": "Error al iniciar sesión"
     },
     "register": {
       "title": "Registrarse",
       "helloFriend": "¡Hola Amigo!",
+      "welcomeToCompany": "Bienvenido a Pita Express",
       "helloMessage": "Introduce tus datos personales y comienza tu viaje con nosotros.",
       "success": "¡Registro exitoso! Revisa tu correo para confirmar tu cuenta.",
       "errorFallback": "Error al registrarse"
     },
     "panels": {
       "welcomeBack": "¡Bienvenido de Nuevo!",
+      "welcomeToCompany": "Bienvenido a Pita Express",
       "welcomeMessage": "Para mantenerte conectado, por favor inicia sesión con tu información personal.",
       "helloFriend": "¡Hola Amigo!",
       "helloMessage": "Introduce tus datos personales y comienza tu viaje con nosotros."
@@ -89,6 +92,71 @@
       "verifyCode": "Verificar Código",
       "newPassword": "Nueva Contraseña",
       "confirmNewPassword": "Confirmar Nueva Contraseña"
+    }
+  },
+  "loginInfo": {
+    "portalFeatures": {
+      "title": "¿Qué puedes hacer en nuestro portal?",
+      "features": {
+        "quotes": {
+          "title": "Solicitar Cotizaciones",
+          "description": "Obtén precios competitivos para tus importaciones"
+        },
+        "buy": {
+          "title": "Comprar Directamente",
+          "description": "Selecciona productos de proveedores verificados"
+        },
+        "tracking": {
+          "title": "Seguimiento en Tiempo Real",
+          "description": "Monitorea tu mercancía desde China hasta Venezuela"
+        },
+        "payments": {
+          "title": "Pagos Seguros",
+          "description": "Múltiples métodos de pago adaptados a Venezuela"
+        },
+        "support": {
+          "title": "Soporte Personalizado",
+          "description": "Asesoría en cada paso del proceso"
+        }
+      }
+    },
+    "servicePhilosophy": {
+      "title": "Nuestra Filosofía de Servicio",
+      "slogan": "Analizamos Posibilidades. Generamos Soluciones. Construimos Oportunidades.",
+      "intro": "En Pita Logística conectamos personas y organizaciones con soluciones claras, guiados por nuestros valores fundamentales:",
+      "values": {
+        "transparency": {
+          "title": "Transparencia",
+          "description": "Comunicación clara en cada etapa"
+        },
+        "commitment": {
+          "title": "Compromiso",
+          "description": "Contigo, tus pedidos y tus objetivos"
+        },
+        "adaptability": {
+          "title": "Adaptabilidad",
+          "description": "Soluciones flexibles a tus necesidades específicas"
+        }
+      }
+    },
+    "ethicalCommitment": {
+      "title": "Nuestro Compromiso Ético",
+      "intro": "Como parte de nuestro **Código de Ética**, garantizamos:",
+      "guarantees": {
+        "respect": "Respeto por tu negocio y tus necesidades",
+        "integrity": "Integridad en cada transacción y comunicación",
+        "trust": "Confianza a través del cumplimiento de compromisos"
+      }
+    },
+    "footer": {
+      "companyName": "Pita Logística, C.A.",
+      "tagline": "El puente que conecta personas y organizaciones con soluciones claras e innovadoras",
+      "links": {
+        "privacy": "Política de Privacidad",
+        "terms": "Términos de Servicio",
+        "ethics": "Código de Ética Completo"
+      },
+      "copyright": "© 2023 Pita Logística, C.A. - Todos los derechos reservados"
     }
   },
   "authPasswordResetModal": {

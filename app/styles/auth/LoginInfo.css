@@ -1,0 +1,282 @@
+/* Contenedor principal para las secciones informativas */
+.login-info-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  background-color: rgba(32, 40, 65, 0.85); /* Fondo oscuro con transparencia */
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+/* Secciones informativas */
+.login-info-section {
+  margin-bottom: 40px;
+}
+
+.section-divider {
+  width: 100%;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin: 30px 0;
+}
+
+.section-title {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+/* Portal Features */
+.portal-features .features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.feature-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.feature-content {
+  flex: 1;
+}
+
+.feature-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 5px;
+}
+
+.feature-description {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Service Philosophy */
+.service-philosophy {
+  margin-top: 40px;
+}
+
+.philosophy-slogan {
+  font-size: 1.1rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.philosophy-intro {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.values-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.value-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.value-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.value-content {
+  flex: 1;
+}
+
+.value-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 5px;
+}
+
+.value-description {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Ethical Commitment */
+.ethical-commitment {
+  margin-top: 40px;
+}
+
+.commitment-intro {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.commitment-intro strong {
+  font-weight: bold;
+}
+
+.guarantees-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.guarantee-item {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.8;
+  padding-left: 20px;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.guarantee-item::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: white;
+  font-weight: bold;
+}
+
+/* Footer */
+.login-footer {
+  margin-top: 40px;
+}
+
+.footer-content {
+  text-align: left;
+}
+
+.footer-company-name {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 10px;
+}
+
+.footer-tagline {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.footer-divider {
+  width: 100%;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin: 20px 0;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.footer-link {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+.footer-link-separator {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.footer-copyright {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .login-info-container {
+    padding: 30px 15px;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .feature-title,
+  .value-title {
+    font-size: 1rem;
+  }
+
+  .feature-description,
+  .value-description,
+  .guarantee-item {
+    font-size: 0.9rem;
+  }
+
+  .philosophy-slogan {
+    font-size: 1rem;
+  }
+
+  .footer-company-name {
+    font-size: 1.1rem;
+  }
+
+  .footer-links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .footer-link-separator {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .login-info-container {
+    padding: 35px 20px;
+  }
+}
+

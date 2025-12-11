@@ -1,5 +1,6 @@
 import "../styles/auth/AuthPage.css";
 import "../styles/auth/PasswordReset.css";
+import "../styles/auth/LoginInfo.css";
 import React from "react";
 
 export default function LoginRegisterLayout({

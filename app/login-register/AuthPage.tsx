@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import Lottie from "react-lottie";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
-import { useOptimizedLottie } from "@/hooks/useOptimizedLottie";
+import Image from "next/image";
 
 type Props = {
   onNavigateToPasswordReset: () => void;
@@ -24,12 +23,6 @@ export default function AuthPage({
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Usar el hook optimizado para cargar la animación
-  const { animationData: defaultOptions, isLoading, hasError } = useOptimizedLottie({
-    animationPath: "/animations/wired-flat-497-truck-delivery-loop-cycle.json",
-    timeout: 3000 // Timeout más corto para mejor UX
-  });
 
   const handleToggle = (toLogin: boolean): void => {
     if (isAnimating) return; // Prevenir múltiples clics durante la animación
@@ -60,40 +53,19 @@ export default function AuthPage({
     }
   }, []);
 
-  const handleLottieClick = (): void => {};
-
-  // Componente de fallback para cuando la animación no carga
-  const AnimationFallback = () => (
-    <div className="lottie-fallback">
-      <div className="fallback-icon">🚚</div>
-    </div>
-  );
-
-  // Componente de loading
-  const LoadingSpinner = () => (
-    <div className="lottie-placeholder">
-      <div className="loading-spinner"></div>
-    </div>
-  );
-
-  // Componente de animación optimizado
-  const OptimizedLottie = ({ height, width }: { height: number; width: number }) => {
-    if (hasError) {
-      return <AnimationFallback />;
-    }
-
-    if (isLoading || !defaultOptions) {
-      return <LoadingSpinner />;
-    }
-
+  // Componente del logo SVG
+  const LogoIcon = ({ height, width }: { height: number; width: number }) => {
     return (
-      <Lottie
-        options={defaultOptions}
-        height={height}
-        width={width}
-        pointerEvents="none"
-        onClick={handleLottieClick}
-      />
+      <div style={{ width: `${width}px`, height: `${height}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Image
+          src="/pita_icon.svg"
+          alt="Pita Express Logo"
+          width={width}
+          height={height}
+          style={{ objectFit: 'contain' }}
+          priority
+        />
+      </div>
     );
   };
 
@@ -141,9 +113,10 @@ export default function AuthPage({
           <div className="overlay">
             <div className="overlay-panel overlay-left">
               <div className="lottie-panel-icon">
-                <OptimizedLottie height={120} width={120} />
+                <LogoIcon height={120} width={120} />
               </div>
               <h2 style={{ fontWeight:"bold", fontSize: "1.25rem" }}>{t('auth.panels.welcomeBack')}</h2>
+              <h3 style={{ fontWeight: "600", fontSize: "1rem", marginTop: "0.5rem" }}>{t('auth.panels.welcomeToCompany')}</h3>
               <p className="text-sm">{t('auth.panels.welcomeMessage')}</p>
               <button className="ghost-button" onClick={() => handleToggle(true)}>
                 {t('auth.common.login')}
@@ -152,9 +125,10 @@ export default function AuthPage({
 
             <div className="overlay-panel overlay-right">
               <div className="lottie-panel-icon">
-                <OptimizedLottie height={120} width={120} />
+                <LogoIcon height={120} width={120} />
               </div>
               <h2 style={{ fontWeight: "bold", fontSize: "1.25rem" }}>{t('auth.panels.helloFriend')}</h2>
+              <h3 style={{ fontWeight: "600", fontSize: "1rem", marginTop: "0.5rem" }}>{t('auth.panels.welcomeToCompany')}</h3>
               <p className="text-sm">{t('auth.panels.helloMessage')}</p>
               <button className="ghost-button" onClick={() => handleToggle(false)}>
                 {t('auth.common.register')}
@@ -171,9 +145,10 @@ export default function AuthPage({
             <div className="mobile-form">
               <div className="mobile-form-header">
                 <div className="lottie-mobile-icon">
-                  <OptimizedLottie height={80} width={80} />
+                  <LogoIcon height={80} width={80} />
                 </div>
                 <h2>{t('auth.login.welcomeBack')}</h2>
+                <h3 style={{ fontWeight: "600", fontSize: "1rem", marginTop: "0.5rem" }}>{t('auth.login.welcomeToCompany')}</h3>
                 <p>{t('auth.login.welcomeMessage')}</p>
               </div>
               <LoginForm onNavigateToPasswordReset={onNavigateToPasswordReset} idPrefix="mobile" />
@@ -182,9 +157,10 @@ export default function AuthPage({
             <div className="mobile-form">
               <div className="mobile-form-header">
                 <div className="lottie-mobile-icon">
-                  <OptimizedLottie height={80} width={80} />
+                  <LogoIcon height={80} width={80} />
                 </div>
                 <h2>{t('auth.register.helloFriend')}</h2>
+                <h3 style={{ fontWeight: "600", fontSize: "1rem", marginTop: "0.5rem" }}>{t('auth.register.welcomeToCompany')}</h3>
                 <p>{t('auth.register.helloMessage')}</p>
               </div>
               <RegisterForm />

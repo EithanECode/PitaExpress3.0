@@ -39,12 +39,15 @@
     "login": {
       "title": "登录",
       "welcomeBack": "欢迎回来！",
+      "welcomeToCompany": "欢迎来到 Pita Express",
       "welcomeMessage": "请使用你的个人信息登录以保持连接。",
       "errorFallback": "登录错误"
     },
     "register": {
       "title": "注册",
       "estimatedBudget": "预估预算",
+      "helloFriend": "你好，朋友！",
+      "welcomeToCompany": "欢迎来到 Pita Express",
       "helloMessage": "输入你的个人信息，开始与我们一起的旅程。",
       "success": "注册成功！请查看邮箱确认你的账号。",
       "max7DigitsHint": "（最多 7 位整数）",
@@ -52,6 +55,7 @@
     },
     "panels": {
       "welcomeBack": "欢迎回来！",
+      "welcomeToCompany": "欢迎来到 Pita Express",
       "welcomeMessage": "请使用你的个人信息登录以保持连接。",
       "helloFriend": "你好，朋友！",
       "helloMessage": "输入你的个人信息，开始与我们一起的旅程。"
@@ -90,6 +94,71 @@
       "verifyCode": "验证代码",
       "newPassword": "新密码",
       "confirmNewPassword": "确认新密码"
+    }
+  },
+  "loginInfo": {
+    "portalFeatures": {
+      "title": "您可以在我们的门户网站上做什么？",
+      "features": {
+        "quotes": {
+          "title": "请求报价",
+          "description": "为您的进口获得有竞争力的价格"
+        },
+        "buy": {
+          "title": "直接购买",
+          "description": "从经过验证的供应商中选择产品"
+        },
+        "tracking": {
+          "title": "实时跟踪",
+          "description": "监控您的商品从中国到委内瑞拉"
+        },
+        "payments": {
+          "title": "安全支付",
+          "description": "适应委内瑞拉的多种支付方式"
+        },
+        "support": {
+          "title": "个性化支持",
+          "description": "在流程的每一步提供建议"
+        }
+      }
+    },
+    "servicePhilosophy": {
+      "title": "我们的服务理念",
+      "slogan": "我们分析可能性。我们产生解决方案。我们创造机会。",
+      "intro": "在 Pita Logística，我们以我们的基本价值观为指导，将人员和组织与清晰的解决方案联系起来：",
+      "values": {
+        "transparency": {
+          "title": "透明度",
+          "description": "在每个阶段进行清晰的沟通"
+        },
+        "commitment": {
+          "title": "承诺",
+          "description": "与您、您的订单和您的目标同在"
+        },
+        "adaptability": {
+          "title": "适应性",
+          "description": "针对您的特定需求的灵活解决方案"
+        }
+      }
+    },
+    "ethicalCommitment": {
+      "title": "我们的道德承诺",
+      "intro": "作为我们**道德准则**的一部分，我们保证：",
+      "guarantees": {
+        "respect": "尊重您的业务和需求",
+        "integrity": "在每次交易和沟通中保持诚信",
+        "trust": "通过履行承诺建立信任"
+      }
+    },
+    "footer": {
+      "companyName": "Pita Logística, C.A.",
+      "tagline": "连接人员和组织与清晰创新解决方案的桥梁",
+      "links": {
+        "privacy": "隐私政策",
+        "terms": "服务条款",
+        "ethics": "完整道德准则"
+      },
+      "copyright": "© 2023 Pita Logística, C.A. - 保留所有权利"
     }
   },
   "authPasswordResetModal": {

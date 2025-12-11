@@ -38,18 +38,21 @@
     "login": {
       "title": "Login",
       "welcomeBack": "Welcome Back!",
+      "welcomeToCompany": "Welcome to Pita Express",
       "welcomeMessage": "To keep you connected, please sign in with your personal info.",
       "errorFallback": "Login error"
     },
     "register": {
       "title": "Register",
       "helloFriend": "Hello Friend!",
+      "welcomeToCompany": "Welcome to Pita Express",
       "helloMessage": "Enter your personal details and start your journey with us.",
       "success": "Registration successful! Check your email to confirm your account.",
       "errorFallback": "Registration error"
     },
     "panels": {
       "welcomeBack": "Welcome Back!",
+      "welcomeToCompany": "Welcome to Pita Express",
       "welcomeMessage": "To keep you connected, please sign in with your personal info.",
       "helloFriend": "Hello Friend!",
       "helloMessage": "Enter your personal details and start your journey with us."
@@ -88,6 +91,71 @@
       "verifyCode": "Verify Code",
       "newPassword": "New Password",
       "confirmNewPassword": "Confirm New Password"
+    }
+  },
+  "loginInfo": {
+    "portalFeatures": {
+      "title": "What can you do on our portal?",
+      "features": {
+        "quotes": {
+          "title": "Request Quotes",
+          "description": "Get competitive prices for your imports"
+        },
+        "buy": {
+          "title": "Buy Directly",
+          "description": "Select products from verified suppliers"
+        },
+        "tracking": {
+          "title": "Real-time Tracking",
+          "description": "Monitor your merchandise from China to Venezuela"
+        },
+        "payments": {
+          "title": "Secure Payments",
+          "description": "Multiple payment methods adapted to Venezuela"
+        },
+        "support": {
+          "title": "Personalized Support",
+          "description": "Advice at every step of the process"
+        }
+      }
+    },
+    "servicePhilosophy": {
+      "title": "Our Service Philosophy",
+      "slogan": "We Analyze Possibilities. We Generate Solutions. We Build Opportunities.",
+      "intro": "At Pita Logística we connect people and organizations with clear solutions, guided by our fundamental values:",
+      "values": {
+        "transparency": {
+          "title": "Transparency",
+          "description": "Clear communication at every stage"
+        },
+        "commitment": {
+          "title": "Commitment",
+          "description": "With you, your orders and your objectives"
+        },
+        "adaptability": {
+          "title": "Adaptability",
+          "description": "Flexible solutions to your specific needs"
+        }
+      }
+    },
+    "ethicalCommitment": {
+      "title": "Our Ethical Commitment",
+      "intro": "As part of our **Code of Ethics**, we guarantee:",
+      "guarantees": {
+        "respect": "Respect for your business and your needs",
+        "integrity": "Integrity in every transaction and communication",
+        "trust": "Trust through the fulfillment of commitments"
+      }
+    },
+    "footer": {
+      "companyName": "Pita Logística, C.A.",
+      "tagline": "The bridge that connects people and organizations with clear and innovative solutions",
+      "links": {
+        "privacy": "Privacy Policy",
+        "terms": "Terms of Service",
+        "ethics": "Full Code of Ethics"
+      },
+      "copyright": "© 2023 Pita Logística, C.A. - All rights reserved"
     }
   },
   "authPasswordResetModal": {
