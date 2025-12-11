@@ -144,9 +144,9 @@ async function svgToPngDataUrl(path: string, size = 120): Promise<string> {
 function groupOrders(orders: Pedido[]): OrderGroup[] {
   if (!orders || orders.length === 0) return [];
 
-  // 1. Ordenar por fecha descendente (más reciente primero)
+  // 1. Ordenar por ID descendente (mayor ID primero)
   const sorted = [...orders].sort((a, b) =>
-    new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+    Number(b.id) - Number(a.id)
   );
 
   const groups: OrderGroup[] = [];

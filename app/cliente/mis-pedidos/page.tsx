@@ -502,7 +502,7 @@ export default function MisPedidosPage() {
         .from('orders')
         .select('id, productName, description, estimatedBudget, totalQuote, unitQuote, shippingPrice, state, created_at, pdfRoutes, quantity, box_id, imgs, batch_id, shippingType, deliveryType')
         .eq('client_id', clientId)
-        .order('created_at', { ascending: false });
+        .order('id', { ascending: false });
       if (error) {
         console.error('Error cargando pedidos:', error);
         return;

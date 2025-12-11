@@ -35,8 +35,8 @@ export function useAdminOrdersList() {
         supabase
           .from('orders')
           .select('id, state, productName, description, client_id, asignedEVzla, asignedEChina, created_at, estimatedBudget, reputation, pdfRoutes')
-          // FIFO: más antiguos primero
-          .order('created_at', { ascending: true }),
+          // LIFO: Mayor ID primero
+          .order('id', { ascending: false }),
         supabase
           .from('clients')
           .select('user_id, name'),

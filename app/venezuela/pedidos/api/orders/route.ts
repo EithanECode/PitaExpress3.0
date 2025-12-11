@@ -8,11 +8,12 @@ function getSupabaseClient() {
 // Esta función obtiene los pedidos con el nombre del cliente
 async function getOrdersWithClientName(asignedEVzla?: string) {
   const supabase = getSupabaseClient();
-  
+
   // Traer pedidos
   let ordersQuery = supabase
     .from('orders')
-    .select('id, quantity, productName, deliveryType, shippingType, state, client_id, asignedEVzla, description, pdfRoutes');
+    .select('id, quantity, productName, deliveryType, shippingType, state, client_id, asignedEVzla, description, pdfRoutes')
+    .order('id', { ascending: false });
 
   if (asignedEVzla) {
     ordersQuery = ordersQuery.eq('asignedEVzla', asignedEVzla);
@@ -51,8 +52,8 @@ import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
-  const asignedEVzla = request.nextUrl.searchParams.get('asignedEVzla') || undefined;
-  const orders = await getOrdersWithClientName(asignedEVzla);
+    const asignedEVzla = request.nextUrl.searchParams.get('asignedEVzla') || undefined;
+    const orders = await getOrdersWithClientName(asignedEVzla);
     return Response.json(orders);
   } catch (error: any) {
     return Response.json({ error: error.message }, { status: 500 });

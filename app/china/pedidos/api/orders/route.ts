@@ -33,7 +33,7 @@ async function getOrdersWithClientName(page: number = 1, limit: number = 50, emp
 
   // Aplicar paginación y orden
   const { data: orders, count, error: ordersError } = await query
-    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .range(from, to);
 
   if (ordersError) throw ordersError;
