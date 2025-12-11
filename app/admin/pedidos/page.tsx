@@ -7,8 +7,8 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { MAX_NAME, MAX_DESCRIPTION, MAX_MONEY_INT_DIGITS, isValidMoney } from '@/lib/constants/validation';
 import { useTheme } from 'next-themes';
 import { default as dynamicImport } from 'next/dynamic';
-import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
+import { useAdminLayoutContext } from '@/lib/AdminLayoutContext';
 import { useAdminOrders } from '@/hooks/use-admin-orders';
 import { useAdminOrdersList, type AdminOrderListItem } from '@/hooks/use-admin-orders-list';
 import { useClientsInfo } from '@/hooks/use-clients-info';
@@ -141,6 +141,7 @@ const NUMERIC_STATE_TO_UI: Record<number, Order['status']> = {
   11: 'en-transito',        // Recibido en almacén
   12: 'en-transito',        // Listo para entrega
   13: 'entregado',          // Entregado final
+  // Fallback para cancelados si usan un estado numérico distinto a estos, e.g. 0 o 99
 };
 
 // Estado cancelado no está definido en la serie 1..13; mantenemos 9 (provisional) para compat si existía antes.
@@ -400,8 +401,7 @@ export default function PedidosPage() {
   const pedidosTransito = adminStats?.pedidosTransito ?? 0;
   const pedidosEntregados = adminStats?.pedidosEntregados ?? 0;
 
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { toggleMobileMenu } = useAdminLayoutContext();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDocumentsModalOpen, setIsDocumentsModalOpen] = useState(false);
@@ -1272,267 +1272,249 @@ export default function PedidosPage() {
       : 'from-red-600 to-pink-600';
 
   return (
-    <div
-      className={
-        `min-h-screen flex overflow-x-hidden ` +
-        (mounted && theme === 'dark'
-          ? 'bg-slate-900'
-          : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50')
-      }
-    >
-      {/* Sidebar */}
-      <Sidebar
-        isExpanded={sidebarExpanded}
-        setIsExpanded={setSidebarExpanded}
-        isMobileMenuOpen={isMobileMenuOpen}
-        onMobileMenuClose={() => setIsMobileMenuOpen(false)}
-        userRole="admin"
+    <>
+      <Header
+        notifications={3}
+        onMenuToggle={toggleMobileMenu}
+        title={t('admin.orders.title')}
+        subtitle={t('admin.orders.subtitle')}
+        showTitleOnMobile
       />
 
-      {/* Main Content */}
-      <main className={`flex-1 transition-all duration-300 min-w-0 ${sidebarExpanded ? 'lg:ml-72 lg:w-[calc(100%-18rem)]' : 'lg:ml-20 lg:w-[calc(100%-5rem)]'}`}>
-        <Header
-          notifications={3}
-          onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          title={t('admin.orders.title')}
-          subtitle={t('admin.orders.subtitle')}
-          showTitleOnMobile
-        />
+      <div className={mounted && theme === 'dark' ? 'p-4 md:p-5 lg:p-6 space-y-4 md:space-y-5 lg:space-y-6 bg-slate-900' : 'p-4 md:p-5 lg:p-6 space-y-4 md:space-y-5 lg:space-y-6'}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="relative overflow-hidden mb-8 flex w-full gap-1 rounded-2xl p-1 bg-gradient-to-r from-slate-100/70 via-white/60 to-slate-100/70 dark:from-slate-800/60 dark:via-slate-800/40 dark:to-slate-800/60 backdrop-blur border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
+            {/* Sliding indicator */}
+            <div
+              className={`pointer-events-none absolute inset-y-1 left-1 w-1/3 rounded-xl bg-gradient-to-r ${indicatorGradient} shadow-lg transition-transform duration-300 ease-out z-0`}
+              style={{ transform: `translateX(${activeTabIndex * 100}%)` }}
+            />
+            <TabsTrigger value="admin" className="relative z-10 flex-1 min-w-0 justify-center whitespace-nowrap truncate transition-all text-sm md:text-base px-3 py-2 rounded-xl font-medium flex items-center gap-2 border border-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 data-[state=active]:text-white data-[state=inactive]:bg-transparent data-[state=active]:bg-transparent data-[state=active]:animate-in data-[state=inactive]:animate-out data-[state=inactive]:fade-out-0 data-[state=active]:fade-in-50">
+              <Settings className="w-4 h-4" /> {t('sidebar.management')}
+            </TabsTrigger>
+            <TabsTrigger value="venezuela" className="relative z-10 flex-1 min-w-0 justify-center whitespace-nowrap truncate transition-all text-sm md:text-base px-3 py-2 rounded-xl font-medium flex items-center gap-2 border border-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 data-[state=active]:text-white data-[state=inactive]:bg-transparent data-[state=active]:bg-transparent data-[state=active]:animate-in data-[state=inactive]:animate-out data-[state=inactive]:fade-out-0 data-[state=active]:fade-in-50">
+              <MapPin className="w-4 h-4" /> {t('admin.orders.vzlaTabLabel')}
+            </TabsTrigger>
+            <TabsTrigger value="china" className="relative z-10 flex-1 min-w-0 justify-center whitespace-nowrap truncate transition-all text-sm md:text-base px-3 py-2 rounded-xl font-medium flex items-center gap-2 border border-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 data-[state=active]:text-white data-[state=inactive]:bg-transparent data-[state=active]:bg-transparent data-[state=active]:animate-in data-[state=inactive]:animate-out data-[state=inactive]:fade-out-0 data-[state=active]:fade-in-50">
+              <Plane className="w-4 h-4" /> {t('admin.orders.chinaTabLabel')}
+            </TabsTrigger>
+            {/* Pestaña Cliente eliminada */}
+          </TabsList>
 
-        <div className={mounted && theme === 'dark' ? 'p-4 md:p-5 lg:p-6 space-y-4 md:space-y-5 lg:space-y-6 bg-slate-900' : 'p-4 md:p-5 lg:p-6 space-y-4 md:space-y-5 lg:space-y-6'}>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="relative overflow-hidden mb-8 flex w-full gap-1 rounded-2xl p-1 bg-gradient-to-r from-slate-100/70 via-white/60 to-slate-100/70 dark:from-slate-800/60 dark:via-slate-800/40 dark:to-slate-800/60 backdrop-blur border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
-              {/* Sliding indicator */}
-              <div
-                className={`pointer-events-none absolute inset-y-1 left-1 w-1/3 rounded-xl bg-gradient-to-r ${indicatorGradient} shadow-lg transition-transform duration-300 ease-out z-0`}
-                style={{ transform: `translateX(${activeTabIndex * 100}%)` }}
-              />
-              <TabsTrigger value="admin" className="relative z-10 flex-1 min-w-0 justify-center whitespace-nowrap truncate transition-all text-sm md:text-base px-3 py-2 rounded-xl font-medium flex items-center gap-2 border border-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 data-[state=active]:text-white data-[state=inactive]:bg-transparent data-[state=active]:bg-transparent data-[state=active]:animate-in data-[state=inactive]:animate-out data-[state=inactive]:fade-out-0 data-[state=active]:fade-in-50">
-                <Settings className="w-4 h-4" /> {t('sidebar.management')}
-              </TabsTrigger>
-              <TabsTrigger value="venezuela" className="relative z-10 flex-1 min-w-0 justify-center whitespace-nowrap truncate transition-all text-sm md:text-base px-3 py-2 rounded-xl font-medium flex items-center gap-2 border border-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 data-[state=active]:text-white data-[state=inactive]:bg-transparent data-[state=active]:bg-transparent data-[state=active]:animate-in data-[state=inactive]:animate-out data-[state=inactive]:fade-out-0 data-[state=active]:fade-in-50">
-                <MapPin className="w-4 h-4" /> {t('admin.orders.vzlaTabLabel')}
-              </TabsTrigger>
-              <TabsTrigger value="china" className="relative z-10 flex-1 min-w-0 justify-center whitespace-nowrap truncate transition-all text-sm md:text-base px-3 py-2 rounded-xl font-medium flex items-center gap-2 border border-transparent data-[state=inactive]:text-slate-700 dark:data-[state=inactive]:text-slate-300 data-[state=active]:text-white data-[state=inactive]:bg-transparent data-[state=active]:bg-transparent data-[state=active]:animate-in data-[state=inactive]:animate-out data-[state=inactive]:fade-out-0 data-[state=active]:fade-in-50">
-                <Plane className="w-4 h-4" /> {t('admin.orders.chinaTabLabel')}
-              </TabsTrigger>
-              {/* Pestaña Cliente eliminada */}
-            </TabsList>
-
-            <TabsContent
-              value="admin"
-              className="space-y-6 data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 data-[state=active]:duration-200 motion-reduce:transition-none motion-reduce:animate-none"
-            >
-              {/* Stats Cards */}
-              {statsCards}
-              {/* Table Card existente */}
-              <Card className={mounted && theme === 'dark' ? 'shadow-lg border-0 bg-slate-800/80 backdrop-blur-sm' : 'shadow-lg border-0 bg-white/70 backdrop-blur-sm'}>
-                <CardHeader>
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
-                      <CardTitle className={`text-lg md:text-xl font-bold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t('admin.orders.listTitle')}</CardTitle>
-                      <CardDescription className={`text-sm md:text-base ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                        {t('admin.orders.listDescription', { count: totalPedidos })}
-                      </CardDescription>
-                    </div>
-                    <div className="w-full lg:w-auto flex items-center justify-end gap-2 md:gap-3 flex-wrap">
-                      <Input
-                        placeholder={t('admin.orders.search')}
-                        value={searchTerm}
-                        onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                        className={`${mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-400' : 'bg-white/50 border-slate-200'} h-10 w-full sm:w-64 px-3`}
-                      />
-                      <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
-                        <SelectTrigger className={`h-10 w-full sm:w-56 px-3 whitespace-nowrap truncate ${mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white/50 border-slate-200'}`}>
-                          <SelectValue placeholder={t('admin.orders.filters.status')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">{t('admin.orders.filters.allStates')}</SelectItem>
-                          <SelectItem value="pendiente-china">{t('admin.orders.status.pendiente-china')}</SelectItem>
-                          <SelectItem value="pendiente-vzla">{t('admin.orders.status.pendiente-vzla')}</SelectItem>
-                          <SelectItem value="esperando-pago">{t('admin.orders.status.esperando-pago')}</SelectItem>
-                          <SelectItem value="en-transito">{t('admin.orders.status.en-transito')}</SelectItem>
-                          <SelectItem value="entregado">{t('admin.orders.status.entregado')}</SelectItem>
-                          <SelectItem value="cancelado">{t('admin.orders.status.cancelado')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+          <TabsContent
+            value="admin"
+            className="space-y-6 data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 data-[state=active]:duration-200 motion-reduce:transition-none motion-reduce:animate-none"
+          >
+            {/* Stats Cards */}
+            {statsCards}
+            {/* Table Card existente */}
+            <Card className={mounted && theme === 'dark' ? 'shadow-lg border-0 bg-slate-800/80 backdrop-blur-sm' : 'shadow-lg border-0 bg-white/70 backdrop-blur-sm'}>
+              <CardHeader>
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div>
+                    <CardTitle className={`text-lg md:text-xl font-bold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t('admin.orders.listTitle')}</CardTitle>
+                    <CardDescription className={`text-sm md:text-base ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                      {t('admin.orders.listDescription', { count: totalPedidos })}
+                    </CardDescription>
                   </div>
-
-                </CardHeader>
-                <CardContent>
-                  {/* Vista Desktop - Tabla */}
-                  <div className="hidden lg:block overflow-x-auto">
-                    <table className={mounted && theme === 'dark' ? 'w-full bg-slate-800' : 'w-full'}>
-                      <colgroup>
-                        <col className="w-44" />
-                        <col className="w-[22rem]" />
-                        <col className="w-40" />
-                        <col className="w-40" />
-                        <col className="w-28" />
-                        <col className="w-28" />
-                        <col className="w-28" />
-                      </colgroup>
-                      <thead>
-                        <tr className={mounted && theme === 'dark' ? 'border-b border-slate-700' : 'border-b border-slate-200'}>
-                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.id')}</th>
-                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.client')}</th>
-                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.status')}</th>
-                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.assignedTo')}</th>
-                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.date')}</th>
-                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.time')}</th>
-                          <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.actions')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {tableRows}
-                      </tbody>
-                    </table>
+                  <div className="w-full lg:w-auto flex items-center justify-end gap-2 md:gap-3 flex-wrap">
+                    <Input
+                      placeholder={t('admin.orders.search')}
+                      value={searchTerm}
+                      onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                      className={`${mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 placeholder:text-slate-400' : 'bg-white/50 border-slate-200'} h-10 w-full sm:w-64 px-3`}
+                    />
+                    <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
+                      <SelectTrigger className={`h-10 w-full sm:w-56 px-3 whitespace-nowrap truncate ${mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white/50 border-slate-200'}`}>
+                        <SelectValue placeholder={t('admin.orders.filters.status')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('admin.orders.filters.allStates')}</SelectItem>
+                        <SelectItem value="pendiente-china">{t('admin.orders.status.pendiente-china')}</SelectItem>
+                        <SelectItem value="pendiente-vzla">{t('admin.orders.status.pendiente-vzla')}</SelectItem>
+                        <SelectItem value="esperando-pago">{t('admin.orders.status.esperando-pago')}</SelectItem>
+                        <SelectItem value="en-transito">{t('admin.orders.status.en-transito')}</SelectItem>
+                        <SelectItem value="entregado">{t('admin.orders.status.entregado')}</SelectItem>
+                        <SelectItem value="cancelado">{t('admin.orders.status.cancelado')}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
+                </div>
 
-                  {/* Vista Mobile/Tablet - Cards */}
-                  <div className="lg:hidden space-y-3 md:space-y-4">
-                    {paginatedOrders.map((order) => {
-                      const status = statusConfig[order.status];
-                      const assigned = assignedConfig[order.assignedTo];
-                      const StatusIcon = status.icon;
-                      const formatOrderId = (raw: string) => {
-                        const base = String(raw ?? '');
-                        const tail = base.replace(/[^0-9]/g, '').slice(-3) || base.slice(-3);
-                        const code = (tail || '001').toString().padStart(3, '0');
-                        return `#PED-${code}`;
-                      };
-                      const formatDate = (iso?: string) => {
-                        if (!iso) return '—';
-                        const d = new Date(iso);
-                        if (isNaN(d.getTime())) return '—';
-                        const dd = String(d.getDate()).padStart(2, '0');
-                        const mm = String(d.getMonth() + 1).padStart(2, '0');
-                        const yyyy = d.getFullYear();
-                        return `${dd}/${mm}/${yyyy}`;
-                      };
+              </CardHeader>
+              <CardContent>
+                {/* Vista Desktop - Tabla */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className={mounted && theme === 'dark' ? 'w-full bg-slate-800' : 'w-full'}>
+                    <colgroup>
+                      <col className="w-44" />
+                      <col className="w-[22rem]" />
+                      <col className="w-40" />
+                      <col className="w-40" />
+                      <col className="w-28" />
+                      <col className="w-28" />
+                      <col className="w-28" />
+                    </colgroup>
+                    <thead>
+                      <tr className={mounted && theme === 'dark' ? 'border-b border-slate-700' : 'border-b border-slate-200'}>
+                        <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.id')}</th>
+                        <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.client')}</th>
+                        <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.status')}</th>
+                        <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.assignedTo')}</th>
+                        <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.date')}</th>
+                        <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.time')}</th>
+                        <th className={mounted && theme === 'dark' ? 'text-left py-4 px-6 font-semibold text-white' : 'text-left py-4 px-6 font-semibold text-slate-900'}>{t('admin.orders.table.actions')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableRows}
+                    </tbody>
+                  </table>
+                </div>
 
-                      return (
-                        <div
-                          key={order.id}
-                          className={`bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200 p-4 md:p-5 hover:shadow-lg transition-all duration-300 group cursor-pointer ${mounted && theme === 'dark' ? 'bg-slate-800/80 border-slate-700' : ''}`}
-                          onClick={() => setSelectedOrder(order)}
-                        >
-                          <div className="flex flex-col gap-3 md:gap-4">
-                            <div className="flex items-center gap-3 md:gap-4">
-                              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Package className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <div className="font-semibold text-slate-900 group-hover:text-blue-900 transition-colors text-sm md:text-base dark:text-white">{formatOrderId(order.id)}</div>
-                                <div className="mt-1 flex items-center gap-1 text-[11px] md:text-xs text-slate-500 dark:text-slate-400">
-                                  <Calendar className="w-3 h-3" />
-                                  <span>{formatDate(order.createdAt)}</span>
-                                </div>
-                                <div className="text-xs md:text-sm text-slate-600 dark:text-slate-300 mt-1">{order.client}</div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{order.description}</div>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
-                                <Clock className="w-3 h-3" />
-                                <span>{t('admin.orders.time.days', { count: order.daysElapsed })}</span>
-                              </div>
+                {/* Vista Mobile/Tablet - Cards */}
+                <div className="lg:hidden space-y-3 md:space-y-4">
+                  {paginatedOrders.map((order) => {
+                    const status = statusConfig[order.status];
+                    const assigned = assignedConfig[order.assignedTo];
+                    const StatusIcon = status.icon;
+                    const formatOrderId = (raw: string) => {
+                      const base = String(raw ?? '');
+                      const tail = base.replace(/[^0-9]/g, '').slice(-3) || base.slice(-3);
+                      const code = (tail || '001').toString().padStart(3, '0');
+                      return `#PED-${code}`;
+                    };
+                    const formatDate = (iso?: string) => {
+                      if (!iso) return '—';
+                      const d = new Date(iso);
+                      if (isNaN(d.getTime())) return '—';
+                      const dd = String(d.getDate()).padStart(2, '0');
+                      const mm = String(d.getMonth() + 1).padStart(2, '0');
+                      const yyyy = d.getFullYear();
+                      return `${dd}/${mm}/${yyyy}`;
+                    };
+
+                    return (
+                      <div
+                        key={order.id}
+                        className={`bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200 p-4 md:p-5 hover:shadow-lg transition-all duration-300 group cursor-pointer ${mounted && theme === 'dark' ? 'bg-slate-800/80 border-slate-700' : ''}`}
+                        onClick={() => setSelectedOrder(order)}
+                      >
+                        <div className="flex flex-col gap-3 md:gap-4">
+                          <div className="flex items-center gap-3 md:gap-4">
+                            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Package className="w-5 h-5 md:w-6 md:h-6 text-white" />
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Badge className={`${status.color} border text-xs`}>
-                                <StatusIcon className="w-3 h-3 mr-1" />
-                                {t(`admin.orders.status.${order.status}`)}
-                              </Badge>
-                              <Badge className={`${assigned.color} border text-xs`}>
-                                {t(`admin.orders.assigned.${order.assignedTo}`)}
-                              </Badge>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-slate-900 group-hover:text-blue-900 transition-colors text-sm md:text-base dark:text-white">{formatOrderId(order.id)}</div>
+                              <div className="mt-1 flex items-center gap-1 text-[11px] md:text-xs text-slate-500 dark:text-slate-400">
+                                <Calendar className="w-3 h-3" />
+                                <span>{formatDate(order.createdAt)}</span>
+                              </div>
+                              <div className="text-xs md:text-sm text-slate-600 dark:text-slate-300 mt-1">{order.client}</div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{order.description}</div>
+                            </div>
+                            <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 flex-shrink-0">
+                              <Clock className="w-3 h-3" />
+                              <span>{t('admin.orders.time.days', { count: order.daysElapsed })}</span>
                             </div>
                           </div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge className={`${status.color} border text-xs`}>
+                              <StatusIcon className="w-3 h-3 mr-1" />
+                              {t(`admin.orders.status.${order.status}`)}
+                            </Badge>
+                            <Badge className={`${assigned.color} border text-xs`}>
+                              {t(`admin.orders.assigned.${order.assignedTo}`)}
+                            </Badge>
+                          </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t ${mounted && theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
-                      <div className={`text-xs md:text-sm ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                        {t('admin.orders.pagination.results', {
-                          from: filteredOrders.length === 0 ? 0 : startIndex + 1,
-                          to: startIndex + paginatedOrders.length,
-                          total: filteredOrders.length
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t ${mounted && theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
+                    <div className={`text-xs md:text-sm ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                      {t('admin.orders.pagination.results', {
+                        from: filteredOrders.length === 0 ? 0 : startIndex + 1,
+                        to: startIndex + paginatedOrders.length,
+                        total: filteredOrders.length
+                      })}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end w-full sm:w-auto">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className={mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
+                      >
+                        <ChevronLeft className="w-4 h-4 mr-1" />
+                        {t('admin.orders.pagination.previous')}
+                      </Button>
+                      {/* Compact indicator on mobile */}
+                      <div className={`flex items-center gap-2 sm:hidden ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                        <span className="text-xs">{currentPage} / {totalPages}</span>
+                      </div>
+                      {/* Full pagination with ellipses on sm+ */}
+                      <div className="hidden sm:flex items-center space-x-1">
+                        {visiblePages.map((p, idx) => {
+                          if (p === 'ellipsis-left' || p === 'ellipsis-right') {
+                            return (
+                              <span key={`${p}-${idx}`} className={`${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'} px-2`}>…</span>
+                            );
+                          }
+                          const page = p as number;
+                          return (
+                            <Button
+                              key={page}
+                              variant={currentPage === page ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setCurrentPage(page)}
+                              className={currentPage === page
+                                ? 'bg-blue-600 text-white'
+                                : mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
+                            >
+                              {page}
+                            </Button>
+                          );
                         })}
                       </div>
-                      <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end w-full sm:w-auto">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                          disabled={currentPage === 1}
-                          className={mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
-                        >
-                          <ChevronLeft className="w-4 h-4 mr-1" />
-                          {t('admin.orders.pagination.previous')}
-                        </Button>
-                        {/* Compact indicator on mobile */}
-                        <div className={`flex items-center gap-2 sm:hidden ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                          <span className="text-xs">{currentPage} / {totalPages}</span>
-                        </div>
-                        {/* Full pagination with ellipses on sm+ */}
-                        <div className="hidden sm:flex items-center space-x-1">
-                          {visiblePages.map((p, idx) => {
-                            if (p === 'ellipsis-left' || p === 'ellipsis-right') {
-                              return (
-                                <span key={`${p}-${idx}`} className={`${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'} px-2`}>…</span>
-                              );
-                            }
-                            const page = p as number;
-                            return (
-                              <Button
-                                key={page}
-                                variant={currentPage === page ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => setCurrentPage(page)}
-                                className={currentPage === page
-                                  ? 'bg-blue-600 text-white'
-                                  : mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
-                              >
-                                {page}
-                              </Button>
-                            );
-                          })}
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                          disabled={currentPage === totalPages}
-                          className={mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
-                        >
-                          {t('admin.orders.pagination.next')}
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
-                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                        className={mounted && theme === 'dark' ? 'bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 hover:border-blue-800' : 'bg-white/50 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}
+                      >
+                        {t('admin.orders.pagination.next')}
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <TabsContent
-              value="venezuela"
-              className="space-y-6 min-h-[60vh] data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 data-[state=active]:duration-200 motion-reduce:transition-none motion-reduce:animate-none"
-            >
-              <VenezuelaOrdersTabContent />
-            </TabsContent>
-            <TabsContent
-              value="china"
-              className="space-y-6 min-h-[60vh] data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 data-[state=active]:duration-200 motion-reduce:transition-none motion-reduce:animate-none"
-            >
-              <ChinaOrdersTabContent />
-            </TabsContent>
-            {/* TabsContent cliente eliminado */}
-          </Tabs>
-        </div>
-      </main>
+          <TabsContent
+            value="venezuela"
+            className="space-y-6 min-h-[60vh] data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 data-[state=active]:duration-200 motion-reduce:transition-none motion-reduce:animate-none"
+          >
+            <VenezuelaOrdersTabContent />
+          </TabsContent>
+          <TabsContent
+            value="china"
+            className="space-y-6 min-h-[60vh] data-[state=active]:animate-in data-[state=active]:fade-in-50 data-[state=active]:slide-in-from-bottom-2 data-[state=active]:duration-200 motion-reduce:transition-none motion-reduce:animate-none"
+          >
+            <ChinaOrdersTabContent />
+          </TabsContent>
+          {/* TabsContent cliente eliminado */}
+        </Tabs>
+      </div>
+
 
       {/* Modal Crear Nuevo Pedido (reutilizado de cliente) */}
       <Dialog open={isNewOrderModalOpen} onOpenChange={setIsNewOrderModalOpen}>
@@ -2259,6 +2241,6 @@ export default function PedidosPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

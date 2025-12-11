@@ -56,9 +56,10 @@ export type ConfigurationRole = 'admin' | 'china' | 'venezuela' | 'client' | 'pa
 interface ConfigurationContentProps {
   role: ConfigurationRole;
   onUserImageUpdate?: (url?: string) => void;
+  layoutMode?: 'standalone' | 'integrated';
 }
 
-export default function ConfigurationContent({ role, onUserImageUpdate }: ConfigurationContentProps) {
+export default function ConfigurationContent({ role, onUserImageUpdate, layoutMode = 'standalone' }: ConfigurationContentProps) {
   const { fontSize, setFontSize } = useFontSize();
   const MAX_FIELD_LENGTH = 50; // Límite requerido para nombre, email y contraseñas
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
@@ -546,40 +547,44 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
   if (!mounted) return null;
 
   return (
-    <div className={`min-h-screen flex overflow-x-hidden ${theme === 'dark' ? 'bg-slate-900' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'}`}>
-      <Sidebar
-        isExpanded={sidebarExpanded}
-        setIsExpanded={setSidebarExpanded}
-        isMobileMenuOpen={isMobileMenuOpen}
-        onMobileMenuClose={() => setIsMobileMenuOpen(false)}
-        userRole={role}
-      />
+    <div className={layoutMode === 'standalone' ? `min-h-screen flex overflow-x-hidden ${theme === 'dark' ? 'bg-slate-900' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'}` : ''}>
+      {layoutMode === 'standalone' && (
+        <Sidebar
+          isExpanded={sidebarExpanded}
+          setIsExpanded={setSidebarExpanded}
+          isMobileMenuOpen={isMobileMenuOpen}
+          onMobileMenuClose={() => setIsMobileMenuOpen(false)}
+          userRole={role}
+        />
+      )}
 
-      <main className={`transition-all duration-300 flex-1 ${sidebarExpanded ? 'lg:ml-72 lg:w-[calc(100%-18rem)]' : 'lg:ml-24 lg:w-[calc(100%-6rem)]'}`}>
+      <div className={layoutMode === 'standalone' ? `transition-all duration-300 flex-1 ${sidebarExpanded ? 'lg:ml-72 lg:w-[calc(100%-18rem)]' : 'lg:ml-24 lg:w-[calc(100%-6rem)]'}` : ''}>
         {/* Header */}
-        <header className={mounted && theme === 'dark' ? 'bg-slate-800/80 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-40' : 'bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-40'}>
-          <div className="px-4 md:px-5 lg:px-6 py-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
+        {layoutMode === 'standalone' && (
+          <header className={mounted && theme === 'dark' ? 'bg-slate-800/80 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-40' : 'bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-40'}>
+            <div className="px-4 md:px-5 lg:px-6 py-4">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
 
-              <div>
-                <h1 className={`text-xl md:text-2xl lg:text-3xl font-bold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                  {t('admin.configuration.title')}
-                </h1>
-                <p className={`text-sm md:text-base ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                  {t('admin.configuration.subtitle')}
-                </p>
+                <div>
+                  <h1 className={`text-xl md:text-2xl lg:text-3xl font-bold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                    {t('admin.configuration.title')}
+                  </h1>
+                  <p className={`text-sm md:text-base ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
+                    {t('admin.configuration.subtitle')}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        </header>
+          </header>
+        )}
 
         {/* Contenido principal */}
         <div className="p-4 md:p-5 lg:p-6 space-y-6 md:space-y-8">
@@ -958,8 +963,8 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
                         </div>
                         <div className="flex items-center gap-2 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
                           <span className="flex-1 font-mono text-sm">info@pitacompra.com</span>
-                          <SupportActionButtons 
-                            type="email" 
+                          <SupportActionButtons
+                            type="email"
                             value="info@pitacompra.com"
                             t={t}
                           />
@@ -976,8 +981,8 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
                         </div>
                         <div className="flex items-center gap-2 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
                           <span className="flex-1 font-mono text-sm">+58 424-4545294</span>
-                          <SupportActionButtons 
-                            type="whatsapp" 
+                          <SupportActionButtons
+                            type="whatsapp"
                             value="+58 424-4545294"
                             t={t}
                           />
@@ -997,7 +1002,7 @@ export default function ConfigurationContent({ role, onUserImageUpdate }: Config
             )}
           </Tabs>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
@@ -1013,7 +1018,7 @@ function SupportActionButtons({ type, value, t }: { type: 'email' | 'whatsapp'; 
       setCopied(true);
       toast({
         title: t('admin.configuration.support.copied', { fallback: 'Copiado' }),
-        description: type === 'email' 
+        description: type === 'email'
           ? t('admin.configuration.support.email.copiedMessage', { fallback: 'Correo copiado al portapapeles' })
           : t('admin.configuration.support.phone.copiedMessage', { fallback: 'Número copiado al portapapeles' }),
       });
@@ -1031,17 +1036,17 @@ function SupportActionButtons({ type, value, t }: { type: 'email' | 'whatsapp'; 
       // El formato wa.me funciona tanto para WhatsApp Web como para la app móvil
       // En PC abre WhatsApp Web, en móvil abre la app
       let phoneNumber = value.replace(/\s+/g, '').replace(/-/g, '').replace(/\(/g, '').replace(/\)/g, '');
-      
+
       // Remover el + si existe
       if (phoneNumber.startsWith('+')) {
         phoneNumber = phoneNumber.substring(1);
       }
-      
+
       // Asegurar que el número tenga el código de país completo
       // Formato: código país + número (ejemplo: 584244545294)
       // Usamos api.whatsapp.com como alternativa más compatible
       const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}`;
-      
+
       // Abrir en nueva pestaña
       window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     }
@@ -1202,18 +1207,18 @@ function AdminReviewsSection() {
   };
 
   // Filtrar reseñas según el rating seleccionado
-  const filteredReviews = ratingFilter === null 
-    ? reviews 
+  const filteredReviews = ratingFilter === null
+    ? reviews
     : reviews.filter(review => review.rating === ratingFilter);
 
   // Calcular promedio de todas las reseñas
   const averageRating = reviews.length > 0
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
     : 0;
-  
+
   // Calcular porcentaje para el gauge (0-100%)
   const ratingPercentage = (averageRating / 5) * 100;
-  
+
   // Determinar color según el promedio
   const getRatingColor = () => {
     if (averageRating >= 4.5) return 'text-green-500';
@@ -1342,45 +1347,45 @@ function AdminReviewsSection() {
                   {t('admin.configuration.reviews.filterByRating', { fallback: 'Filtrar por calificación' })}:
                 </Label>
                 <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={ratingFilter === null ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRatingFilter(null)}
-                  className="gap-2"
-                >
-                  {t('admin.configuration.reviews.allRatings', { fallback: 'Todas' })}
-                  <Badge variant="secondary" className="ml-1">
-                    {reviews.length}
-                  </Badge>
-                </Button>
-                {[5, 4, 3, 2, 1].map((rating) => {
-                  const count = reviews.filter(r => r.rating === rating).length;
-                  return (
-                    <Button
-                      key={rating}
-                      variant={ratingFilter === rating ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setRatingFilter(rating)}
-                      className="gap-2"
-                      disabled={count === 0}
-                    >
-                      <div className="flex gap-0.5">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className={`w-3.5 h-3.5 ${star <= rating
-                              ? 'text-yellow-400 fill-yellow-400'
-                              : 'text-slate-400'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <Badge variant="secondary" className="ml-1">
-                        {count}
-                      </Badge>
-                    </Button>
-                  );
-                })}
+                  <Button
+                    variant={ratingFilter === null ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setRatingFilter(null)}
+                    className="gap-2"
+                  >
+                    {t('admin.configuration.reviews.allRatings', { fallback: 'Todas' })}
+                    <Badge variant="secondary" className="ml-1">
+                      {reviews.length}
+                    </Badge>
+                  </Button>
+                  {[5, 4, 3, 2, 1].map((rating) => {
+                    const count = reviews.filter(r => r.rating === rating).length;
+                    return (
+                      <Button
+                        key={rating}
+                        variant={ratingFilter === rating ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setRatingFilter(rating)}
+                        className="gap-2"
+                        disabled={count === 0}
+                      >
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-3.5 h-3.5 ${star <= rating
+                                ? 'text-yellow-400 fill-yellow-400'
+                                : 'text-slate-400'
+                                }`}
+                            />
+                          ))}
+                        </div>
+                        <Badge variant="secondary" className="ml-1">
+                          {count}
+                        </Badge>
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1396,7 +1401,7 @@ function AdminReviewsSection() {
                   <RatingGauge />
                   <div className="text-center">
                     <p className={`text-[10px] ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                      {reviews.length} {reviews.length === 1 
+                      {reviews.length} {reviews.length === 1
                         ? t('admin.configuration.reviews.review', { fallback: 'reseña' })
                         : t('admin.configuration.reviews.reviews', { fallback: 'reseñas' })
                       }
@@ -1411,53 +1416,53 @@ function AdminReviewsSection() {
               <div className="text-center py-8">
                 <Star className={`w-12 h-12 mx-auto mb-4 ${mounted && theme === 'dark' ? 'text-slate-600' : 'text-slate-300'}`} />
                 <p className={mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}>
-                  {ratingFilter !== null 
+                  {ratingFilter !== null
                     ? `No hay reseñas con ${ratingFilter} ${ratingFilter === 1 ? 'estrella' : 'estrellas'}`
                     : t('admin.configuration.reviews.noReviews', { fallback: 'No hay reseñas aún' })
                   }
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-                {filteredReviews.map((review) => (
-              <div
-                key={review.id}
-                className={`p-4 rounded-lg border ${mounted && theme === 'dark'
-                  ? 'bg-slate-700/50 border-slate-600'
-                  : 'bg-slate-50 border-slate-200'
-                  }`}
-              >
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline" className="text-xs">
-                        {t('admin.configuration.reviews.order', { fallback: 'Pedido' })} #{review.orderId}
-                      </Badge>
-                      <span className={`text-sm font-medium ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
-                        {review.orderProductName}
-                      </span>
-                    </div>
-                    <p className={`text-sm ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                      {t('admin.configuration.reviews.client', { fallback: 'Cliente' })}:{' '}
-                      <span className="font-medium">{review.clientName}</span>
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    {renderStars(review.rating)}
-                    <p className={`text-xs mt-1 ${mounted && theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
-                      {new Date(review.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                {review.reviewText && (
-                  <div className={`mt-3 p-3 rounded ${mounted && theme === 'dark' ? 'bg-slate-800 text-slate-200' : 'bg-white text-slate-800'
-                    }`}>
-                    <p className="text-sm whitespace-pre-wrap">{review.reviewText}</p>
-                  </div>
-                )}
+                </p>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredReviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className={`p-4 rounded-lg border ${mounted && theme === 'dark'
+                      ? 'bg-slate-700/50 border-slate-600'
+                      : 'bg-slate-50 border-slate-200'
+                      }`}
+                  >
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline" className="text-xs">
+                            {t('admin.configuration.reviews.order', { fallback: 'Pedido' })} #{review.orderId}
+                          </Badge>
+                          <span className={`text-sm font-medium ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                            {review.orderProductName}
+                          </span>
+                        </div>
+                        <p className={`text-sm ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                          {t('admin.configuration.reviews.client', { fallback: 'Cliente' })}:{' '}
+                          <span className="font-medium">{review.clientName}</span>
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        {renderStars(review.rating)}
+                        <p className={`text-xs mt-1 ${mounted && theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    {review.reviewText && (
+                      <div className={`mt-3 p-3 rounded ${mounted && theme === 'dark' ? 'bg-slate-800 text-slate-200' : 'bg-white text-slate-800'
+                        }`}>
+                        <p className="text-sm whitespace-pre-wrap">{review.reviewText}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </>
         )}
