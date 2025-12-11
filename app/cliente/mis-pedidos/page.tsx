@@ -3568,291 +3568,291 @@ export default function MisPedidosPage() {
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
             
-        .payment-step-rans    ition {
+        .payment-step-transition {
           animation: scaleIn 0.3s ease-out;
         }
         
-            .payment-info-card {
+        .payment-info-card {
           animation: slideInFromBottom 0.4s ease-out;
         }
       `}</style>
 
-      {/* Modal     de Calificación */}
-          <Dialog open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
-        <Dialog    Content className={`max-w-md ${mounted && theme === 'dark' ? 'bg-slate-800 border-slate-7    00' : 'bg-white'}`}>
-              <DialogHeader>
-            <DialogTitle className={`${mounted && theme === 'dark' ? 't    ext-white' : ''}`}>
-              {t('c    lient.recentOrders.reviews.modal.title', { fallback: 'Calificar pedido' })}
+      {/* Modal de Calificación */}
+      <Dialog open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
+        <DialogContent className={`max-w-md ${mounted && theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
+          <DialogHeader>
+            <DialogTitle className={`${mounted && theme === 'dark' ? 'text-white' : ''}`}>
+              {t('client.recentOrders.reviews.modal.title', { fallback: 'Calificar pedido' })}
             </DialogTitle>
-            <DialogDescription className={mounted     && theme === 'dark' ? 'tex    t-slate-400' : ''}>
-                  {selectedOrderForReview &&
-                    `${t('client.recentOrders.revi    ews.modal.subtit    le', { fallback: 'Pedido' })} #${selectedOrderForReview.id} - ${selectedOrderForReview.product}`}
-            <    /DialogDescription>
+            <DialogDescription className={mounted && theme === 'dark' ? 'text-slate-400' : ''}>
+              {selectedOrderForReview &&
+                `${t('client.recentOrders.reviews.modal.subtitle', { fallback: 'Pedido' })} #${selectedOrderForReview.id} - ${selectedOrderForReview.product}`}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-                {/* Cal    ificación con estrellas */}
+            {/* Calificación con estrellas */}
             <div>
-                  <Label className={`text-sm font-s    emibold ${mounted && the    me === 'dark' ? 'text-slate    -300' : ''}`}>
-                    {t('client.recentOrders.reviews.modal.rating', { fall    back: 'Calificación' })} *
+              <Label className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'text-slate-300' : ''}`}>
+                {t('client.recentOrders.reviews.modal.rating', { fallback: 'Calificación' })} *
               </Label>
-              <div className="f    lex gap-2 mt-2">
-                {[1, 2, 3, 4, 5    ].map((star) => (
+              <div className="flex gap-2 mt-2">
+                {[1, 2, 3, 4, 5].map((star) => (
                   <button
-                        key={star}
+                    key={star}
                     type="button"
-                        onClick={() => setReviewRating(star)}
-                        c    lassName={`transit    ion-all duration-200 ${s    tar <= reviewRating
+                    onClick={() => setReviewRating(star)}
+                    className={`transition-all duration-200 ${star <= reviewRating
                       ? 'text-yellow-400 scale-110'
-                          : mount    ed && theme === 'dark'    
-                            ? 'tex    t-slate-500 hover:text-yellow-300'
-                            : 'text-slate-300 hover:text-yellow-400'
+                      : mounted && theme === 'dark'
+                        ? 'text-slate-500 hover:text-yellow-300'
+                        : 'text-slate-300 hover:text-yellow-400'
                       }`}
                   >
-                        <Star
-                          className={`w-8 h-8 ${sta    r <= reviewRating ? 'fill-current' : ''}`}
+                    <Star
+                      className={`w-8 h-8 ${star <= reviewRating ? 'fill-current' : ''}`}
                     />
-                  </bu    tton>
+                  </button>
                 ))}
               </div>
               {reviewRating > 0 && (
-                    <p     className=    {`text-sm mt-2 $    {mounted && theme === 'dark' ? 'tex    t-slate-400' : '    text-slate-600'}`}>
+                <p className={`text-sm mt-2 ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
                   {reviewRating}{' '}
                   {reviewRating === 1
-                    ? t('client.recen    tOrders.reviews.modal.star', { fallback: 'estrella' })
-                    : t('client.recentOrde    rs.reviews.modal.st    ars', { fallback: 'est    rellas' })}
-                <    /p>
+                    ? t('client.recentOrders.reviews.modal.star', { fallback: 'estrella' })
+                    : t('client.recentOrders.reviews.modal.stars', { fallback: 'estrellas' })}
+                </p>
               )}
-                </div>
+            </div>
 
             {/* Texto de la reseña */}
-                <div>
-              <Label htmlFor="review-text" className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'tex    t-slate-300' : ''}`}>
+            <div>
+              <Label htmlFor="review-text" className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'text-slate-300' : ''}`}>
                 {t('client.recentOrders.reviews.modal.reviewText', { fallback: 'Escribe tu reseña' })}
-                  </Label>
-                  <Te    xtarea
+              </Label>
+              <Textarea
                 id="review-text"
                 value={reviewText}
-                onChange={(e) => setR    eviewText(e.target.value)}
-                placeholder={t('client.recentOrders.reviews.modal.reviewPlaceholder', {     fallback: 'D    eja tu reseña     aquí' })}
-                    className={`mt-2 min-h-[100px] ${mounted && theme     === 'dark' ? 'bg-s    late-700 border-slate-600 te    xt-white' : ''}`}
-                    maxLength={500}
+                onChange={(e) => setReviewText(e.target.value)}
+                placeholder={t('client.recentOrders.reviews.modal.reviewPlaceholder', { fallback: 'Deja tu reseña aquí' })}
+                className={`mt-2 min-h-[100px] ${mounted && theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : ''}`}
+                maxLength={500}
               />
-                  <p className={`text-x    s mt-1 ${mounted && theme === '    dark' ? 'text-slate-500' : 'text-slate-400'    }`}>
-                    {reviewText.length}/500 {t('cl    ient.recentOrders.reviews.modal.characters', { fallback: 'caracteres' })}
-                      </p>
+              <p className={`text-xs mt-1 ${mounted && theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                {reviewText.length}/500 {t('client.recentOrders.reviews.modal.characters', { fallback: 'caracteres' })}
+              </p>
             </div>
           </div>
 
-          <div className="flex gap-3 j    ustify-end pt-4 bo    rder-t">
-                <Button
-              variant="outli    ne"
+          <div className="flex gap-3 justify-end pt-4 border-t">
+            <Button
+              variant="outline"
               onClick={() => {
-                setIsRevi    ewModalOpen(false);
+                setIsReviewModalOpen(false);
                 setReviewRating(0);
-                se    tReviewText(    '');
-                setSelectedOr    derForReview(null    );
+                setReviewText('');
+                setSelectedOrderForReview(null);
               }}
               disabled={submittingReview}
-              className={mounted && theme === 'dark' ? 'bo    rder-slate-600' : ''}
+              className={mounted && theme === 'dark' ? 'border-slate-600' : ''}
             >
-              {t('client.recentOrders.reviews.modal.cance    l', { fallback    : 'Cancelar' })}
-                </Butt    on>
+              {t('client.recentOrders.reviews.modal.cancel', { fallback: 'Cancelar' })}
+            </Button>
             <Button
-              onClick={h    andleSubmitReview}
+              onClick={handleSubmitReview}
               disabled={submittingReview || reviewRating === 0}
-                  c    lassName="b    g-purple-600 hov    er:bg-purpl    e-700 disabled:opac    ity-60"
-                >
-              {sumitt    ingReview ? (
+              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-60"
+            >
+              {submittingReview ? (
                 <>
-                  <div className="w-4 h-4 border-    2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  {t('client.recentOrders.review    s.modal.submitting', {     fallback: 'Enviando...' })}
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  {t('client.recentOrders.reviews.modal.submitting', { fallback: 'Enviando...' })}
                 </>
               ) : (
                 <>
-                      <Star className="w-4 h-4 mr-2" />
-                  {t('client.recentO    rders.reviews.modal.sub    mit', { fallback: 'Enviar' })}
+                  <Star className="w-4 h-4 mr-2" />
+                  {t('client.recentOrders.reviews.modal.submit', { fallback: 'Enviar' })}
                 </>
               )}
             </Button>
-              </div>
+          </div>
         </DialogContent>
-          </Dialog>
+      </Dialog>
 
       {/* Modal de Ver Reseña */}
       <Dialog open={isViewReviewModalOpen} onOpenChange={setIsViewReviewModalOpen}>
-        <DialogContent     className={`max-w-md ${mou    nted && theme === 'dark    ' ? 'bg-slate-800     border-slate-700' : 'bg-white'}`}>
-          <Dial    ogHeader>
-            <DialogTitle className={`${mounted && theme === 'da    rk' ? 'text-white' : ''}`}>
-              {t('client.r    ecentOrders.reviews.viewModal.title'    , { fallback: 'Tu Reseña' })}
-                </DialogTitle>
-            <DialogDescription className={mounted && theme === 'dark' ? 'text-slate-400' :     ''}>
+        <DialogContent className={`max-w-md ${mounted && theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white'}`}>
+          <DialogHeader>
+            <DialogTitle className={`${mounted && theme === 'dark' ? 'text-white' : ''}`}>
+              {t('client.recentOrders.reviews.viewModal.title', { fallback: 'Tu Reseña' })}
+            </DialogTitle>
+            <DialogDescription className={mounted && theme === 'dark' ? 'text-slate-400' : ''}>
               {selectedOrderForReview &&
-                `${t('client.recentOrders.reviews.viewM    odal.subtitle',     { fallback: 'P    edido' })}     #${selectedOrderFor    Review.id} - ${selectedOrderForReview.product    }`}
+                `${t('client.recentOrders.reviews.viewModal.subtitle', { fallback: 'Pedido' })} #${selectedOrderForReview.id} - ${selectedOrderForReview.product}`}
             </DialogDescription>
-              </DialogHeader>    
+          </DialogHeader>
 
           {(() => {
             if (!selectedOrderForReview) return null;
-            const selectedKey = normali    zeOrderId(selectedOrderForReview.id);
+            const selectedKey = normalizeOrderId(selectedOrderForReview.id);
             const reviewData = orderReviews[selectedKey];
-                if (!reviewDat    a) return (
+            if (!reviewData) return (
               <div className="py-4">
-                    <p className={`text-center ${mounted     && theme === 'dark' ? 'te    xt-slate-400' : 'text-slate-600    '}`}>
-                  {t('client.recentOrders.reviews.viewModal.load    ing', { fallback: 'Cargando reseña...' })}
-                    </p>
+                <p className={`text-center ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                  {t('client.recentOrders.reviews.viewModal.loading', { fallback: 'Cargando reseña...' })}
+                </p>
               </div>
             );
-                return (
-              <div className="spac    e-y-4 py-4">
-                {/* Califica    ción mostrada */}
-                    <div>
-                      <    Label className={`tex    t-sm font-semibold ${mounted && theme === 'dark' ? 'text-slate-300' : ''}`}>
-                    {t('client.recentOr    ders.reviews.viewModal.rating', { fallbac    k: 'Tu Calificación' })}
-                      </Label>
+            return (
+              <div className="space-y-4 py-4">
+                {/* Calificación mostrada */}
+                <div>
+                  <Label className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'text-slate-300' : ''}`}>
+                    {t('client.recentOrders.reviews.viewModal.rating', { fallback: 'Tu Calificación' })}
+                  </Label>
                   <div className="flex gap-2 mt-2">
-                    {[1, 2, 3    , 4, 5].map((star) => (
+                    {[1, 2, 3, 4, 5].map((star) => (
                       <Star
                         key={star}
-                                className={`w-6     h-6 ${star <= reviewData.rating
-                              ? 'text-yellow-400 fil    l-yellow-400'
-                              : mounted && theme === 'dark'
+                        className={`w-6 h-6 ${star <= reviewData.rating
+                          ? 'text-yellow-400 fill-yellow-400'
+                          : mounted && theme === 'dark'
                             ? 'text-slate-600'
-                                : 'text-slate-300'
+                            : 'text-slate-300'
                           }`}
                       />
-                        ))}
-                  </    div>
+                    ))}
+                  </div>
                   <p className={`text-sm mt-2 ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                    {reviewDa    ta.rating}{' '}
+                    {reviewData.rating}{' '}
                     {reviewData.rating === 1
-                      ? t(    'client.recentOrders.    reviews.modal.star'    , { fallback: 'e    strella' })
-                          : t('client.    recentOrders.reviews.modal.stars', { fallback: 'estrellas' })}
+                      ? t('client.recentOrders.reviews.modal.star', { fallback: 'estrella' })
+                      : t('client.recentOrders.reviews.modal.stars', { fallback: 'estrellas' })}
                   </p>
                 </div>
 
-                    {/* Texto de la reseña */}
+                {/* Texto de la reseña */}
                 {reviewData.reviewText && (
-                      <div>
-                    <Label className={`text-sm font-s    emibold ${mounted     && theme === 'da    rk' ? 'text-sla    te-300' :     ''}`}>
-                          {t('client.recentOrders.reviews.viewModa    l.reviewText', { f    allback: 'Tu Reseña' })}
-                        </Label>
-                        <div className={`mt-2 p-3 ro    unded-lg ${mounted && theme === 'dark' ? 'b    g-slate-700 t    ext-slate-200' : 'bg-slate-50 text-slate-800'}`}>
-                      <p     className="    text-sm whitespace-pre-wrap">{reviewData.reviewText}</p>
-                    </div>    
-                      </div>
-                    )}
+                  <div>
+                    <Label className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'text-slate-300' : ''}`}>
+                      {t('client.recentOrders.reviews.viewModal.reviewText', { fallback: 'Tu Reseña' })}
+                    </Label>
+                    <div className={`mt-2 p-3 rounded-lg ${mounted && theme === 'dark' ? 'bg-slate-700 text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
+                      <p className="text-sm whitespace-pre-wrap">{reviewData.reviewText}</p>
+                    </div>
+                  </div>
+                )}
 
-                        {/* Fecha */}
+                {/* Fecha */}
                 <div>
-                     <p className={`    text-xs ${mounted && theme === 'dark' ? 't    ext-slate-500' : 'text-slate-400'}`}>
-                        {t('client.recentOrder    s.reviews.viewModal.date'    , { fallback: 'Fecha' })}:{' '}
-                    {new     Date(reviewData.createdAt).toLocaleDateString()}
-                      </p>
+                  <p className={`text-xs ${mounted && theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {t('client.recentOrders.reviews.viewModal.date', { fallback: 'Fecha' })}:{' '}
+                    {new Date(reviewData.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
-                );
-              })()}
+            );
+          })()}
 
-          <div className    ="flex     justify-end pt-4 border-t">
-               <Button
+          <div className="flex justify-end pt-4 border-t">
+            <Button
               variant="outline"
               onClick={() => {
-                    setIsViewReviewModalOpen(false);
-                setSe    lectedOrderForReview(nu    ll);
+                setIsViewReviewModalOpen(false);
+                setSelectedOrderForReview(null);
               }}
-              className={mounted && th    eme === 'dark' ? 'border-slate-600' : ''}
-            >    
-              {t('clien    t.recentOrders.reviews.    viewModal.close', { fallback:     'Cerrar' })}
+              className={mounted && theme === 'dark' ? 'border-slate-600' : ''}
+            >
+              {t('client.recentOrders.reviews.viewModal.close', { fallback: 'Cerrar' })}
             </Button>
           </div>
-            </DialogContent>
-      </    Dialog>
+        </DialogContent>
+      </Dialog>
 
-      {/* Moda    l de Alternativa de Producto */}
-          <ReviewAlternativeModal
-        isOp    en={isReviewAlternativeModalOpen}
+      {/* Modal de Alternativa de Producto */}
+      <ReviewAlternativeModal
+        isOpen={isReviewAlternativeModalOpen}
         onClose={closeReviewAlternativeModal}
-        alternative={selectedAl    ternative}
+        alternative={selectedAlternative}
         originalProduct={{
           name: selectedOrderForAlternative?.product || '',
-          description    : selectedOrderForAlternative?.description,
-              imageUrl    : selectedOrderForAlternative?.imageUrl || undefined,
+          description: selectedOrderForAlternative?.description,
+          imageUrl: selectedOrderForAlternative?.imageUrl || undefined,
         }}
-        onSuccess={handleAlternativeSuccess}    
+        onSuccess={handleAlternativeSuccess}
       />
 
-      {/* Modal de Cancelar Pedido */    }
-      <Dialog     open={isCancelOrd    erModalOpen} onOpe    nChange={setIsCancelOrderModalOpen}>
+      {/* Modal de Cancelar Pedido */}
+      <Dialog open={isCancelOrderModalOpen} onOpenChange={setIsCancelOrderModalOpen}>
         <DialogContent className="w-[95vw] sm:w-full max-w-md">
-          <D    ialogHeader>
-            <DialogTit    le className="flex it    ems-center gap-2">
-                  <XCircle className="h-5 w-    5 text-red-500" />
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="h-5 w-5 text-red-500" />
               Cancelar Pedido
-            </D    ialogTitle>
+            </DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que desea    s cancelar este pedido?    
-            </DialogDescript    ion>
-              </DialogHeader>
-    
+              ¿Estás seguro de que deseas cancelar este pedido?
+            </DialogDescription>
+          </DialogHeader>
+
           {selectedOrderForCancel && (
             <div className="space-y-4">
-              <div className={`p-4 rounded-lg ${mounted && theme === 'dark' ? 'bg-slat    e-700' : 'bg-slate-50'}`}>
-                <p className={`text-sm font-semibold ${mounted && theme === 'dark' ?     'text-white' : 'text-slate-800'}`}>
+              <div className={`p-4 rounded-lg ${mounted && theme === 'dark' ? 'bg-slate-700' : 'bg-slate-50'}`}>
+                <p className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
                   {selectedOrderForCancel.product}
                 </p>
-                <p class    Name={`text-xs     ${mounted && theme     === 'dark' ? 'text-slate-400' : 'text-slate-6    00'}`}>
-                      Pedido #{selectedOrderForCan    cel.id}
+                <p className={`text-xs ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Pedido #{selectedOrderForCancel.id}
                 </p>
-              </d    iv>
+              </div>
 
               <div>
-                    <Label className={`text-sm font    -semibold ${moun    ted && theme === 'dark' ? 'text-    slate-300' : ''}`}>
-                      Razón     de cancelación *
+                <Label className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'text-slate-300' : ''}`}>
+                  Razón de cancelación *
                 </Label>
-                    <Textarea
+                <Textarea
                   value={cancelReason}
-                      onChange={(e) => setCancelReason(e.target.value)}
-                          placeholder="Por favor indica por qué     deseas cancelar este     pedido..."
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Por favor indica por qué deseas cancelar este pedido..."
                   rows={3}
                   className="mt-2"
                 />
-                  </div>
+              </div>
 
-              <div c    lassName={`p-3 rou    nded-lg ${mounted && t    heme === 'dark' ? 'bg    -yellow-900/20 border border-yellow-700' : 'bg-yellow-5    0 border border-yellow-200'}`}>
-                    <p cla    ssName={`text-x    s ${mounted && theme     === 'dark' ? '    text-yellow-3    00' : '    text-yellow-800'}`}    >
-                      <strong>Nota:</strong> Una vez canceado,     el pedido no podrá ser reactivado. Se notificará a China sobre la cancelación    .
+              <div className={`p-3 rounded-lg ${mounted && theme === 'dark' ? 'bg-yellow-900/20 border border-yellow-700' : 'bg-yellow-50 border border-yellow-200'}`}>
+                <p className={`text-xs ${mounted && theme === 'dark' ? 'text-yellow-300' : 'text-yellow-800'}`}>
+                  <strong>Nota:</strong> Una vez cancelado, el pedido no podrá ser reactivado. Se notificará a China sobre la cancelación.
                 </p>
               </div>
 
-                  <div class    Name="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-4">
                 <Button
-                      variant="outline"
-                  onClick={closeC    ancelOrderModal}
+                  variant="outline"
+                  onClick={closeCancelOrderModal}
                   disabled={cancellingOrder}
                   className="flex-1"
-                    >
+                >
                   No, mantener pedido
                 </Button>
                 <Button
-                  o    nClick={handleCancelOrder}
-                  disabled={canc    ellingOrder || !cancelReason.trim()}
-                  cl    assName="flex-1     bg-red-600 hover:bg-red-70    0 text-white"
-                    >
+                  onClick={handleCancelOrder}
+                  disabled={cancellingOrder || !cancelReason.trim()}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
                   {cancellingOrder ? (
-                        <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 bord    er-white mr-2"></    div>
-                          Canceland    o...
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Cancelando...
                     </>
-                      ) : (
-                        <>
-                      <XCircle     className="h-4 w-4 mr-2" />
-                          Sí, cance    lar pedido
+                  ) : (
+                    <>
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Sí, cancelar pedido
                     </>
                   )}
-                    </Butto    n>
-                  </div>
-                </div>
+                </Button>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>

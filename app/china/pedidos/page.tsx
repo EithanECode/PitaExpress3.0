@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from '@/hooks/useTranslation';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import Sidebar from '@/components/layout/Sidebar';
+import { useChinaLayoutContext } from '@/lib/ChinaLayoutContext';
 import '../../animations/animations.css';
 import Header from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -397,8 +397,7 @@ export default function PedidosChina() {
     pesoInput: '',
   });
   const [modalDetalle, setModalDetalle] = useState<{ open: boolean, pedido?: Pedido }>({ open: false });
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { toggleMobileMenu } = useChinaLayoutContext();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'pedidos' | 'cajas' | 'contenedores'>('pedidos');
   const { theme } = useTheme();
@@ -2154,22 +2153,11 @@ export default function PedidosChina() {
   }
 
   return (
-    <div className={`min-h-screen flex overflow-x-hidden ${mounted && theme === 'dark' ? 'bg-slate-900' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'}`}>
-      <Sidebar
-        isExpanded={sidebarExpanded}
-        setIsExpanded={setSidebarExpanded}
-        isMobileMenuOpen={isMobileMenuOpen}
-        onMobileMenuClose={() => setIsMobileMenuOpen(false)}
-        userRole="china"
-      />
-
-      <main
-        className={`flex-1 transition-all duration-300 px-2 sm:px-4 lg:px-6 ${sidebarExpanded ? 'lg:ml-72' : 'lg:ml-24'
-          }`}
-      >
+    <>
+      <div className="flex-1 transition-all duration-300 px-2 sm:px-4 lg:px-6">
         <Header
           notifications={unreadCount || 0}
-          onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onMenuToggle={toggleMobileMenu}
           title={t('chinese.ordersPage.title')}
           subtitle={t('chinese.ordersPage.subtitle')}
           showTitleOnMobile
@@ -3828,7 +3816,7 @@ export default function PedidosChina() {
             </div>
           </div>
         )}
-      </main>
+      </div>
 
       {/* Modal Proponer Alternativa */}
       <ProposeAlternativeModal
@@ -3850,6 +3838,6 @@ export default function PedidosChina() {
         }}
       />
       <Toaster />
-    </div>
+    </>
   );
 }

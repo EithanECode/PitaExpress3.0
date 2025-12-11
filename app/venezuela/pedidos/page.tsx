@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useTheme } from 'next-themes';
-import Sidebar from '@/components/layout/Sidebar';
+import { useVzlaLayoutContext } from '@/lib/VzlaLayoutContext';
 import '../../animations/animations.css';
 import Header from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,8 +21,7 @@ export default function VenezuelaPedidosPage() {
   const [mounted, setMounted] = useState(false);
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { toggleMobileMenu } = useVzlaLayoutContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   type Order = {
@@ -721,22 +720,12 @@ export default function VenezuelaPedidosPage() {
   if (!mounted) return null;
 
   return (
-    <div className={`min-h-screen flex overflow-x-hidden ${theme === 'dark' ? 'bg-slate-900' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'
-      }`}>
-      <Sidebar
-        isExpanded={sidebarExpanded}
-        setIsExpanded={setSidebarExpanded}
-        isMobileMenuOpen={isMobileMenuOpen}
-        onMobileMenuClose={() => setIsMobileMenuOpen(false)}
-        userRole="venezuela"
-      />
-
-      <main className={`transition-all duration-300 flex-1 pr-4 ${sidebarExpanded ? 'lg:ml-72 lg:w-[calc(100%-18rem)]' : 'lg:ml-24 lg:w-[calc(100%-6rem)]'
-        }`}>
+    <>
+      <div className="flex-1 pr-4">
         <Header
           notifications={0}
           notificationsRole="venezuela"
-          onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onMenuToggle={toggleMobileMenu}
           title={t('venezuela.pedidos.title')}
           subtitle={t('venezuela.pedidos.subtitle')}
           showTitleOnMobile
@@ -1703,7 +1692,7 @@ export default function VenezuelaPedidosPage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 }
