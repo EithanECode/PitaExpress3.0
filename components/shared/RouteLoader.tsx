@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import PitaLogo from "@/components/ui/common/PitaLogo";
 
 // Simple loader overlay that shows the app logo for ~1s on route changes.
 // Modern look with smooth fade/scale and a subtle progress bar.
@@ -45,11 +46,13 @@ export default function RouteLoader() {
       {visible && (
         <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm animate-fade-in">
           <div className="flex flex-col items-center gap-6 animate-scale-in">
-            <div className="relative">
+            <div className="relative flex items-center justify-center">
               {/* Spinning ring */}
-              <div className="absolute inset-0 rounded-full border-4 border-blue-200 border-t-blue-500 animate-spin-slow" />
+              <div className="absolute inset-[-8px] rounded-full border-4 border-blue-200 border-t-blue-500 animate-spin-slow" />
               {/* Logo */}
-              <img src="/pita_icon.svg" alt="Pita" className="w-16 h-16 relative z-10" />
+              <div className="relative w-16 h-16 z-10 flex items-center justify-center">
+                <PitaLogo size="lg" animated={false} className="!w-full !h-full" />
+              </div>
             </div>
             {/* Progress bar */}
             <div className="w-40 h-1.5 bg-slate-200/70 dark:bg-slate-700/60 rounded-full overflow-hidden">
