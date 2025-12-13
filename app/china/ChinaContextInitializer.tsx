@@ -18,7 +18,7 @@ export default function ChinaContextInitializer() {
       let userImage = "";
       try {
         const { data: chinaData } = await supabase
-          .from("china")
+          .from("employees")
           .select("name")
           .eq("user_id", userId)
           .maybeSingle();
@@ -30,7 +30,7 @@ export default function ChinaContextInitializer() {
           .maybeSingle();
         chinaRole = levelData?.user_level || "";
         userImage = levelData?.user_image || "";
-      } catch {}
+      } catch { }
       setChina({ chinaId: userId, chinaName, chinaEmail: userEmail, chinaRole, userImage });
     };
     fetchUserData();
