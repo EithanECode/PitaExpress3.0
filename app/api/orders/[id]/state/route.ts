@@ -32,9 +32,10 @@ export async function PUT(
     const { state, changed_by, notes, ip_address, user_agent } = body;
 
     // Validar estado
-    if (!state || state < 1 || state > 13) {
+    // Validar estado (permitir cancelado -2 y rechazado -1)
+    if (state === undefined || state === null || (state < 1 && state !== -1 && state !== -2) || state > 13) {
       return NextResponse.json(
-        { error: 'Estado inválido. Debe estar entre 1 y 13' },
+        { error: 'Estado inválido. Debe estar entre 1 y 13, o ser estados de cancelación (-1, -2)' },
         { status: 400 }
       );
     }

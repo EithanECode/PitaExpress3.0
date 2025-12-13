@@ -330,7 +330,6 @@ export async function POST(req: Request) {
     // Insertar en tabla de rol
     const table = getTableByRole(role);
     const insertPayload: any = { user_id: userId, name: fullName };
-    if (table === 'clients') insertPayload.correo = email; // mantener consistencia con RegisterForm
     const { error: roleInsErr } = await supabase.from(table).insert(insertPayload);
     if (roleInsErr) {
       return NextResponse.json({ error: roleInsErr.message }, { status: 400 });

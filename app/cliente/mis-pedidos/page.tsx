@@ -489,6 +489,7 @@ export default function MisPedidosPage() {
 
   // Mapeos de estado numérico de la BD a estados de UI y progreso
   const mapStateToStatus = (state?: number | null): Order['status'] => {
+    if (state === -2) return 'cancelled';
     if (state === -1) return 'quoted'; // Rechazado: reutilizamos flujo de pago
     if (!state) return 'pending';
     // Coarse mapping para UI del cliente
@@ -620,7 +621,7 @@ export default function MisPedidosPage() {
         // Tasa CNY es USD/CNY, entonces USD = CNY / rate
         const currentCnyRate = cnyRate || 7.25; // Usar tasa del hook o fallback
         const calcAmountUSD = totalQuoteUSD !== null ? totalQuoteUSD : ((unit + ship) / currentCnyRate);
-        const status = mapStateToStatus(row.state as number | null);
+        const status = mapStateToStatus(row.state ? Number(row.state) : null);
 
         // Extract first image if available
         let imgUrl = null;

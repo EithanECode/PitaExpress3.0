@@ -17,11 +17,11 @@ export default function RegisterForm() {
     let cancelled = false;
     Promise.all([
       fetch("/animations/Register.json").then((r) => {
-  if (!r.ok) throw new Error(t('auth.common.registerAnimationLoadError'));
+        if (!r.ok) throw new Error(t('auth.common.registerAnimationLoadError'));
         return r.json();
       }),
       fetch("/animations/Success.json").then((r) => {
-  if (!r.ok) throw new Error(t('auth.common.animationLoadError'));
+        if (!r.ok) throw new Error(t('auth.common.animationLoadError'));
         return r.json();
       })
     ])
@@ -61,20 +61,20 @@ export default function RegisterForm() {
 
   const defaultRegisterOptions = registerAnim
     ? {
-        loop: true,
-        autoplay: true,
-        animationData: registerAnim,
-        rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
-      }
+      loop: true,
+      autoplay: true,
+      animationData: registerAnim,
+      rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
+    }
     : null;
 
   const defaultCheckmarkOptions = successAnim
     ? {
-        loop: false,
-        autoplay: true,
-        animationData: successAnim,
-        rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
-      }
+      loop: false,
+      autoplay: true,
+      animationData: successAnim,
+      rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
+    }
     : null;
 
   const getPasswordStrengthInfo = (pwd: string): { text: string; level: typeof passwordStrength } => {
@@ -91,16 +91,16 @@ export default function RegisterForm() {
     if (pwd.length >= 12 && /[^A-Za-z0-9]/.test(pwd)) strength++;
 
     if (strength === 1) {
-  text = t('auth.common.passwordLevelLow');
+      text = t('auth.common.passwordLevelLow');
       level = "low";
     } else if (strength === 2) {
-  text = t('auth.common.passwordLevelMedium');
+      text = t('auth.common.passwordLevelMedium');
       level = "medium";
     } else if (strength === 3) {
-  text = t('auth.common.passwordLevelStrong');
+      text = t('auth.common.passwordLevelStrong');
       level = "strong";
     } else if (strength >= 4) {
-  text = t('auth.common.passwordLevelVeryStrong');
+      text = t('auth.common.passwordLevelVeryStrong');
       level = "very-strong";
     }
 
@@ -202,8 +202,7 @@ export default function RegisterForm() {
           .insert([
             {
               user_id: userId,
-              name: fullName,
-              correo: email
+              name: fullName
             }
           ]);
         if (clientError) {
@@ -224,14 +223,14 @@ export default function RegisterForm() {
           console.warn("after-signup fetch failed", e);
         }
       }
-  setSuccessMsg(t('auth.register.success'));
+      setSuccessMsg(t('auth.register.success'));
       setFullName("");
       setEmail("");
       setPassword("");
       setConfirmPassword("");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-  setErrorMsg(message || t('auth.register.errorFallback'));
+      setErrorMsg(message || t('auth.register.errorFallback'));
     } finally {
       setLoading(false);
     }
@@ -280,7 +279,7 @@ export default function RegisterForm() {
     if (shouldShowCheckmark) {
       setShowCheckmark(true);
       if (checkmarkTimeoutRef.current) clearTimeout(checkmarkTimeoutRef.current);
-      checkmarkTimeoutRef.current = setTimeout(() => {}, 50);
+      checkmarkTimeoutRef.current = setTimeout(() => { }, 50);
     } else {
       if (checkmarkTimeoutRef.current) clearTimeout(checkmarkTimeoutRef.current);
       checkmarkTimeoutRef.current = setTimeout(() => setShowCheckmark(false), 0);
@@ -300,7 +299,7 @@ export default function RegisterForm() {
           </div>
         )}
       </div>
-  <h2 className="text-lg">{t('auth.register.title')}</h2>
+      <h2 className="text-lg">{t('auth.register.title')}</h2>
 
       <label htmlFor="register-fullname" className="text-sm">{t('auth.common.fullName')}</label>
       <input
@@ -342,23 +341,22 @@ export default function RegisterForm() {
         <p className="text-red-500 text-xs mt-1" role="alert">{emailError}</p>
       )}
 
-    <label htmlFor="register-password" className="text-sm">{t('auth.common.password')}</label>
+      <label htmlFor="register-password" className="text-sm">{t('auth.common.password')}</label>
       <div className="password-input-container">
         <input
           type={showPassword ? "text" : "password"}
           id="register-password"
-      placeholder={t('auth.common.passwordPlaceholder')}
+          placeholder={t('auth.common.passwordPlaceholder')}
           value={password}
           maxLength={MAX_PASSWORD}
           onChange={handlePasswordChange}
           onFocus={handlePasswordFocus}
           onBlur={handlePasswordBlur}
           required
-          className={`password-input py-1 px-2 ${
-            currentStrengthInfo.level !== "none"
+          className={`password-input py-1 px-2 ${currentStrengthInfo.level !== "none"
               ? `password-strength-border-${currentStrengthInfo.level}`
               : ""
-          }`}
+            }`}
           suppressHydrationWarning={true}
         />
         {password.length > 0 && password.length === MAX_PASSWORD && (
@@ -383,12 +381,12 @@ export default function RegisterForm() {
         )}
       </div>
 
-    <label htmlFor="register-confirm-password" className="text-sm">{t('auth.common.confirmPassword')}</label>
+      <label htmlFor="register-confirm-password" className="text-sm">{t('auth.common.confirmPassword')}</label>
       <div className="password-input-container">
         <input
           type={showConfirmPassword ? "text" : "password"}
           id="register-confirm-password"
-      placeholder={t('auth.common.passwordPlaceholder')}
+          placeholder={t('auth.common.passwordPlaceholder')}
           value={confirmPassword}
           maxLength={MAX_PASSWORD}
           onChange={handleConfirmPasswordChange}

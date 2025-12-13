@@ -1,20 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServiceRoleClient } from '@/lib/supabase/server';
 
-function getSupabaseClient() {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase environment variables');
-  }
-
-  return createClient(supabaseUrl, supabaseKey);
-}
 
 // Esta función obtiene los pedidos con el nombre del cliente
 // Esta función obtiene los pedidos con el nombre del cliente
 async function getOrdersWithClientName(page: number = 1, limit: number = 50, empleadoId?: string | null) {
-  const supabase = getSupabaseClient();
+  const supabase = getSupabaseServiceRoleClient();
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
@@ -22,14 +12,15 @@ async function getOrdersWithClientName(page: number = 1, limit: number = 50, emp
   let query = supabase
     .from('orders')
     .select('id, quantity, productName, deliveryType, shippingType, state, client_id, asignedEChina, created_at, description, pdfRoutes, totalQuote, batch_id', { count: 'exact' })
-    .gte('state', 0); // Incluir cancelados (estado 0)
+    .gte('state', 1)  // Estados de proceso normal (1-8), excluir cancelados y rechazados
+    .lte('state', 8);
 
   // Filtrar por empleado si se proporciona
   if (empleadoId) {
-    query = query.eq('asignedEChina', empleadoId);
-  } else {
-    query = query.not('asignedEChina', 'is', null);
+    // Si se pasa empleadoId, buscar pedidos asignados a ese empleado O no asignados en estados iniciales
+    query = query.or(`asignedEChina.eq.${empleadoId},and(asignedEChina.is.null,state.in.(1,2,3))`);
   }
+  // Si NO se pasa empleadoId, mostrar todos los pedidos en proceso (4-8) para visibilidad general
 
   // Aplicar paginación y orden
   const { data: orders, count, error: ordersError } = await query

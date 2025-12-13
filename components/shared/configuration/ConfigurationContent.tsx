@@ -125,7 +125,8 @@ export default function ConfigurationContent({ role, onUserImageUpdate, layoutMo
   // Estados de seguridad mínimos (solo para mostrar info de cuenta)
   const [security, setSecurity] = useState({
     ultimoAcceso: new Date().toLocaleString('es-VE'),
-    ipUltimoAcceso: `192.168.1.${Math.floor(Math.random() * 255)}`
+    ipUltimoAcceso: `192.168.1.${Math.floor(Math.random() * 255)}`,
+    miembroDesde: new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }) // Valor por defecto
   });
 
   // UI state
@@ -195,6 +196,20 @@ export default function ConfigurationContent({ role, onUserImageUpdate, layoutMo
           telefono: phone,
           idioma: language as string
         });
+
+        // Actualizar security con fecha real
+        if (user.created_at) {
+          const createdAt = new Date(user.created_at);
+          const month = createdAt.toLocaleDateString('es-ES', { month: 'long' });
+          const year = createdAt.getFullYear();
+          // Capitalizar la primera letra del mes
+          const formattedDate = `${month.charAt(0).toUpperCase() + month.slice(1)} ${year}`;
+
+          setSecurity(prev => ({
+            ...prev,
+            miembroDesde: formattedDate
+          }));
+        }
       }
     };
 
@@ -858,7 +873,7 @@ export default function ConfigurationContent({ role, onUserImageUpdate, layoutMo
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-slate-600 dark:text-slate-400">{t('admin.configuration.profile.accountInfo.memberSince')}</span>
-                        <span className="text-sm font-medium">{t('admin.configuration.profile.accountInfo.months.Enero')} 2024</span>
+                        <span className="text-sm font-medium">{security.miembroDesde}</span>
                       </div>
                       <Separator />
                       <div className="flex justify-between items-center">
