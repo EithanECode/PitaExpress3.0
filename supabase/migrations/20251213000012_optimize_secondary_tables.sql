@@ -57,7 +57,7 @@ DROP POLICY IF EXISTS "users_manage_own_typing" ON public.chat_typing_status;
 CREATE POLICY "users_manage_typing_status" ON public.chat_typing_status
   FOR ALL TO authenticated
   USING (
-    (select auth.uid()) IN (user_id, target_user_id)
+    (select auth.uid()) IN (user_id, typing_to_id)
   )
   WITH CHECK (
     (select auth.uid()) = user_id
