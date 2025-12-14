@@ -52,7 +52,7 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
 }) => {
     // Hook para conversión CNY a USD
     const { cnyRate } = useCNYConversion();
-    
+
     // Calcular monto en USD: usar totalQuote si existe, sino convertir de CNY a USD
     const getAmountInUSD = () => {
         if (order.totalQuote !== null && order.totalQuote !== undefined) {
@@ -62,7 +62,7 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
         const totalCNY = (order.unitQuote ?? 0) + (order.shippingPrice ?? 0);
         return totalCNY / (cnyRate || 7.25);
     };
-    
+
     return (
         <div className={`p-4 md:p-6 rounded-xl border hover:shadow-md transition-all duration-300 group ${mounted && theme === 'dark' ? 'bg-gradient-to-r from-slate-700 to-slate-600 border-slate-600' : 'bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200'}`}>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 mb-4">
@@ -77,7 +77,7 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                     {/* Un solo badge basado en stateNum; fallback al badge de status si no hay stateNum */}
                     {typeof order.stateNum === 'number' ? (
                         <Badge className={`text-xs md:text-sm font-semibold px-3 py-1 transition-colors hover:brightness-110 hover:ring-1 ${mounted && theme === 'dark' ? (
-                            order.stateNum === -1 ? 'bg-red-900/30 text-red-300 border-red-700 hover:bg-red-900/50 hover:ring-red-500/20' :
+                            (order.stateNum === -1 || order.stateNum === -2) ? 'bg-red-900/30 text-red-300 border-red-700 hover:bg-red-900/50 hover:ring-red-500/20' :
                                 order.stateNum === 13 ? 'bg-emerald-900/30 text-emerald-300 border-emerald-700 hover:bg-emerald-900/50 hover:ring-emerald-500/20' :
                                     order.stateNum === 12 ? 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700 hover:ring-gray-500/20' :
                                         order.stateNum === 11 ? 'bg-green-900/30 text-green-300 border-green-700 hover:bg-green-900/50 hover:ring-green-500/20' :
@@ -90,7 +90,7 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                                                                     order.stateNum === 2 ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700 hover:bg-yellow-900/50 hover:ring-yellow-500/20' :
                                                                         'bg-yellow-900/30 text-yellow-300 border-yellow-700 hover:bg-yellow-900/50 hover:ring-yellow-500/20'
                         ) : (
-                            order.stateNum === -1 ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-50 hover:ring-red-200' :
+                            (order.stateNum === -1 || order.stateNum === -2) ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-50 hover:ring-red-200' :
                                 order.stateNum === 13 ? 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-50 hover:ring-emerald-200' :
                                     order.stateNum === 12 ? 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-50 hover:ring-gray-200' :
                                         order.stateNum === 11 ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-50 hover:ring-green-200' :
@@ -104,7 +104,7 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                                                                         'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-50 hover:ring-yellow-200'
                         )
                             }`}>
-                            {order.stateNum === -1 ? t('client.recentOrders.statuses.paymentRejected') :
+                            {(order.stateNum === -1 || order.stateNum === -2) ? t('client.recentOrders.statuses.cancelled') :
                                 order.stateNum === 5 ? t('client.recentOrders.statuses.paymentValidated') :
                                     order.stateNum === 6 ? t('client.recentOrders.statuses.packagingBox') :
                                         // 7 y 8 etiquetados como 9

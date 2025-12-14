@@ -361,13 +361,21 @@ export default function MisPedidosPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // Notificar resultado
-      alert(`Se han ocultado ${data.count} pedidos entregados/cancelados.`);
+      // Notificar resultado con toast
+      toast({
+        title: "Historial limpiado",
+        description: data.count > 0
+          ? `Se han ocultado ${data.count} pedidos entregados/cancelados.`
+          : "No hay pedidos para ocultar.",
+      });
       setIsArchiveModalOpen(false);
       fetchOrders(); // Recargar la lista
     } catch (e: any) {
-      console.error('Archive error:', e);
-      alert('Error al borrar historial: ' + e.message);
+      toast({
+        title: "Error",
+        description: 'Error al borrar historial: ' + e.message,
+        variant: "destructive",
+      });
     } finally {
       setIsArchiving(false);
     }
@@ -490,7 +498,7 @@ export default function MisPedidosPage() {
   // Mapeos de estado numérico de la BD a estados de UI y progreso
   const mapStateToStatus = (state?: number | null): Order['status'] => {
     if (state === -2) return 'cancelled';
-    if (state === -1) return 'quoted'; // Rechazado: reutilizamos flujo de pago
+    if (state === -1) return 'cancelled'; // Rechazado/Cancelado por cliente
     if (!state) return 'pending';
     // Coarse mapping para UI del cliente
     if (state === 3) return 'quoted';
@@ -505,7 +513,7 @@ export default function MisPedidosPage() {
 
   const mapStateToProgress = (state?: number | null): number => {
     switch (state) {
-      case -1: return 30; // Rechazado: mismo progreso que cotizado
+      case -1: return 0; // Cancelado: progreso en 0
       case 1: return 10; // creado
       case 2: return 20; // recibido
       case 3: return 30; // cotizado
@@ -1774,6 +1782,16 @@ export default function MisPedidosPage() {
     // Validar paso actual (ya se valida con canProceedToNext, pero doble check)
     if (!newOrderData.productName || !newOrderData.description) return;
 
+    // Validar límite de 5 pedidos
+    if (orderQueue.length >= 5) {
+      toast({
+        title: "Límite alcanzado",
+        description: "Solo puedes agregar un máximo de 5 artículos por solicitud.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setOrderQueue(prev => [...prev, { ...newOrderData }]);
 
     // Animación y Reset
@@ -2483,10 +2501,11 @@ export default function MisPedidosPage() {
                               variant="outline"
                               size="sm"
                               onClick={handleAddNewItem}
-                              className="text-blue-500 border-blue-500 hover:bg-blue-50"
+                              disabled={orderQueue.length >= 5}
+                              className="text-blue-500 border-blue-500 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <Plus className="w-4 h-4 mr-1" />
-                              Agregar Otro Producto
+                              {orderQueue.length >= 5 ? 'Máximo 5 artículos' : 'Agregar Otro Producto'}
                             </Button>
                           </div>
 

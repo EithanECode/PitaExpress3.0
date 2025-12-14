@@ -19,12 +19,12 @@ export async function POST(request: NextRequest) {
         // Given the project pattern, we are using the service role and trusting the inputs/middleware.
 
         if (role === 'client') {
-            // Client: Archive delivered (13) or cancelled (0) immediately
+            // Client: Archive delivered (13) or cancelled (-1, -2) immediately
             const { data, error } = await supabase
                 .from('orders')
                 .update({ archived_by_client: true })
                 .eq('client_id', userId)
-                .in('state', [0, 13])
+                .in('state', [-2, -1, 13])
                 .eq('archived_by_client', false)
                 .select();
 
@@ -34,11 +34,11 @@ export async function POST(request: NextRequest) {
 
         if (role === 'admin') {
             // Admin Logic
-            // 1. Cancelled (0) -> Immediate
+            // 1. Cancelled (-1, -2) -> Immediate
             const { data: dataCancelled, error: errorCancelled } = await supabase
                 .from('orders')
                 .update({ archived_by_admin: true })
-                .eq('state', 0)
+                .in('state', [-2, -1])
                 .eq('archived_by_admin', false)
                 .select();
 
