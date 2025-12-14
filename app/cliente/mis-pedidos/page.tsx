@@ -365,8 +365,8 @@ export default function MisPedidosPage() {
       toast({
         title: "Historial limpiado",
         description: data.count > 0
-          ? `Se han ocultado ${data.count} pedidos entregados/cancelados.`
-          : "No hay pedidos para ocultar.",
+          ? `Se han eliminado ${data.count} pedidos entregados/cancelados del historial.`
+          : "No hay pedidos para eliminar.",
       });
       setIsArchiveModalOpen(false);
       fetchOrders(); // Recargar la lista
