@@ -42,26 +42,23 @@ export default function ChinaChatPage() {
         enabled: true
     });
 
-    // Obtener ID del admin
+    // Obtener ID del admin principal (admin@gmail.com)
     useEffect(() => {
         const fetchAdminId = async () => {
             try {
                 const supabase = getSupabaseBrowserClient();
 
-                // Buscar usuario con user_level = 'Admin'
-                const { data: adminData, error } = await supabase
-                    .from('userlevel')
-                    .select('id, user_level')
-                    .eq('user_level', 'Admin')
-                    .limit(1)
-                    .single();
+                // Usar función RPC para obtener el admin designado
+                const { data: adminUserId, error } = await supabase
+                    .rpc('get_admin_id_by_email', { admin_email: 'admin@gmail.com' });
 
-                if (!error && adminData) {
-
-                    setAdminId(adminData.id);
+                if (error) {
+                    console.error('❌ Error fetching admin:', error);
+                } else if (adminUserId) {
+                    setAdminId(adminUserId);
                     setAdminName('Administrador');
                 } else {
-
+                    console.error('❌ Admin admin@gmail.com not found');
                 }
             } catch (error) {
                 console.error('❌ Error fetching admin:', error);

@@ -63,9 +63,9 @@ export function ChatList({ onSelectConversation, selectedUserId, currentUserId }
         try {
             setLoading(true);
 
-            // Intentar usar la RPC nueva (v2) que trae nombres reales y filtra ocultos
+            // Intentar usar la RPC nueva (v3) que trae nombres reales y filtra ocultos
             const { data: rpcData, error: rpcError } = await supabase
-                .rpc('get_chat_conversations_v2', { current_user_id: currentUserId });
+                .rpc('get_chat_conversations_v3', { p_user_id: currentUserId });
 
             if (!rpcError && rpcData) {
 
