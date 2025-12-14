@@ -825,6 +825,15 @@ const PaymentValidationDashboard: React.FC = () => {
       previousStatus: payment.estado,
     });
 
+    // Si estamos en la pestaña de pendientes, cambiar a 'todos' para que el pago no desaparezca
+    if (selectedTab === 'pendientes') {
+      setSelectedTab('todos');
+    }
+    // Si estamos filtrando por estado, resetear a todos para asegurar visibilidad
+    if (filterStatus === 'pendiente' || filterStatus === 'rechazado') {
+      setFilterStatus('todos');
+    }
+
     // UI optimista
     setPayments(prev => prev.map(p =>
       p.id === id ? { ...p, estado: 'completado' as const } : p
@@ -903,6 +912,16 @@ const PaymentValidationDashboard: React.FC = () => {
     const payment = payments.find(p => p.id === id);
     if (!payment) return;
     setLastAction({ type: 'reject', paymentId: id, previousStatus: payment.estado });
+
+    // Si estamos en la pestaña de pendientes, cambiar a 'todos' para que el pago no desaparezca
+    if (selectedTab === 'pendientes') {
+      setSelectedTab('todos');
+    }
+    // Si estamos filtrando por estado, resetear a todos para asegurar visibilidad
+    if (filterStatus === 'pendiente' || filterStatus === 'rechazado') {
+      setFilterStatus('todos');
+    }
+
     setPayments(prev => prev.map(p => p.id === id ? { ...p, estado: 'rechazado' as const } : p));
     setRejectionConfirmation({ isOpen: false, paymentId: null });
     try {

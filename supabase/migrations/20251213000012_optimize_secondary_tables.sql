@@ -15,6 +15,7 @@ DROP POLICY IF EXISTS "Users can update their sent messages" ON public.chat_mess
 DROP POLICY IF EXISTS "users_update_own_messages" ON public.chat_messages;
 DROP POLICY IF EXISTS "Users can update received messages" ON public.chat_messages;
 DROP POLICY IF EXISTS "Users can delete their sent messages" ON public.chat_messages;
+DROP POLICY IF EXISTS "users_can_view_own_messages" ON public.chat_messages;
 
 -- Política consolidada de SELECT
 CREATE POLICY "users_can_view_own_messages" ON public.chat_messages
@@ -24,11 +25,13 @@ CREATE POLICY "users_can_view_own_messages" ON public.chat_messages
   );
 
 -- Política consolidada de INSERT
+DROP POLICY IF EXISTS "users_can_send_messages" ON public.chat_messages;
 CREATE POLICY "users_can_send_messages" ON public.chat_messages
   FOR INSERT TO authenticated
   WITH CHECK ((select auth.uid()) = sender_id);
 
 -- Política consolidada de UPDATE
+DROP POLICY IF EXISTS "users_can_update_messages" ON public.chat_messages;
 CREATE POLICY "users_can_update_messages" ON public.chat_messages
   FOR UPDATE TO authenticated
   USING (
@@ -39,6 +42,7 @@ CREATE POLICY "users_can_update_messages" ON public.chat_messages
   );
 
 -- Política consolidada de DELETE
+DROP POLICY IF EXISTS "users_can_delete_own_messages" ON public.chat_messages;
 CREATE POLICY "users_can_delete_own_messages" ON public.chat_messages
   FOR DELETE TO authenticated
   USING ((select auth.uid()) = sender_id);
@@ -54,6 +58,7 @@ DROP POLICY IF EXISTS "Users can delete their typing status" ON public.chat_typi
 DROP POLICY IF EXISTS "users_manage_own_typing" ON public.chat_typing_status;
 
 -- Política consolidada
+DROP POLICY IF EXISTS "users_manage_typing_status" ON public.chat_typing_status;
 CREATE POLICY "users_manage_typing_status" ON public.chat_typing_status
   FOR ALL TO authenticated
   USING (
@@ -74,6 +79,7 @@ DROP POLICY IF EXISTS "Users can unhide their own conversations" ON public.chat_
 DROP POLICY IF EXISTS "users_manage_own_hidden_convs" ON public.chat_hidden_conversations;
 
 -- Política consolidada
+DROP POLICY IF EXISTS "users_manage_hidden_conversations" ON public.chat_hidden_conversations;
 CREATE POLICY "users_manage_hidden_conversations" ON public.chat_hidden_conversations
   FOR ALL TO authenticated
   USING ((select auth.uid()) = user_id)
@@ -90,16 +96,19 @@ DROP POLICY IF EXISTS "notifications_update_owner" ON public.notifications;
 DROP POLICY IF EXISTS "notifications_update_authenticated" ON public.notifications;
 
 -- SELECT: Solo pueden ver sus propias notificaciones
+DROP POLICY IF EXISTS "users_select_notifications" ON public.notifications;
 CREATE POLICY "users_select_notifications" ON public.notifications
   FOR SELECT TO authenticated
   USING ((select auth.uid()) = user_id);
 
 -- INSERT: Cualquier usuario autenticado puede crear notificaciones
+DROP POLICY IF EXISTS "users_insert_notifications" ON public.notifications;
 CREATE POLICY "users_insert_notifications" ON public.notifications
   FOR INSERT TO authenticated
   WITH CHECK (true);
 
 -- UPDATE: Solo el dueño puede actualizarlas
+DROP POLICY IF EXISTS "users_update_own_notifications" ON public.notifications;
 CREATE POLICY "users_update_own_notifications" ON public.notifications
   FOR UPDATE TO authenticated
   USING ((select auth.uid()) = user_id)
@@ -115,6 +124,7 @@ DROP POLICY IF EXISTS "notification_reads_delete_own" ON public.notification_rea
 DROP POLICY IF EXISTS "users_manage_own_reads" ON public.notification_reads;
 
 -- Política consolidada
+DROP POLICY IF EXISTS "users_manage_notification_reads" ON public.notification_reads;
 CREATE POLICY "users_manage_notification_reads" ON public.notification_reads
   FOR ALL TO authenticated
   USING ((select auth.uid()) = user_id)
@@ -132,6 +142,7 @@ DROP POLICY IF EXISTS "admins_insert_userlevel" ON public.userlevel;
 DROP POLICY IF EXISTS "admins_delete_userlevel" ON public.userlevel;
 
 -- SELECT: Usuario puede ver su propio userlevel O admin puede ver todos
+DROP POLICY IF EXISTS "userlevel_select" ON public.userlevel;
 CREATE POLICY "userlevel_select" ON public.userlevel
   FOR SELECT TO authenticated
   USING (
@@ -143,12 +154,14 @@ CREATE POLICY "userlevel_select" ON public.userlevel
   );
 
 -- UPDATE: Solo el propio usuario puede actualizar su userlevel
+DROP POLICY IF EXISTS "userlevel_update_own" ON public.userlevel;
 CREATE POLICY "userlevel_update_own" ON public.userlevel
   FOR UPDATE TO authenticated
   USING ((select auth.uid()) = id)
   WITH CHECK ((select auth.uid()) = id);
 
 -- INSERT/DELETE: Solo admins
+DROP POLICY IF EXISTS "admins_manage_userlevel" ON public.userlevel;
 CREATE POLICY "admins_manage_userlevel" ON public.userlevel
   FOR ALL TO authenticated
   USING (
@@ -175,6 +188,7 @@ DROP POLICY IF EXISTS "Clients can update their alternatives" ON public.product_
 DROP POLICY IF EXISTS "Employees can create alternatives" ON public.product_alternatives;
 
 -- SELECT consolidado
+DROP POLICY IF EXISTS "users_select_alternatives" ON public.product_alternatives;
 CREATE POLICY "users_select_alternatives" ON public.product_alternatives
   FOR SELECT TO authenticated
   USING (
@@ -190,6 +204,7 @@ CREATE POLICY "users_select_alternatives" ON public.product_alternatives
   );
 
 -- INSERT: Solo empleados
+DROP POLICY IF EXISTS "employees_insert_alternatives" ON public.product_alternatives;
 CREATE POLICY "employees_insert_alternatives" ON public.product_alternatives
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -201,6 +216,7 @@ CREATE POLICY "employees_insert_alternatives" ON public.product_alternatives
   );
 
 -- UPDATE: Cliente puede actualizar sus alternativas
+DROP POLICY IF EXISTS "clients_update_alternatives" ON public.product_alternatives;
 CREATE POLICY "clients_update_alternatives" ON public.product_alternatives
   FOR UPDATE TO authenticated
   USING (
@@ -223,6 +239,7 @@ DROP POLICY IF EXISTS "Clients can update their own reviews" ON public.order_rev
 DROP POLICY IF EXISTS "Only admins can delete reviews" ON public.order_reviews;
 
 -- SELECT consolidado
+DROP POLICY IF EXISTS "users_select_reviews" ON public.order_reviews;
 CREATE POLICY "users_select_reviews" ON public.order_reviews
   FOR SELECT TO authenticated
   USING (
@@ -238,6 +255,7 @@ CREATE POLICY "users_select_reviews" ON public.order_reviews
   );
 
 -- INSERT: Solo clientes para sus pedidos
+DROP POLICY IF EXISTS "clients_insert_reviews" ON public.order_reviews;
 CREATE POLICY "clients_insert_reviews" ON public.order_reviews
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -245,6 +263,7 @@ CREATE POLICY "clients_insert_reviews" ON public.order_reviews
   );
 
 -- UPDATE: Cliente actualiza sus reviews O admin actualiza cualquiera
+DROP POLICY IF EXISTS "users_update_reviews" ON public.order_reviews;
 CREATE POLICY "users_update_reviews" ON public.order_reviews
   FOR UPDATE TO authenticated
   USING (
@@ -261,6 +280,7 @@ CREATE POLICY "users_update_reviews" ON public.order_reviews
   );
 
 -- DELETE: Solo admins
+DROP POLICY IF EXISTS "admins_delete_reviews" ON public.order_reviews;
 CREATE POLICY "admins_delete_reviews" ON public.order_reviews
   FOR DELETE TO authenticated
   USING (
@@ -277,6 +297,7 @@ DROP POLICY IF EXISTS "Allow service role write access on exchange_rates" ON pub
 DROP POLICY IF EXISTS "Allow public read access on exchange_rates" ON public.exchange_rates;
 
 -- SELECT: Público (anon + authenticated)
+DROP POLICY IF EXISTS "public_read_exchange_rates" ON public.exchange_rates;
 CREATE POLICY "public_read_exchange_rates" ON public.exchange_rates
   FOR SELECT
   USING (true);
@@ -288,6 +309,7 @@ CREATE POLICY "public_read_exchange_rates" ON public.exchange_rates
 DROP POLICY IF EXISTS "Admins can insert business_config" ON public.business_config;
 DROP POLICY IF EXISTS "Admins can update business_config" ON public.business_config;
 
+DROP POLICY IF EXISTS "admins_manage_business_config" ON public.business_config;
 CREATE POLICY "admins_manage_business_config" ON public.business_config
   FOR ALL TO authenticated
   USING (

@@ -31,6 +31,7 @@ DROP POLICY IF EXISTS "Authenticated can view employees" ON public.employees;
 -- de forma consolidada:
 
 -- ADMINISTRATORS: Solo admins pueden ver otros admins
+DROP POLICY IF EXISTS "users_select_administrators" ON public.administrators;
 CREATE POLICY "users_select_administrators" ON public.administrators
   FOR SELECT TO authenticated
   USING (
@@ -42,11 +43,13 @@ CREATE POLICY "users_select_administrators" ON public.administrators
   );
 
 -- CLIENTS: Cualquier usuario autenticado puede ver clientes (necesario para UI)
+DROP POLICY IF EXISTS "authenticated_select_clients" ON public.clients;
 CREATE POLICY "authenticated_select_clients" ON public.clients
   FOR SELECT TO authenticated
   USING (true);
 
 -- EMPLOYEES: Cualquier usuario autenticado puede ver empleados (necesario para asignaciones)
+DROP POLICY IF EXISTS "authenticated_select_employees" ON public.employees;
 CREATE POLICY "authenticated_select_employees" ON public.employees
   FOR SELECT TO authenticated
   USING (true);

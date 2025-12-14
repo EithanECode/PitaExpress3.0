@@ -1,5 +1,7 @@
 -- Ensure storage.buckets RLS doesn't block access
 -- Allow public access to read buckets (metadata)
+-- Allow public access to read buckets (metadata)
+DROP POLICY IF EXISTS "Public Access to Buckets" ON storage.buckets;
 CREATE POLICY "Public Access to Buckets"
 ON storage.buckets FOR SELECT
 TO public

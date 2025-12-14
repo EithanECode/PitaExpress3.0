@@ -10,6 +10,7 @@ DROP POLICY IF EXISTS "admins_insert_clients" ON public.clients;
 DROP POLICY IF EXISTS "admins_update_clients" ON public.clients;
 DROP POLICY IF EXISTS "admins_delete_clients" ON public.clients;
 
+DROP POLICY IF EXISTS "admins_manage_clients" ON public.clients;
 CREATE POLICY "admins_manage_clients" ON public.clients
   FOR ALL TO authenticated
   USING (
@@ -35,6 +36,7 @@ DROP POLICY IF EXISTS "admins_insert_employees" ON public.employees;
 DROP POLICY IF EXISTS "admins_update_employees" ON public.employees;
 DROP POLICY IF EXISTS "admins_delete_employees" ON public.employees;
 
+DROP POLICY IF EXISTS "admins_manage_employees" ON public.employees;
 CREATE POLICY "admins_manage_employees" ON public.employees
   FOR ALL TO authenticated
   USING (
@@ -60,6 +62,7 @@ DROP POLICY IF EXISTS "admins_insert_administrators" ON public.administrators;
 DROP POLICY IF EXISTS "admins_update_administrators" ON public.administrators;
 DROP POLICY IF EXISTS "admins_delete_administrators" ON public.administrators;
 
+DROP POLICY IF EXISTS "admins_manage_administrators" ON public.administrators;
 CREATE POLICY "admins_manage_administrators" ON public.administrators
   FOR ALL TO authenticated
   USING (
@@ -83,6 +86,7 @@ CREATE POLICY "admins_manage_administrators" ON public.administrators
 
 DROP POLICY IF EXISTS "employees_manage_boxes" ON public.boxes;
 
+DROP POLICY IF EXISTS "employees_manage_boxes_optimized" ON public.boxes;
 CREATE POLICY "employees_manage_boxes_optimized" ON public.boxes
   FOR ALL TO authenticated
   USING (
@@ -106,6 +110,7 @@ CREATE POLICY "employees_manage_boxes_optimized" ON public.boxes
 
 DROP POLICY IF EXISTS "employees_manage_containers" ON public.containers;
 
+DROP POLICY IF EXISTS "employees_manage_containers_optimized" ON public.containers;
 CREATE POLICY "employees_manage_containers_optimized" ON public.containers
   FOR ALL TO authenticated
   USING (
@@ -129,6 +134,7 @@ CREATE POLICY "employees_manage_containers_optimized" ON public.containers
 
 DROP POLICY IF EXISTS "employees_insert_order_history" ON public.order_state_history;
 
+DROP POLICY IF EXISTS "employees_insert_order_history_optimized" ON public.order_state_history;
 CREATE POLICY "employees_insert_order_history_optimized" ON public.order_state_history
   FOR INSERT TO authenticated, service_role
   WITH CHECK (

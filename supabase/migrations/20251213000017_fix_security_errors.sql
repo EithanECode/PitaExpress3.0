@@ -37,11 +37,13 @@ COMMENT ON VIEW public.user_phones IS
 ALTER TABLE public.exchange_rates_cny ENABLE ROW LEVEL SECURITY;
 
 -- Permitir lectura pública (es información de tasas de cambio)
+DROP POLICY IF EXISTS "public_read_exchange_rates_cny" ON public.exchange_rates_cny;
 CREATE POLICY "public_read_exchange_rates_cny" ON public.exchange_rates_cny
   FOR SELECT
   USING (true);
 
 -- Solo service_role puede INSERT/UPDATE/DELETE (asumiendo que es data de sistema)
+DROP POLICY IF EXISTS "service_role_manage_exchange_rates_cny" ON public.exchange_rates_cny;
 CREATE POLICY "service_role_manage_exchange_rates_cny" ON public.exchange_rates_cny
   FOR ALL TO service_role
   USING (true)

@@ -45,6 +45,7 @@ DROP POLICY IF EXISTS "users_select_administrators" ON public.administrators;
 DROP POLICY IF EXISTS "Authenticated can view administrators" ON public.administrators;
 
 -- Política SELECT única y segura
+DROP POLICY IF EXISTS "admins_select_administrators_v3" ON public.administrators;
 CREATE POLICY "admins_select_administrators_v3" ON public.administrators
   FOR SELECT TO authenticated
   USING ( public.is_admin() );
@@ -55,15 +56,18 @@ DROP POLICY IF EXISTS "admins_update_administrators_v2" ON public.administrators
 DROP POLICY IF EXISTS "admins_delete_administrators_v2" ON public.administrators;
 DROP POLICY IF EXISTS "admins_manage_administrators" ON public.administrators;
 
+DROP POLICY IF EXISTS "admins_insert_administrators_v3" ON public.administrators;
 CREATE POLICY "admins_insert_administrators_v3" ON public.administrators
   FOR INSERT TO authenticated
   WITH CHECK ( public.is_admin() );
 
+DROP POLICY IF EXISTS "admins_update_administrators_v3" ON public.administrators;
 CREATE POLICY "admins_update_administrators_v3" ON public.administrators
   FOR UPDATE TO authenticated
   USING ( public.is_admin() )
   WITH CHECK ( public.is_admin() );
 
+DROP POLICY IF EXISTS "admins_delete_administrators_v3" ON public.administrators;
 CREATE POLICY "admins_delete_administrators_v3" ON public.administrators
   FOR DELETE TO authenticated
   USING ( public.is_admin() );
@@ -73,15 +77,18 @@ DROP POLICY IF EXISTS "admins_insert_clients_v2" ON public.clients;
 DROP POLICY IF EXISTS "admins_update_clients_v2" ON public.clients;
 DROP POLICY IF EXISTS "admins_delete_clients_v2" ON public.clients;
 
+DROP POLICY IF EXISTS "admins_insert_clients_v3" ON public.clients;
 CREATE POLICY "admins_insert_clients_v3" ON public.clients
   FOR INSERT TO authenticated
   WITH CHECK ( public.is_admin() );
 
+DROP POLICY IF EXISTS "admins_update_clients_v3" ON public.clients;
 CREATE POLICY "admins_update_clients_v3" ON public.clients
   FOR UPDATE TO authenticated
   USING ( public.is_admin() )
   WITH CHECK ( public.is_admin() );
 
+DROP POLICY IF EXISTS "admins_delete_clients_v3" ON public.clients;
 CREATE POLICY "admins_delete_clients_v3" ON public.clients
   FOR DELETE TO authenticated
   USING ( public.is_admin() );
@@ -91,15 +98,18 @@ DROP POLICY IF EXISTS "admins_insert_employees_v2" ON public.employees;
 DROP POLICY IF EXISTS "admins_update_employees_v2" ON public.employees;
 DROP POLICY IF EXISTS "admins_delete_employees_v2" ON public.employees;
 
+DROP POLICY IF EXISTS "admins_insert_employees_v3" ON public.employees;
 CREATE POLICY "admins_insert_employees_v3" ON public.employees
   FOR INSERT TO authenticated
   WITH CHECK ( public.is_admin() );
 
+DROP POLICY IF EXISTS "admins_update_employees_v3" ON public.employees;
 CREATE POLICY "admins_update_employees_v3" ON public.employees
   FOR UPDATE TO authenticated
   USING ( public.is_admin() )
   WITH CHECK ( public.is_admin() );
 
+DROP POLICY IF EXISTS "admins_delete_employees_v3" ON public.employees;
 CREATE POLICY "admins_delete_employees_v3" ON public.employees
   FOR DELETE TO authenticated
   USING ( public.is_admin() );
