@@ -63,6 +63,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
 import VenezuelaOrdersTabContent from '@/components/venezuela/VenezuelaOrdersTabContent';
 import ChinaOrdersTabContent from '@/components/china/ChinaOrdersTabContent';
 import ProposeAlternativeModal from '@/components/china/ProposeAlternativeModal';
@@ -455,6 +456,8 @@ export default function PedidosPage() {
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
 
+  const { toast } = useToast();
+
   const handleArchiveHistory = async () => {
     setIsArchiving(true);
     try {
@@ -469,13 +472,20 @@ export default function PedidosPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // Notificar resultado
-      alert(`Se han eliminado ${data.count} pedidos.`);
+      toast({
+        title: "Historial limpiado",
+        description: data.count > 0
+          ? `Se han eliminado ${data.count} pedidos permanentemente.`
+          : "No hay pedidos que cumplan los criterios (cancelados/entregados +30 días).",
+      });
       setIsArchiveModalOpen(false);
-      refetchOrders(); // Recargar la lista
+      refetchOrders();
     } catch (e: any) {
-      console.error('Archive error:', e);
-      alert('Error al borrar historial: ' + e.message);
+      toast({
+        title: "Error",
+        description: 'Error al borrar historial: ' + e.message,
+        variant: "destructive",
+      });
     } finally {
       setIsArchiving(false);
     }
@@ -488,17 +498,13 @@ export default function PedidosPage() {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     return (adminOrders || []).filter(o => {
-      // Logic for AdminOrderListItem (hook return type)
-      // Check filtering is redundant effectively as the hook filters it, but keep it for clarity
-      // if (o.archived_by_admin) return false; -> Hook already filters this out.
+      // All archivable orders must be older than 30 days
+      if (!o.created_at) return false;
+      const orderDate = new Date(o.updated_at || o.created_at);
+      if (orderDate >= thirtyDaysAgo) return false;
 
-      if (o.state === 0) return true; // Cancelled (o.state matches StateNum in hook)
-      if (o.state === 13) {
-        // Check date
-        if (!o.created_at) return false; // fallback
-        const orderDate = new Date(o.updated_at || o.created_at);
-        return orderDate < thirtyDaysAgo;
-      }
+      // Cancelled states: -2, -1 or Delivered: 13
+      if (o.state === -2 || o.state === -1 || o.state === 13) return true;
       return false;
     }).length;
   }, [adminOrders]);
@@ -2215,14 +2221,14 @@ export default function PedidosPage() {
           <DialogHeader>
             <DialogTitle>¿Borrar historial de pedidos?</DialogTitle>
             <DialogDescription className="space-y-3">
-              <p>Esta acción archivará pedidos antiguos para limpiar la vista. Reglas aplicadas:</p>
+              <p>Esta acción eliminará <strong>permanentemente</strong> pedidos antiguos de la base de datos:</p>
               <ul className="list-disc list-inside text-sm space-y-1 ml-2">
-                <li><strong>Cancelados:</strong> Se archivan inmediatamente.</li>
-                <li><strong>Entregados:</strong> Solo si tienen más de <strong>30 días</strong> de antigüedad.</li>
+                <li><strong>Cancelados:</strong> Se eliminan si tienen más de 30 días.</li>
+                <li><strong>Entregados:</strong> Se eliminan si tienen más de 30 días.</li>
               </ul>
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md text-sm text-yellow-800 dark:text-yellow-200 flex gap-2">
+              <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-md text-sm text-red-800 dark:text-red-200 flex gap-2">
                 <AlertCircle className="w-5 h-5 shrink-0" />
-                <span>Los pedidos no se eliminan de la base de datos, solo se ocultan.</span>
+                <span><strong>ADVERTENCIA:</strong> Esta acción no se puede deshacer. Los pedidos se eliminarán de la base de datos.</span>
               </div>
             </DialogDescription>
           </DialogHeader>

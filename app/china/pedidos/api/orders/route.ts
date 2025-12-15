@@ -8,16 +8,17 @@ async function getOrdersWithClientName(page: number = 1, limit: number = 50, emp
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  // Construir query base
+  // Construir query base - incluir estados 1-8 (proceso normal) y cancelados que China ya vio
+  // Cancelados: solo si max_state_reached >= 1 (China ya interactuó con el pedido)
   let query = supabase
     .from('orders')
-    .select('id, quantity, productName, deliveryType, shippingType, state, client_id, asignedEChina, created_at, description, pdfRoutes, totalQuote, batch_id', { count: 'exact' })
-    .gte('state', 1)  // Estados de proceso normal (1-8), excluir cancelados y rechazados
-    .lte('state', 8);
+    .select('id, quantity, productName, deliveryType, shippingType, state, client_id, asignedEChina, created_at, description, pdfRoutes, totalQuote, batch_id, archived_by_china, max_state_reached', { count: 'exact' })
+    .or('and(state.gte.1,state.lte.8),and(state.in.(-2,-1),max_state_reached.gte.1)') // Normal + cancelados que llegaron a China
+    .eq('archived_by_china', false); // Excluir los que China ya ocultó
 
   // Filtrar por empleado si se proporciona
   if (empleadoId) {
-    // Si se pasa empleadoId, buscar pedidos asignados a ese empleado O no asignados en estados iniciales
+    // Buscar pedidos asignados a ese empleado (incluyendo cancelados) O no asignados en estados iniciales
     query = query.or(`asignedEChina.eq.${empleadoId},and(asignedEChina.is.null,state.in.(1,2,3))`);
   }
   // Si NO se pasa empleadoId, mostrar todos los pedidos en proceso (4-8) para visibilidad general

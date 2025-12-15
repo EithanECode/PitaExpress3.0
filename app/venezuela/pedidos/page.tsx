@@ -17,6 +17,7 @@ import { AlertTriangle, Boxes, Calendar, CheckCircle, Clock, Eye, Filter, List, 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useRealtimeVzla } from '@/hooks/use-realtime-vzla';
 import { useRealtimeVzlaBoxesContainers } from '@/hooks/use-realtime-vzla-boxes-containers';
+import { ArchiveHistoryButton } from '@/components/shared/ArchiveHistoryButton';
 export default function VenezuelaPedidosPage() {
   const [mounted, setMounted] = useState(false);
   const { theme } = useTheme();
@@ -884,6 +885,11 @@ export default function VenezuelaPedidosPage() {
                         <SelectItem value="processing">{t('venezuela.pedidos.filters.processing')}</SelectItem>
                       </SelectContent>
                     </Select>
+                    <ArchiveHistoryButton
+                      role="vzla"
+                      userId={empleadoId || ''}
+                      onSuccess={() => fetchOrders()}
+                    />
                   </div>
                 </div>
               </CardHeader>

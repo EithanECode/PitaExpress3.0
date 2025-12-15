@@ -88,7 +88,7 @@ interface Order {
   product: string;
   description: string;
   amount: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'quoted';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'quoted' | 'payment_rejected';
   progress: number;
   tracking: string;
   estimatedDelivery: string;
@@ -497,8 +497,8 @@ export default function MisPedidosPage() {
 
   // Mapeos de estado numérico de la BD a estados de UI y progreso
   const mapStateToStatus = (state?: number | null): Order['status'] => {
-    if (state === -2) return 'cancelled';
-    if (state === -1) return 'cancelled'; // Rechazado/Cancelado por cliente
+    if (state === -2) return 'cancelled'; // Cancelado por cliente
+    if (state === -1) return 'payment_rejected'; // Pago rechazado - puede reintentar
     if (!state) return 'pending';
     // Coarse mapping para UI del cliente
     if (state === 3) return 'quoted';

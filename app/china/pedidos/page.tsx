@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Toaster } from '@/components/ui/toaster';
 import { toast } from '@/hooks/use-toast';
 import ProposeAlternativeModal from '@/components/china/ProposeAlternativeModal';
+import { ArchiveHistoryButton } from '@/components/shared/ArchiveHistoryButton';
 // PDF
 import jsPDF from 'jspdf';
 
@@ -207,16 +208,18 @@ export default function PedidosChina() {
   const ITEMS_PER_PAGE = 1000; // Mostrar todos (sin paginación real) a petición del usuario
   // Mapear state numérico a texto usado en China
   function mapStateToEstado(state: number): Pedido['estado'] {
+    // Estados cancelados/rechazados
+    if (state === -2 || state === -1 || state === 0) return 'cancelado';
     // Rango solicitado para la vista China:
     // 1-2: pendiente (pedidos nuevos y recibidos)
-    // 3-4: procesando (3 se mostrará como cotizado donde aplique)
+    // 3: cotizado
+    // 4: procesando
     // 5-8: enviado
     if (state >= 5 && state <= 8) return 'enviado';
     if (state === 4) return 'procesando';
     if (state === 3) return 'cotizado';
-    if (state === 0) return 'cancelado';
-    if (state === 1 || state === 2) return 'pendiente'; // Estados 1 y 2 son pendientes
-    // Fallback: cualquier otro se considera pendiente aquí
+    if (state === 1 || state === 2) return 'pendiente';
+    // Fallback
     return 'pendiente';
   }
 
@@ -226,8 +229,8 @@ export default function PedidosChina() {
     const isDark = mounted && theme === 'dark';
     // Colores utilitarios tailwind para Badges
     const base = 'border';
-    if (s === 0) return { label: t('chinese.ordersPage.badges.cancelled', { defaultValue: 'Cancelado' }), className: `${base} ${isDark ? 'bg-red-900/30 text-red-300 border-red-700' : 'bg-red-100 text-red-800 border-red-200'}` };
-    if (s < 0 || isNaN(s)) return { label: t('chinese.ordersPage.badges.unknown'), className: `${base} ${isDark ? 'bg-gray-800 text-gray-300 border-gray-700' : 'bg-gray-100 text-gray-800 border-gray-200'}` };
+    // Estados cancelados: -2, -1, 0
+    if (s === -2 || s === -1 || s === 0) return { label: t('chinese.ordersPage.badges.cancelled', { defaultValue: 'Cancelado' }), className: `${base} ${isDark ? 'bg-red-900/30 text-red-300 border-red-700' : 'bg-red-100 text-red-800 border-red-200'}` };
     if (s === 1 || s === 2) return { label: t('chinese.ordersPage.badges.pending'), className: `${base} ${isDark ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700' : 'bg-yellow-100 text-yellow-800 border-yellow-200'}` }; // Estados 1 y 2 son pendientes
     if (s === 3) return { label: t('chinese.ordersPage.badges.quoted'), className: `${base} ${isDark ? 'bg-blue-900/30 text-blue-300 border-blue-700' : 'bg-blue-100 text-blue-800 border-blue-200'}` };
     if (s === 4) return { label: t('chinese.ordersPage.badges.processing'), className: `${base} ${isDark ? 'bg-purple-900/30 text-purple-300 border-purple-700' : 'bg-purple-100 text-purple-800 border-purple-200'}` };
@@ -2296,6 +2299,11 @@ export default function PedidosChina() {
                           <SelectItem value="cancelado">{t('chinese.ordersPage.filters.status.cancelled', { defaultValue: 'Cancelado' })}</SelectItem>
                         </SelectContent>
                       </Select>
+                      <ArchiveHistoryButton
+                        role="china"
+                        userId={chinaId || ''}
+                        onSuccess={() => fetchPedidos()}
+                      />
                     </>
                   )}
                   {activeTab === 'cajas' && (

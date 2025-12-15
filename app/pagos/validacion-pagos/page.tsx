@@ -44,6 +44,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useTranslation } from '@/hooks/useTranslation';
 import { NotificationsFactory } from '@/lib/notifications';
 import { useNotifications } from '@/hooks/use-notifications';
+import { ArchiveHistoryButton } from '@/components/shared/ArchiveHistoryButton';
 
 // =============================================
 // SIEMPRE datos reales: lógica unificada con admin
@@ -563,7 +564,16 @@ const PaymentValidationDashboard: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   const [lastRealtimeUpdate, setLastRealtimeUpdate] = useState<number | null>(null);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const [pagosUserId, setPagosUserId] = useState<string>('');
   useEffect(() => { setMounted(true); }, []);
+
+  // Get current user ID for archive functionality
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) setPagosUserId(user.id);
+    })();
+  }, [supabase]);
 
   // Realtime global: cualquier cambio en orders o clients provoca refresh si afecta estados >=4
   useEffect(() => {
@@ -614,14 +624,17 @@ const PaymentValidationDashboard: React.FC = () => {
       };
       startTimeout();
       try {
-        const selectCols = 'id, client_id, productName, description, totalQuote, estimatedBudget, created_at, state';
+        const selectCols = 'id, client_id, productName, description, totalQuote, estimatedBudget, created_at, state, max_state_reached, archived_by_pagos';
         // Rango de paginación
         const from = (page - 1) * PAGE_SIZE;
         const to = from + PAGE_SIZE - 1;
+        // Pagos ve: estado 4 (pendiente validación), estado 5 (validado), estado -1 (rechazado) 
+        // Rechazados: solo si max_state_reached >= 4 (llegaron hasta pagos)
         let query = supabase
           .from('orders')
           .select(selectCols, { count: 'exact' })
-          .or('state.eq.4,state.eq.5,state.eq.-1'); // añadido -1
+          .or('state.eq.4,state.eq.5,and(state.eq.-1,max_state_reached.gte.4)')
+          .eq('archived_by_pagos', false);
         // Filtro server-side por estado (pendiente = state 4, completado >4)
         if (filterStatus === 'pendiente') query = query.eq('state', 4);
         else if (filterStatus === 'completado') query = query.eq('state', 5);
@@ -1099,6 +1112,11 @@ const PaymentValidationDashboard: React.FC = () => {
                     <span className="hidden sm:inline">{t('venezuela.pagos.actions.export')}</span>
                     <span className="sm:hidden">{t('venezuela.pagos.actions.exportShort')}</span>
                   </Button>
+                  <ArchiveHistoryButton
+                    role="pagos"
+                    userId={pagosUserId}
+                    onSuccess={() => setRefreshIndex(i => i + 1)}
+                  />
                 </div>
               </div>
             </CardHeader>

@@ -15,11 +15,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'UserId required' }, { status: 400 });
         }
 
-        // In a production app with strict security, we would verify the session here.
-        // Given the project pattern, we are using the service role and trusting the inputs/middleware.
-
+        // Client: Soft delete (independent visibility)
         if (role === 'client') {
-            // Client: Archive delivered (13) or cancelled (-1, -2) immediately
             const { data, error } = await supabase
                 .from('orders')
                 .update({ archived_by_client: true })
@@ -32,33 +29,60 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ count: data?.length || 0 });
         }
 
-        if (role === 'admin') {
-            // Admin Logic
-            // 1. Cancelled (-1, -2) -> Immediate
-            const { data: dataCancelled, error: errorCancelled } = await supabase
+        // China: Soft delete (independent visibility)
+        if (role === 'china') {
+            const { data, error } = await supabase
                 .from('orders')
-                .update({ archived_by_admin: true })
-                .in('state', [-2, -1])
-                .eq('archived_by_admin', false)
+                .update({ archived_by_china: true })
+                .in('state', [-2, -1, 13])
+                .eq('archived_by_china', false)
                 .select();
 
-            if (errorCancelled) throw errorCancelled;
+            if (error) throw error;
+            return NextResponse.json({ count: data?.length || 0 });
+        }
 
-            // 2. Delivered (13) -> Only if older than 30 days
+        // Venezuela: Soft delete (independent visibility)
+        if (role === 'vzla') {
+            const { data, error } = await supabase
+                .from('orders')
+                .update({ archived_by_vzla: true })
+                .in('state', [-2, -1, 13])
+                .eq('archived_by_vzla', false)
+                .select();
+
+            if (error) throw error;
+            return NextResponse.json({ count: data?.length || 0 });
+        }
+
+        // Pagos: Soft delete (independent visibility) - payment states
+        if (role === 'pagos') {
+            const { data, error } = await supabase
+                .from('orders')
+                .update({ archived_by_pagos: true })
+                .in('state', [5, -1])
+                .eq('archived_by_pagos', false)
+                .select();
+
+            if (error) throw error;
+            return NextResponse.json({ count: data?.length || 0 });
+        }
+
+        // Admin: DELETE permanent (only orders older than 30 days)
+        if (role === 'admin') {
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-            const { data: dataDelivered, error: errorDelivered } = await supabase
+            // Delete cancelled and delivered orders older than 30 days
+            const { data, error } = await supabase
                 .from('orders')
-                .update({ archived_by_admin: true })
-                .eq('state', 13)
+                .delete()
+                .in('state', [-2, -1, 13])
                 .lt('updated_at', thirtyDaysAgo.toISOString())
-                .eq('archived_by_admin', false)
                 .select();
 
-            if (errorDelivered) throw errorDelivered;
-
-            return NextResponse.json({ count: (dataCancelled?.length || 0) + (dataDelivered?.length || 0) });
+            if (error) throw error;
+            return NextResponse.json({ count: data?.length || 0 });
         }
 
         return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
@@ -68,4 +92,3 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
-

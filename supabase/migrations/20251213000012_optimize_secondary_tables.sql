@@ -172,7 +172,7 @@ CREATE POLICY "admins_manage_userlevel" ON public.userlevel
   )
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM public.administrators
+      SELECT 1 FROM public.administrators1
       WHERE administrators.user_id = (select auth.uid())
     )
   );

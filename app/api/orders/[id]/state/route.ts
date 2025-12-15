@@ -67,6 +67,14 @@ export async function PUT(
       });
     }
 
+    // VALIDACIÓN: No permitir cancelación después de pago validado (state >= 5)
+    if ((state === -2 || state === -1) && currentOrder.state >= 5) {
+      return NextResponse.json(
+        { error: 'No se puede cancelar un pedido después de que el pago ha sido validado' },
+        { status: 400 }
+      );
+    }
+
     // Obtener información del request
     const clientIP = ip_address || 
       request.headers.get('x-forwarded-for') || 

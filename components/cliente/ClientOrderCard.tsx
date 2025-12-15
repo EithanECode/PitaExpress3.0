@@ -77,46 +77,49 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                     {/* Un solo badge basado en stateNum; fallback al badge de status si no hay stateNum */}
                     {typeof order.stateNum === 'number' ? (
                         <Badge className={`text-xs md:text-sm font-semibold px-3 py-1 transition-colors hover:brightness-110 hover:ring-1 ${mounted && theme === 'dark' ? (
-                            (order.stateNum === -1 || order.stateNum === -2) ? 'bg-red-900/30 text-red-300 border-red-700 hover:bg-red-900/50 hover:ring-red-500/20' :
-                                order.stateNum === 13 ? 'bg-emerald-900/30 text-emerald-300 border-emerald-700 hover:bg-emerald-900/50 hover:ring-emerald-500/20' :
-                                    order.stateNum === 12 ? 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700 hover:ring-gray-500/20' :
-                                        order.stateNum === 11 ? 'bg-green-900/30 text-green-300 border-green-700 hover:bg-green-900/50 hover:ring-green-500/20' :
-                                            order.stateNum === 10 ? 'bg-orange-900/30 text-orange-300 border-orange-700 hover:bg-orange-900/50 hover:ring-orange-500/20' :
-                                                (order.stateNum === 7 || order.stateNum === 8 || order.stateNum === 9) ? 'bg-cyan-900/30 text-cyan-300 border-cyan-700 hover:bg-cyan-900/50 hover:ring-cyan-500/20' :
-                                                    order.stateNum === 6 ? 'bg-blue-900/30 text-blue-300 border-blue-700 hover:bg-blue-900/50 hover:ring-blue-500/20' :
-                                                        order.stateNum === 5 ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700 hover:bg-yellow-900/50 hover:ring-yellow-500/20' :
-                                                            order.stateNum === 4 ? 'bg-blue-900/30 text-blue-300 border-blue-700 hover:bg-blue-900/50 hover:ring-blue-500/20' :
-                                                                order.stateNum === 3 ? 'bg-green-900/30 text-green-300 border-green-700 hover:bg-green-900/50 hover:ring-green-500/20' :
-                                                                    order.stateNum === 2 ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700 hover:bg-yellow-900/50 hover:ring-yellow-500/20' :
-                                                                        'bg-yellow-900/30 text-yellow-300 border-yellow-700 hover:bg-yellow-900/50 hover:ring-yellow-500/20'
+                            order.stateNum === -2 ? 'bg-red-900/30 text-red-300 border-red-700 hover:bg-red-900/50 hover:ring-red-500/20' :
+                                order.stateNum === -1 ? 'bg-orange-900/30 text-orange-300 border-orange-700 hover:bg-orange-900/50 hover:ring-orange-500/20' :
+                                    order.stateNum === 13 ? 'bg-emerald-900/30 text-emerald-300 border-emerald-700 hover:bg-emerald-900/50 hover:ring-emerald-500/20' :
+                                        order.stateNum === 12 ? 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700 hover:ring-gray-500/20' :
+                                            order.stateNum === 11 ? 'bg-green-900/30 text-green-300 border-green-700 hover:bg-green-900/50 hover:ring-green-500/20' :
+                                                order.stateNum === 10 ? 'bg-orange-900/30 text-orange-300 border-orange-700 hover:bg-orange-900/50 hover:ring-orange-500/20' :
+                                                    (order.stateNum === 7 || order.stateNum === 8 || order.stateNum === 9) ? 'bg-cyan-900/30 text-cyan-300 border-cyan-700 hover:bg-cyan-900/50 hover:ring-cyan-500/20' :
+                                                        order.stateNum === 6 ? 'bg-blue-900/30 text-blue-300 border-blue-700 hover:bg-blue-900/50 hover:ring-blue-500/20' :
+                                                            order.stateNum === 5 ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700 hover:bg-yellow-900/50 hover:ring-yellow-500/20' :
+                                                                order.stateNum === 4 ? 'bg-blue-900/30 text-blue-300 border-blue-700 hover:bg-blue-900/50 hover:ring-blue-500/20' :
+                                                                    order.stateNum === 3 ? 'bg-green-900/30 text-green-300 border-green-700 hover:bg-green-900/50 hover:ring-green-500/20' :
+                                                                        order.stateNum === 2 ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700 hover:bg-yellow-900/50 hover:ring-yellow-500/20' :
+                                                                            'bg-yellow-900/30 text-yellow-300 border-yellow-700 hover:bg-yellow-900/50 hover:ring-yellow-500/20'
                         ) : (
-                            (order.stateNum === -1 || order.stateNum === -2) ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-50 hover:ring-red-200' :
-                                order.stateNum === 13 ? 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-50 hover:ring-emerald-200' :
-                                    order.stateNum === 12 ? 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-50 hover:ring-gray-200' :
-                                        order.stateNum === 11 ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-50 hover:ring-green-200' :
-                                            order.stateNum === 10 ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-50 hover:ring-orange-200' :
-                                                (order.stateNum === 7 || order.stateNum === 8 || order.stateNum === 9) ? 'bg-cyan-100 text-cyan-800 border-cyan-200 hover:bg-cyan-50 hover:ring-cyan-200' :
-                                                    order.stateNum === 6 ? 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-50 hover:ring-blue-200' :
-                                                        order.stateNum === 5 ? 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-50 hover:ring-yellow-200' :
-                                                            order.stateNum === 4 ? 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-50 hover:ring-blue-200' :
-                                                                order.stateNum === 3 ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-50 hover:ring-green-200' :
-                                                                    order.stateNum === 2 ? 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-50 hover:ring-yellow-200' :
-                                                                        'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-50 hover:ring-yellow-200'
+                            order.stateNum === -2 ? 'bg-red-100 text-red-800 border-red-200 hover:bg-red-50 hover:ring-red-200' :
+                                order.stateNum === -1 ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-50 hover:ring-orange-200' :
+                                    order.stateNum === 13 ? 'bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-50 hover:ring-emerald-200' :
+                                        order.stateNum === 12 ? 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-50 hover:ring-gray-200' :
+                                            order.stateNum === 11 ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-50 hover:ring-green-200' :
+                                                order.stateNum === 10 ? 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-50 hover:ring-orange-200' :
+                                                    (order.stateNum === 7 || order.stateNum === 8 || order.stateNum === 9) ? 'bg-cyan-100 text-cyan-800 border-cyan-200 hover:bg-cyan-50 hover:ring-cyan-200' :
+                                                        order.stateNum === 6 ? 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-50 hover:ring-blue-200' :
+                                                            order.stateNum === 5 ? 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-50 hover:ring-yellow-200' :
+                                                                order.stateNum === 4 ? 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-50 hover:ring-blue-200' :
+                                                                    order.stateNum === 3 ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-50 hover:ring-green-200' :
+                                                                        order.stateNum === 2 ? 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-50 hover:ring-yellow-200' :
+                                                                            'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-50 hover:ring-yellow-200'
                         )
                             }`}>
-                            {(order.stateNum === -1 || order.stateNum === -2) ? t('client.recentOrders.statuses.cancelled') :
-                                order.stateNum === 5 ? t('client.recentOrders.statuses.paymentValidated') :
-                                    order.stateNum === 6 ? t('client.recentOrders.statuses.packagingBox') :
-                                        // 7 y 8 etiquetados como 9
-                                        (order.stateNum === 7 || order.stateNum === 8 || order.stateNum === 9) ? t('client.recentOrders.statuses.sentFromChina') :
-                                            order.stateNum === 10 ? t('client.recentOrders.statuses.inCustoms') :
-                                                order.stateNum === 11 ? t('client.recentOrders.statuses.arriving') :
-                                                    order.stateNum === 12 ? t('client.recentOrders.statuses.inStore') :
-                                                        order.stateNum === 13 ? t('client.recentOrders.statuses.delivered') :
-                                                            order.stateNum === 4 ? t('client.recentOrders.statuses.processing') :
-                                                                order.stateNum === 3 ? t('client.recentOrders.statuses.quoted') :
-                                                                    order.stateNum === 2 ? t('client.recentOrders.statuses.pending') :
-                                                                        t('client.recentOrders.statuses.pending')}
+                            {order.stateNum === -2 ? t('client.recentOrders.statuses.cancelled') :
+                                order.stateNum === -1 ? t('client.recentOrders.statuses.paymentRejected', { defaultValue: 'Pago Rechazado' }) :
+                                    order.stateNum === 5 ? t('client.recentOrders.statuses.paymentValidated') :
+                                        order.stateNum === 6 ? t('client.recentOrders.statuses.packagingBox') :
+                                            // 7 y 8 etiquetados como 9
+                                            (order.stateNum === 7 || order.stateNum === 8 || order.stateNum === 9) ? t('client.recentOrders.statuses.sentFromChina') :
+                                                order.stateNum === 10 ? t('client.recentOrders.statuses.inCustoms') :
+                                                    order.stateNum === 11 ? t('client.recentOrders.statuses.arriving') :
+                                                        order.stateNum === 12 ? t('client.recentOrders.statuses.inStore') :
+                                                            order.stateNum === 13 ? t('client.recentOrders.statuses.delivered') :
+                                                                order.stateNum === 4 ? t('client.recentOrders.statuses.processing') :
+                                                                    order.stateNum === 3 ? t('client.recentOrders.statuses.quoted') :
+                                                                        order.stateNum === 2 ? t('client.recentOrders.statuses.pending') :
+                                                                            t('client.recentOrders.statuses.pending')}
                         </Badge>
                     ) : (
                         <Badge className={`${getStatusColor(order.status)} text-xs md:text-sm font-semibold px-3 py-1`}>
@@ -233,8 +236,9 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                             );
                         })()}
 
-                        {/* Botón para cancelar pedido (solo en estados pendiente o cotizado) */}
-                        {(order.status === 'pending' || order.status === 'quoted') && (
+
+                        {/* Botón para cancelar pedido (pendiente, cotizado, o pago rechazado) */}
+                        {(order.status === 'pending' || order.status === 'quoted' || order.status === 'payment_rejected') && (
                             <Button
                                 variant="outline"
                                 size="sm"
