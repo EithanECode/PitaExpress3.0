@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client'
+  ;
 import {
-  Search, Filter, Boxes, Package, List, CheckCircle, Calendar, Eye, Calculator, Pencil, Tag, User, Plus, Truck, Trash2, AlertTriangle, DollarSign, Download, Image as ImageIcon, Send
+  Search, Filter, Boxes, Package, List, CheckCircle, Calendar, Eye, Calculator, Pencil, Tag, User, Plus, Truck, Trash2, AlertTriangle, DollarSign, Download, Image as ImageIcon, Send, XCircle
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -17,6 +18,9 @@ import { useRealtimeChina } from '@/hooks/use-realtime-china';
 import { useProductAlternatives } from '@/hooks/use-product-alternatives';
 import ProposeAlternativeModal from './ProposeAlternativeModal';
 import jsPDF from 'jspdf';
+import { PriceDisplayWithCNY } from '@/components/shared/PriceDisplayWithCNY';
+import { useCNYConversion } from '@/hooks/use-cny-conversion';
+import { useTheme } from 'next-themes';
 
 // Utilidad para convertir un SVG público a PNG DataURL para incrustar en PDF (cliente)
 async function svgToPngDataUrl(path: string, size = 120): Promise<string> {
@@ -95,6 +99,8 @@ function getContainerBadge(t: any, stateNum?: number) {
 
 export default function ChinaOrdersTabContent() {
   const { t } = useTranslation();
+  const { formatCNYPrice, loading: cnyLoading, cnyRate } = useCNYConversion();
+  const { theme } = useTheme();
   // Current China user id for realtime filtering
   const [chinaId, setChinaId] = useState<string | undefined>(undefined);
   const [activeSubTab, setActiveSubTab] = useState<'pedidos' | 'cajas' | 'contenedores'>('pedidos');
@@ -416,11 +422,21 @@ export default function ChinaOrdersTabContent() {
     try {
       // Traer TODOS los pedidos que estén asignados a algún empleado de China (sin importar el usuario logueado)
       const res = await fetch(`/china/pedidos/api/orders`, { cache: 'no-store' });
-      const data = await res.json();
-      if (!Array.isArray(data)) { setPedidos([]); return; }
-      // Mantener sólo los que tienen asignedEChina definido y un ID válido
+      const response = await res.json();
+
+      // El API devuelve { data: [...], total: number }, no un array directo
+      const data = response.data || response;
+
+      if (!Array.isArray(data)) {
+        console.error('Respuesta del API no es un array:', response);
+        setPedidos([]);
+        return;
+      }
+
+      // NO filtrar por asignedEChina aquí - Admin debe ver todos los pedidos
+      // El filtrado por empleado se hace en el API cuando se pasa el parámetro empleadoId
       const mappedPedidos = data
-        .filter((order: any) => !!order.asignedEChina && !!order.id)
+        .filter((order: any) => !!order.id) // Solo verificar que tenga ID válido
         .map((order: any) => ({
           id: order.id,
           cliente: order.clientName || '',
@@ -980,67 +996,167 @@ export default function ChinaOrdersTabContent() {
   }
 
   // Helper para renderizar la fila de pedido (extraído del map original para limpieza)
-  const renderPedidoRow = (pedido: Pedido) => (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="font-mono text-sm text-slate-500">#ORD-{pedido.id}</span>
-          <Badge className={getOrderBadge(t, pedido.numericState).className} variant="outline">
-            {getOrderBadge(t, pedido.numericState).label}
+  const renderPedidoRow = (p: Pedido) => {
+    // Badges de alternativa
+    const renderAlternativeBadge = () => {
+      if (p.alternativeStatus === 'pending') {
+        return (
+          <Badge className="hidden sm:inline-block bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">
+            {t('chinese.ordersPage.badges.alternativeSent', { defaultValue: 'Alternativa enviada' })}
           </Badge>
-          {pedido.deliveryType === 'air' && <Badge variant="secondary" className="bg-sky-100 text-sky-700 hover:bg-sky-100"><Truck className="w-3 h-3 mr-1" /> Aéreo</Badge>}
-          {pedido.deliveryType === 'maritime' && <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100"><Truck className="w-3 h-3 mr-1" /> Marítimo</Badge>}
-          {pedido.deliveryType === 'doorToDoor' && <Badge variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100"><Truck className="w-3 h-3 mr-1" /> Puerta a Puerta</Badge>}
-        </div>
-        <h4 className="font-medium text-slate-900 truncate">{pedido.producto}</h4>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">
-          <span className="flex items-center gap-1"><Package className="w-3 h-3" /> {pedido.cantidad} u.</span>
-          {pedido.cotizado && pedido.precio && (
-            <span className="flex items-center gap-1 text-green-600 font-medium">
-              <DollarSign className="w-3 h-3" /> {pedido.precio.toFixed(2)} c/u
-            </span>
-          )}
-        </div>
-      </div>
+        );
+      }
+      if (p.alternativeStatus === 'accepted') {
+        return (
+          <Badge className="hidden sm:inline-block bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700">
+            {t('chinese.ordersPage.badges.alternativeAccepted', { defaultValue: 'Alternativa aceptada' })}
+          </Badge>
+        );
+      }
+      if (p.alternativeStatus === 'rejected') {
+        return (
+          <Badge className="hidden sm:inline-block bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-700">
+            {t('chinese.ordersPage.badges.alternativeRejected', { defaultValue: 'Alternativa rechazada' })}
+          </Badge>
+        );
+      }
+      return null;
+    };
 
-      <div className="flex items-center gap-2 shrink-0">
-        {/* Botones de acción existentes */}
-        {pedido.estado === 'pendiente' && (
-          <Button size="sm" onClick={() => setModalCotizar({ open: true, pedido })}>
-            <Calculator className="w-4 h-4 mr-2" /> {t('chinese.ordersPage.actions.quote')}
-          </Button>
-        )}
-        {pedido.estado === 'cotizado' && (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 px-3 py-1">
-            <CheckCircle className="w-3 h-3 mr-2" /> Cotizado
-          </Badge>
-        )}
-        {pedido.estado === 'procesando' && (
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => handleGenerateOrderLabelPdf(pedido.id)}>
-              <Tag className="w-4 h-4 mr-2" /> Etiqueta
-            </Button>
-            <Button size="sm" onClick={() => {
-              if (!pedido.id) {
-                console.error('Intento de empaquetar pedido sin ID:', pedido);
-                toast({ title: 'Error', description: 'El pedido no tiene ID válido', variant: 'destructive' });
-                return;
-              }
-              console.log('Abriendo modal para pedido:', pedido.id);
-              setModalEmpaquetarPedido({ open: true, pedidoId: pedido.id });
-            }}>
-              <Boxes className="w-4 h-4 mr-2" /> Empaquetar
-            </Button>
+    return (
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 justify-between rounded-xl transition-all duration-300">
+        {/* Columna izquierda */}
+        <div className="flex items-start sm:items-center gap-4 flex-1 min-w-0">
+          <div className={`p-3 rounded-lg shrink-0 ${mounted && theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
+            <Package className={`h-5 w-5 ${mounted && theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`} />
           </div>
-        )}
+          <div className="space-y-1 w-full min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className={`font-semibold text-sm sm:text-base ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>#ORD-{p.id}</h3>
+              {renderAlternativeBadge()}
+              {/* Badge estado principal */}
+              {p.numericState === 2 ? (
+                <Badge className={`hidden sm:inline-block border ${mounted && theme === 'dark' ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700' : 'bg-yellow-100 text-yellow-800 border-yellow-200'}`}>
+                  {t('chinese.ordersPage.filters.status.pending', { defaultValue: 'Pendiente' })}
+                </Badge>
+              ) : (
+                <Badge className={`hidden sm:inline-block ${getOrderBadge(t, p.numericState).className}`}>
+                  {getOrderBadge(t, p.numericState).label}
+                </Badge>
+              )}
+            </div>
+            <p className={`text-xs sm:text-sm truncate max-w-full ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{p.producto}</p>
+            <div className={`flex flex-wrap gap-x-4 gap-y-1 text-[11px] sm:text-xs ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              <span className="flex items-center gap-1 min-w-[110px]">
+                <User className="h-3 w-3" /> {p.cliente}
+              </span>
+              <span className="flex items-center gap-1">
+                <Tag className="h-3 w-3" /> {t('chinese.ordersPage.orders.qtyShort', { defaultValue: 'Cant' })}: {p.cantidad}
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" /> {new Date(p.fecha).toLocaleDateString('es-ES')}
+              </span>
+            </div>
+          </div>
+        </div>
 
-        {/* Menú de alternativas (siempre visible si aplica) */}
-        <Button size="icon" variant="ghost" onClick={() => setModalPropAlternativa({ open: true, pedido })}>
-          <Pencil className="w-4 h-4 text-slate-400" />
-        </Button>
+        {/* Columna derecha / acciones */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
+          {p.precio && (
+            <div className="hidden sm:block text-right space-y-1">
+              <PriceDisplayWithCNY
+                amount={p.precio}
+                currency="USD"
+                variant="inline"
+                className="text-sm font-semibold text-green-600"
+              />
+            </div>
+          )}
+          <div className="flex w-full sm:w-auto flex-wrap items-center gap-2 justify-end sm:justify-end">
+            {p.estado === 'enviado' && (p.numericState ?? 0) < 6 && (
+              <Button
+                size="sm"
+                className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700"
+                onClick={() => {
+                  setModalEmpaquetarPedido({ open: true, pedidoId: p.id });
+                }}
+              >
+                <Boxes className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('chinese.ordersPage.orders.pack', { defaultValue: 'Empaquetar' })}</span>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (p.pdfRoutes) {
+                  const bust = p.pdfRoutes.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
+                  window.open(p.pdfRoutes + bust, '_blank', 'noopener,noreferrer');
+                } else {
+                  toast({ title: t('chinese.ordersPage.orders.pdfMissingToastTitle', { defaultValue: 'PDF no disponible' }) });
+                }
+              }}
+              className="flex items-center gap-1"
+            >
+              <Eye className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('chinese.ordersPage.orders.view', { defaultValue: 'Ver' })}</span>
+            </Button>
+
+            {p.estado === 'pendiente' && (() => {
+              // Ocultar botones si hay una alternativa pendiente
+              if (p.alternativeStatus === 'pending') return null;
+
+              return (!p.numericState || p.numericState < 9) ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`h-7 md:h-8 px-3 md:px-4 text-xs font-semibold transition-all duration-300 ${mounted && theme === 'dark' ? 'border-red-600 text-red-300 hover:bg-red-900/30 hover:border-red-500' : 'border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300'}`}
+                    onClick={() => {
+                      // implementar cancelar pedido
+                      toast({ title: 'Cancelar pedido', description: 'Funcionalidad pendiente' });
+                    }}
+                  >
+                    <XCircle className="h-3 w-3 mr-1" />
+                    {t('chinese.ordersPage.modals.selectBoxForOrder.cancel', { defaultValue: 'Cancelar' })}
+                  </Button>
+
+                  <Button
+                    onClick={() => setModalCotizar({
+                      open: true,
+                      pedido: p,
+                      precioUnitario: 0,
+                      precioEnvio: 0,
+                      altura: 0,
+                      anchura: 0,
+                      largo: 0,
+                      peso: 0,
+                    })}
+                    size="sm"
+                    className="flex items-center gap-1 bg-orange-600 hover:bg-orange-700"
+                  >
+                    <Calculator className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t('chinese.ordersPage.orders.quote', { defaultValue: 'Cotizar' })}</span>
+                  </Button>
+                  {p.alternativeStatus !== 'accepted' && (
+                    <Button
+                      onClick={() => setModalPropAlternativa({ open: true, pedido: p })}
+                      size="sm"
+                      className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700"
+                      title={t('chinese.ordersPage.tooltips.proposeAlternative', { defaultValue: 'Proponer alternativa' })}
+                    >
+                      <Send className="h-4 w-4" />
+                      <span className="hidden sm:inline">{t('chinese.ordersPage.orders.proposeAlternative', { defaultValue: 'Alternativa' })}</span>
+                    </Button>
+                  )}
+                </>
+              ) : null;
+            })()}
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const pedidosFiltrados = pedidos.filter(p => {
     const estadoOk = filtroEstado === 'todos' || p.estado === filtroEstado;

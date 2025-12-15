@@ -18,10 +18,11 @@ async function getOrdersWithClientName(page: number = 1, limit: number = 50, emp
 
   // Filtrar por empleado si se proporciona
   if (empleadoId) {
-    // Buscar pedidos asignados a ese empleado (incluyendo cancelados) O no asignados en estados iniciales
+    // Para empleados específicos: sus pedidos asignados + no asignados en estados iniciales
     query = query.or(`asignedEChina.eq.${empleadoId},and(asignedEChina.is.null,state.in.(1,2,3))`);
   }
-  // Si NO se pasa empleadoId, mostrar todos los pedidos en proceso (4-8) para visibilidad general
+  // Si NO se pasa empleadoId (caso Admin): mostrar TODOS los pedidos sin filtrar por asignación
+  // Esto permite que Admin vea todos los pedidos independientemente de a quién estén asignados
 
   // Aplicar paginación y orden
   const { data: orders, count, error: ordersError } = await query
