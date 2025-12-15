@@ -409,6 +409,7 @@ export default function PedidosChina() {
   const [boxesLoading, setBoxesLoading] = useState(false);
   const [orderCountsByBoxMain, setOrderCountsByBoxMain] = useState<Record<string | number, number>>({});
   const [airOnlyBoxes, setAirOnlyBoxes] = useState<Set<string | number>>(new Set()); // Cajas que solo tienen pedidos aéreos
+  const [boxShippingTypes, setBoxShippingTypes] = useState<Record<string | number, string>>({});
   const [deletingBox, setDeletingBox] = useState(false);
   const [ordersByBox, setOrdersByBox] = useState<Pedido[]>([]);
   const [ordersByBoxLoading, setOrdersByBoxLoading] = useState(false);
@@ -582,6 +583,14 @@ export default function PedidosChina() {
     if (!chinaId) return;
     fetchPedidos();
   }, chinaId);
+
+  // Ensure boxes are fetched when opening the packing modal to get up-to-date shipping types
+  useEffect(() => {
+    if (modalEmpaquetar.open) {
+      console.log('[DEBUG] Modal empaquetar abierto. Refetching boxes...');
+      fetchBoxes();
+    }
+  }, [modalEmpaquetar.open]);
 
   // Realtime para boxes y containers (suscripción única con debounce)
   useEffect(() => {
@@ -964,40 +973,54 @@ export default function PedidosChina() {
       const list = (data || []) as BoxItem[];
       setBoxes(list);
 
-      // Calcular conteo de pedidos por caja para la lista principal
-      const ids = list
-        .map((b) => b.box_id ?? b.boxes_id ?? (b as any).id)
-        .filter((v): v is number | string => v !== undefined && v !== null);
+      // Get orders counts for these boxes AND shipping types
+      const ids = list.map(b => b.box_id ?? b.boxes_id ?? (b as any).id).filter(v => v != null);
       if (ids.length > 0) {
-        const { data: ordersData, error: ordersErr } = await supabase
-          .from('orders')
-          .select('id, box_id')
-          .in('box_id', ids);
-        if (!ordersErr) {
-          const counts: Record<string | number, number> = {};
-          (ordersData || []).forEach((row: any) => {
-            const key = row.box_id as string | number;
-            counts[key] = (counts[key] || 0) + 1;
-          });
-          setOrderCountsByBoxMain(counts);
-        } else {
-          console.error('Error al obtener conteo de pedidos por caja (lista):', ordersErr);
-          setOrderCountsByBoxMain({});
-        }
+        const { data: ordersData } = await supabase.from('orders').select('id, box_id, shippingType').in('box_id', ids as any);
 
-        // Determinar qué cajas tienen solo pedidos aéreos
-        const airOnlySet = new Set<string | number>();
-        for (const boxId of ids) {
-          const isAirOnly = await checkIfBoxHasOnlyAirOrders(boxId);
-          if (isAirOnly) {
-            airOnlySet.add(boxId);
+        const counts: Record<string | number, number> = {};
+        const boxTypes: Record<string | number, string> = {}; // 'Aereo', 'Maritimo', or 'Mixto'
+
+        (ordersData || []).forEach(r => {
+          const bid = r.box_id as any;
+          counts[bid] = (counts[bid] || 0) + 1;
+
+          if (r.shippingType) {
+            // Check exact values from DB image: 'air', 'maritime'
+            const typeNorm = r.shippingType === 'air' ? 'Aereo' : r.shippingType === 'maritime' ? 'Maritimo' : '';
+            // If the DB has 'Aereo'/'Maritimo' directly, handle that too just in case
+            const finalType = typeNorm || (r.shippingType === 'Aereo' ? 'Aereo' : r.shippingType === 'Maritimo' ? 'Maritimo' : '');
+
+            if (finalType) {
+              if (!boxTypes[bid]) {
+                boxTypes[bid] = finalType;
+              } else if (boxTypes[bid] !== finalType) {
+                boxTypes[bid] = 'Mixto';
+              }
+            }
           }
-        }
+        });
+
+        console.log('[DEBUG fetchBoxes] derived boxTypes:', boxTypes);
+
+        setOrderCountsByBoxMain(counts);
+
+        // Populate "airOnly" set (legacy check) AND new detailed types
+        const airOnlySet = new Set<string | number>();
+        Object.keys(boxTypes).forEach(bid => {
+          if (boxTypes[bid] === 'Aereo') {
+            airOnlySet.add(bid);
+          }
+        });
         setAirOnlyBoxes(airOnlySet);
+        setBoxShippingTypes(boxTypes);
       } else {
         setOrderCountsByBoxMain({});
         setAirOnlyBoxes(new Set());
+        setBoxShippingTypes({});
       }
+    } catch (e) {
+      console.error(e);
     } finally {
       setBoxesLoading(false);
     }
@@ -2456,8 +2479,8 @@ export default function PedidosChina() {
                                 <Badge className={`${getBoxBadge(stateNum).className}`}>{getBoxBadge(stateNum).label}</Badge>
                               </div>
                               {stateNum === 1 && (
-                                airOnlyBoxes.has(boxKey) ? (
-                                  // Botón "Enviar" para cajas con solo pedidos aéreos
+                                boxShippingTypes[boxKey as any] === 'Aereo' ? (
+                                  // Botón "Enviar" para cajas Aéreas (directo)
                                   <Button
                                     size="sm"
                                     className="flex items-center gap-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -2473,7 +2496,7 @@ export default function PedidosChina() {
                                     <span className="hidden sm:inline">{t('chinese.ordersPage.boxes.send')}</span>
                                   </Button>
                                 ) : (
-                                  // Botón "Empaquetar" para cajas normales
+                                  // Botón "Empaquetar" para cajas Marítimas (al contenedor)
                                   <Button
                                     size="sm"
                                     className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -3583,8 +3606,34 @@ export default function PedidosChina() {
                     const id = box.box_id ?? box.boxes_id ?? box.id ?? idx;
                     const created = box.creation_date ?? box.created_at ?? '';
                     const stateNum = (box.state ?? 1) as number;
+
+                    // Shipping Type Validation
+                    const currentOrder = pedidos.find(p => String(p.id) === String(modalEmpaquetar.pedidoId));
+                    // User confirmed shippingType is the correct column
+                    const sType = currentOrder?.shippingType || '';
+                    const orderType = sType === 'air' ? 'Aereo' : sType === 'maritime' ? 'Maritimo' : (sType === 'Aereo' ? 'Aereo' : sType === 'Maritimo' ? 'Maritimo' : '');
+                    const boxType = boxShippingTypes[id as any]; // 'Aereo' | 'Maritimo' | undefined
+
+                    let isCompatible = true;
+                    let incompatibleReason = '';
+
+                    // DEBUG LOGS (Newly added to page.tsx)
+                    console.log(`[DEBUG PAGE BOX ${id}]`, {
+                      boxId: id,
+                      orderId: modalEmpaquetar.pedidoId,
+                      orderShippingType: sType,
+                      normalizedOrderType: orderType,
+                      boxStoredType: boxType,
+                      isCompatible: orderType && boxType && orderType !== boxType && boxType !== 'Mixto' ? false : true
+                    });
+
+                    if (orderType && boxType && orderType !== boxType && boxType !== 'Mixto') {
+                      isCompatible = false;
+                      incompatibleReason = `Solo ${boxType}`;
+                    }
+
                     return (
-                      <div key={`${id}`} className={`flex items-center justify-between p-4 rounded-xl ${mounted && theme === 'dark' ? 'bg-gradient-to-r from-slate-700 to-slate-600 border-slate-600' : 'bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200'} border`}>
+                      <div key={`${id}`} className={`flex items-center justify-between p-4 rounded-xl ${mounted && theme === 'dark' ? 'bg-gradient-to-r from-slate-700 to-slate-600 border-slate-600' : 'bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200'} border ${!isCompatible ? 'opacity-75' : ''}`}>
                         <div className="flex items-center gap-4">
                           <div className={`p-3 rounded-lg ${mounted && theme === 'dark' ? 'bg-indigo-900/30' : 'bg-indigo-100'}`}>
                             <Boxes className={`h-5 w-5 ${mounted && theme === 'dark' ? 'text-indigo-300' : 'text-indigo-600'}`} />
@@ -3592,6 +3641,11 @@ export default function PedidosChina() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <h3 className={`font-semibold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>#BOX-{id}</h3>
+                              {boxType && (
+                                <Badge variant="outline" className={`ml-2 text-xs ${boxType === 'Aereo' ? 'text-sky-500 border-sky-500' : 'text-blue-600 border-blue-600'}`}>
+                                  {boxType}
+                                </Badge>
+                              )}
                             </div>
                             <div className={`flex items-center gap-4 text-xs ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
                               <span className="flex items-center gap-1">
@@ -3605,8 +3659,8 @@ export default function PedidosChina() {
                           <Badge className={`${getBoxBadge(stateNum).className}`}>{getBoxBadge(stateNum).label}</Badge>
                           <Button
                             size="sm"
-                            className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={stateNum >= 3}
+                            className={`flex items-center gap-1 ${!isCompatible ? (mounted && theme === 'dark' ? 'bg-slate-800 text-slate-500 border-slate-700' : 'bg-slate-100 text-slate-400 border-slate-200') : 'bg-indigo-600 hover:bg-indigo-700'} disabled:opacity-75 disabled:cursor-not-allowed min-w-[100px] justify-center`}
+                            disabled={stateNum >= 3 || !isCompatible}
                             // Reemplazado flujo: abrir modal etiqueta en lugar de asignar directamente
                             onClick={() => {
                               if (modalEmpaquetar?.pedidoId) {
@@ -3617,7 +3671,7 @@ export default function PedidosChina() {
                               }
                             }}
                           >
-                            {t('chinese.ordersPage.modals.selectBoxForOrder.select')}
+                            {!isCompatible ? incompatibleReason : t('chinese.ordersPage.modals.selectBoxForOrder.select')}
                           </Button>
                         </div>
                       </div>
