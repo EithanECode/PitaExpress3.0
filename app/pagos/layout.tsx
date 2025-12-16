@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { PagosLayoutProvider, usePagosLayoutContext } from "@/lib/PagosLayoutContext";
 import Sidebar from "@/components/layout/Sidebar";
 import { useTheme } from "next-themes";
@@ -8,9 +8,14 @@ import { useTheme } from "next-themes";
 function PagosLayoutContent({ children }: { children: ReactNode }) {
     const { sidebarExpanded, setSidebarExpanded, isMobileMenuOpen, toggleMobileMenu } = usePagosLayoutContext();
     const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     return (
-        <div className={`min-h-screen flex overflow-x-hidden ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
+        <div className={`min-h-screen flex overflow-x-hidden ${mounted && theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
             <Sidebar
                 isExpanded={sidebarExpanded}
                 setIsExpanded={setSidebarExpanded}

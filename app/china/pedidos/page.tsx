@@ -1306,13 +1306,16 @@ export default function PedidosChina() {
         .select('id');
 
       if (ordersUpdateError) {
-        console.error('Error actualizando pedidos:', {
-          message: ordersUpdateError.message,
-          details: ordersUpdateError.details,
-          hint: ordersUpdateError.hint,
-          code: ordersUpdateError.code,
-          error: ordersUpdateError
-        });
+        // Logging mejorado del error
+        const errorInfo = {
+          message: ordersUpdateError.message || 'Error desconocido',
+          details: ordersUpdateError.details || null,
+          hint: ordersUpdateError.hint || null,
+          code: ordersUpdateError.code || null,
+          fullError: ordersUpdateError
+        };
+        console.error('Error actualizando pedidos:', errorInfo);
+        console.error('Error completo (JSON):', JSON.stringify(ordersUpdateError, Object.getOwnPropertyNames(ordersUpdateError)));
         
         // Revertir el estado de la caja si falló la actualización de pedidos
         await supabase
@@ -1665,7 +1668,7 @@ export default function PedidosChina() {
                   }
                 </span>
                 {group.orders.length > 1 && (
-                  <Badge variant="secondary" className="text-xs font-normal">
+                  <Badge variant="secondary" className={`text-xs font-normal border ${mounted && theme === 'dark' ? 'bg-slate-700 text-slate-300 border-slate-600' : 'bg-slate-100 text-slate-700 border-slate-300'}`}>
                     {group.orders.length} pedidos
                   </Badge>
                 )}
@@ -1784,7 +1787,7 @@ export default function PedidosChina() {
                 amount={p.precio}
                 currency="USD"
                 variant="inline"
-                className="text-sm font-semibold text-green-600"
+                className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}
               />
             </div>
           )}
@@ -3276,26 +3279,26 @@ export default function PedidosChina() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
             <div
               ref={modalCrearContenedorRef}
-              className={`bg-white rounded-2xl p-6 max-w-md mx-4 w-full transition-all duration-300 ${isModalCrearContenedorClosing
+              className={`${mounted && theme === 'dark' ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-6 max-w-md mx-4 w-full transition-all duration-300 ${isModalCrearContenedorClosing
                 ? 'translate-y-full scale-95 opacity-0'
                 : 'animate-in slide-in-from-bottom-4 duration-300'
                 }`}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-slate-900">{t('chinese.ordersPage.modals.createContainer.title')}</h3>
+                <h3 className={`text-lg font-bold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t('chinese.ordersPage.modals.createContainer.title')}</h3>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={closeModalCrearContenedor}
-                  className="h-8 w-8 p-0"
+                  className={`h-8 w-8 p-0 ${mounted && theme === 'dark' ? 'hover:bg-slate-700' : ''}`}
                 >
-                  <span className="text-2xl">×</span>
+                  <span className={`text-2xl ${mounted && theme === 'dark' ? 'text-white' : ''}`}>×</span>
                 </Button>
               </div>
-              <p className="text-slate-600 mb-4">{t('chinese.ordersPage.modals.createContainer.question')}</p>
+              <p className={`mb-4 ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{t('chinese.ordersPage.modals.createContainer.question')}</p>
               {/* Nombre del contenedor (requerido) */}
               <div className="mb-6">
-                <label htmlFor="newContainerName" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="newContainerName" className={`block text-sm font-medium mb-1 ${mounted && theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
                   {t('chinese.ordersPage.modals.createContainer.containerNameLabel', { defaultValue: 'Nombre del contenedor' })}
                 </label>
                 <Input
@@ -3305,6 +3308,7 @@ export default function PedidosChina() {
                   maxLength={50}
                   onChange={(e) => setNewContainerName(e.target.value.slice(0, 50))}
                   required
+                  className={mounted && theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-slate-400' : ''}
                 />
               </div>
               <div className="flex justify-end gap-3">
@@ -3497,26 +3501,26 @@ export default function PedidosChina() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-300">
             <div
               ref={modalCrearCajaRef}
-              className={`bg-white rounded-2xl p-6 max-w-md mx-4 w-full transition-all duration-300 ${isModalCrearCajaClosing
+              className={`${mounted && theme === 'dark' ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-6 max-w-md mx-4 w-full transition-all duration-300 ${isModalCrearCajaClosing
                 ? 'translate-y-full scale-95 opacity-0'
                 : 'animate-in slide-in-from-bottom-4 duration-300'
                 }`}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-slate-900">{t('chinese.ordersPage.modals.createBox.title')}</h3>
+                <h3 className={`text-lg font-bold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t('chinese.ordersPage.modals.createBox.title')}</h3>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={closeModalCrearCaja}
-                  className="h-8 w-8 p-0"
+                  className={`h-8 w-8 p-0 ${mounted && theme === 'dark' ? 'hover:bg-slate-700' : ''}`}
                 >
-                  <span className="text-2xl">×</span>
+                  <span className={`text-2xl ${mounted && theme === 'dark' ? 'text-white' : ''}`}>×</span>
                 </Button>
               </div>
-              <p className="text-slate-600 mb-4">{t('chinese.ordersPage.modals.createBox.question')}</p>
+              <p className={`mb-4 ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{t('chinese.ordersPage.modals.createBox.question')}</p>
               {/* Nombre de la caja (requerido) */}
               <div className="mb-6">
-                <label htmlFor="newBoxName" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="newBoxName" className={`block text-sm font-medium mb-1 ${mounted && theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
                   {t('chinese.ordersPage.modals.createBox.boxNameLabel', { defaultValue: 'Nombre de la caja' })}
                 </label>
                 <Input
@@ -3526,6 +3530,7 @@ export default function PedidosChina() {
                   maxLength={50}
                   onChange={(e) => setNewBoxName(e.target.value.slice(0, 50))}
                   required
+                  className={mounted && theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-slate-400' : ''}
                 />
               </div>
               <div className="flex justify-end gap-3">

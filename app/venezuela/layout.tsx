@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { VzlaProvider } from "@/lib/VzlaContext";
 import { VzlaLayoutProvider, useVzlaLayoutContext } from "@/lib/VzlaLayoutContext";
 // import VzlaContextInitializer from "./VzlaContextInitializer"; // Placeholder if it exists or needs to be created
@@ -10,9 +10,14 @@ import { useTheme } from "next-themes";
 function VzlaLayoutContent({ children }: { children: ReactNode }) {
     const { sidebarExpanded, setSidebarExpanded, isMobileMenuOpen, toggleMobileMenu } = useVzlaLayoutContext();
     const { theme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     return (
-        <div className={`min-h-screen flex overflow-x-hidden ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
+        <div className={`min-h-screen flex overflow-x-hidden ${mounted && theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}`}>
             <Sidebar
                 isExpanded={sidebarExpanded}
                 setIsExpanded={setSidebarExpanded}
