@@ -181,12 +181,43 @@ export function useExchangeRateBinance(options: UseExchangeRateBinanceOptions = 
         clearInterval(intervalRef.current);
       }
 
-      // Configurar intervalo
+      console.log(`[useExchangeRateBinance] Iniciando auto-actualización cada ${interval / 1000 / 60} minutos para ${tradeType}`);
+
+      // Configurar intervalo para actualizar cada 30 minutos con force=true
       intervalRef.current = setInterval(() => {
-        fetchRate(false);
+        console.log(`[useExchangeRateBinance] Auto-actualización ejecutándose para ${tradeType}...`);
+        
+        // Usar force=true para forzar actualización desde API, no desde BD
+        fetch(`/api/exchange-rate/binance?force=true&tradeType=${tradeType}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+          .then(response => response.json())
+          .then((data: any) => {
+            if (data.success && data.rate) {
+              setRate(data.rate);
+              setLastUpdated(new Date(data.timestamp || new Date().toISOString()));
+              setSource(data.source || 'Binance P2P');
+              setFromDatabase(data.from_database || false);
+              setAgeMinutes(data.age_minutes || null);
+              
+              // Callback para actualizar el componente padre
+              if (onRateUpdateRef.current) {
+                onRateUpdateRef.current(data.rate);
+              }
+              
+              console.log(`[useExchangeRateBinance] ✅ Tasa ${tradeType} actualizada automáticamente: ${data.rate} VES/USDT`);
+            }
+          })
+          .catch(error => {
+            console.error(`[useExchangeRateBinance] ❌ Error en auto-actualización ${tradeType}:`, error);
+          });
       }, interval);
     } else {
       // Detener auto-actualización si está inactivo
+      console.log(`[useExchangeRateBinance] Auto-actualización desactivada para ${tradeType}`);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -202,7 +233,7 @@ export function useExchangeRateBinance(options: UseExchangeRateBinanceOptions = 
         abortControllerRef.current.abort();
       }
     };
-  }, [autoUpdate, interval, fetchRate]);
+  }, [autoUpdate, interval, tradeType]); // Incluir tradeType en dependencias
 
   // Effect para actualizar el tiempo transcurrido cada minuto
   useEffect(() => {

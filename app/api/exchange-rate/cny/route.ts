@@ -6,6 +6,7 @@ import {
   isValidExchangeRateCNY,
   cleanupOldExchangeRatesCNY
 } from '@/lib/supabase/exchange-rates-cny';
+import { saveApiHealthLog } from '@/lib/supabase/api-health-logs';
 
 // Función para obtener la tasa de cambio USD → CNY con múltiples APIs
 async function fetchUSDToCNYRate(): Promise<number> {
@@ -14,21 +15,6 @@ async function fetchUSDToCNYRate(): Promise<number> {
     {
       name: 'ExchangeRate-API',
       url: 'https://api.exchangerate-api.com/v4/latest/USD',
-      parser: (data: any) => data?.rates?.CNY
-    },
-    {
-      name: 'Fawazahmed0',
-      url: 'https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd/cny.json',
-      parser: (data: any) => data?.cny
-    },
-    {
-      name: 'CurrencyAPI-Free',
-      url: 'https://api.currencyapi.com/v3/latest?apikey=free&currencies=CNY&base_currency=USD',
-      parser: (data: any) => data?.data?.CNY?.value
-    },
-    {
-      name: 'ExchangeRates-IO',
-      url: 'https://api.exchangerates.io/v1/latest?access_key=free&symbols=CNY&base=USD',
       parser: (data: any) => data?.rates?.CNY
     },
     {
@@ -42,9 +28,8 @@ async function fetchUSDToCNYRate(): Promise<number> {
 
   // Intentar cada API en orden
   for (const api of apis) {
+    const startTime = Date.now();
     try {
-
-
       const response = await fetch(api.url, {
         method: 'GET',
         headers: {
@@ -54,7 +39,16 @@ async function fetchUSDToCNYRate(): Promise<number> {
         signal: AbortSignal.timeout(3000)
       });
 
+      const responseTime = Date.now() - startTime;
+
       if (!response.ok) {
+        // Registrar fallo
+        await saveApiHealthLog(
+          api.name.toLowerCase().replace(/-/g, '_').replace(/\s+/g, '_') + '_cny',
+          'failed',
+          responseTime,
+          `API Error: ${response.status} ${response.statusText}`
+        );
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
 
@@ -62,20 +56,52 @@ async function fetchUSDToCNYRate(): Promise<number> {
       const rate = api.parser(data);
 
       if (!rate) {
+        await saveApiHealthLog(
+          api.name.toLowerCase().replace(/-/g, '_').replace(/\s+/g, '_') + '_cny',
+          'failed',
+          responseTime,
+          'CNY rate not found in response'
+        );
         throw new Error(`CNY rate not found in ${api.name} response`);
       }
 
       const parsedRate = parseFloat(rate);
 
       if (!isValidExchangeRateCNY(parsedRate)) {
+        await saveApiHealthLog(
+          api.name.toLowerCase().replace(/-/g, '_').replace(/\s+/g, '_') + '_cny',
+          'failed',
+          responseTime,
+          `Invalid CNY rate value: ${parsedRate}`
+        );
         throw new Error(`Invalid CNY exchange rate value from ${api.name}: ${parsedRate}`);
       }
 
+      // Registrar éxito
+      await saveApiHealthLog(
+        api.name.toLowerCase().replace(/-/g, '_').replace(/\s+/g, '_') + '_cny',
+        'success',
+        responseTime,
+        undefined,
+        parsedRate
+      );
 
       return parsedRate;
 
-    } catch (error) {
+    } catch (error: any) {
+      const responseTime = Date.now() - startTime;
       console.warn(`[CNY] ${api.name} failed, trying next...`);
+      
+      // Registrar fallo si no se registró antes
+      if (!error.message?.includes('API Error') && !error.message?.includes('not found') && !error.message?.includes('Invalid')) {
+        await saveApiHealthLog(
+          api.name.toLowerCase().replace(/-/g, '_').replace(/\s+/g, '_') + '_cny',
+          'failed',
+          responseTime,
+          error.message || 'Unknown error'
+        );
+      }
+      
       lastError = error;
       continue; // Intentar siguiente API
     }
@@ -107,7 +133,7 @@ export async function GET(request: NextRequest) {
       // Guardar tasa exitosa en BD
       await saveExchangeRateCNY(apiRate, apiSource, false, {
         success: true,
-        apis_used: ['exchangerate-api', 'fawazahmed0', 'currencyapi', 'exchangerates-io', 'fixer']
+        apis_used: ['exchangerate-api', 'fixer']
       });
 
       // Limpiar registros antiguos ocasionalmente (1 de cada 50 requests)

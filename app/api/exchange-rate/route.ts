@@ -15,24 +15,22 @@ async function fetchExchangeRate(): Promise<number> {
   const startTime = Date.now();
   
   try {
-    // Intentar obtener la tasa oficial del BCV desde DollarVzla API
-    const response = await fetch('https://api.dollarvzla.com/v1/exchange-rates', {
+    // PRIMERA OPCIÓN: ExchangeRate-API (funcionando actualmente)
+    const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'MornaProject/1.0'
       },
-      // Timeout reducido a 3s para evitar bloqueos largos
       signal: AbortSignal.timeout(3000),
-      cache: 'no-store' // Evitar caché
+      cache: 'no-store'
     });
 
     const responseTime = Date.now() - startTime;
 
     if (!response.ok) {
-      // Registrar fallo
       await saveApiHealthLog(
-        'dollarvzla.com',
+        'exchangerate-api',
         'failed',
         responseTime,
         `API Error: ${response.status} ${response.statusText}`
@@ -41,39 +39,22 @@ async function fetchExchangeRate(): Promise<number> {
     }
 
     const data = await response.json();
-
-    // Validar estructura de respuesta
-    if (!data || !data.exchangeRates || !Array.isArray(data.exchangeRates)) {
+    
+    if (!data || !data.rates || !data.rates.VES) {
       await saveApiHealthLog(
-        'dollarvzla.com',
+        'exchangerate-api',
         'failed',
         responseTime,
-        'Invalid API response structure'
+        'VES rate not found in response'
       );
-      throw new Error('Invalid API response structure');
+      throw new Error('VES rate not found in response');
     }
 
-    // Buscar específicamente la tasa del BCV
-    const bcvRate = data.exchangeRates.find((rate: any) =>
-      rate.sourceCode && rate.sourceCode.toLowerCase() === 'bcv'
-    );
+    const rate = parseFloat(data.rates.VES);
 
-    if (!bcvRate || !bcvRate.value) {
-      await saveApiHealthLog(
-        'dollarvzla.com',
-        'failed',
-        responseTime,
-        'BCV rate not found in API response'
-      );
-      throw new Error('BCV rate not found in API response');
-    }
-
-    const rate = parseFloat(bcvRate.value);
-
-    // Validar que la tasa sea razonable usando la función utilitaria
     if (!isValidExchangeRate(rate)) {
       await saveApiHealthLog(
-        'dollarvzla.com',
+        'exchangerate-api',
         'failed',
         responseTime,
         `Invalid BCV exchange rate value: ${rate}`
@@ -81,9 +62,8 @@ async function fetchExchangeRate(): Promise<number> {
       throw new Error(`Invalid BCV exchange rate value: ${rate}`);
     }
 
-    // Registrar éxito
     await saveApiHealthLog(
-      'dollarvzla.com',
+      'exchangerate-api',
       'success',
       responseTime,
       undefined,
@@ -94,12 +74,12 @@ async function fetchExchangeRate(): Promise<number> {
 
   } catch (error: any) {
     const responseTime = Date.now() - startTime;
-    console.warn('Warning: Primary BCV API failed (using fallback):', error.message);
+    console.warn('Warning: Primary BCV API (ExchangeRate-API) failed (using fallback):', error.message);
 
-    // Fallback: Intentar con pyDolarVenezuela para obtener BCV
-    const fallbackStartTime = Date.now();
+    // FALLBACK 1: Fawazahmed0 Currency API (via jsDelivr) - funciona sin API key
+    const fallback1StartTime = Date.now();
     try {
-      const fallbackResponse = await fetch('https://pydolarvenezuela-api.vercel.app/api/v1/dollar/page?page=bcv', {
+      const fallback1Response = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json', {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -108,95 +88,98 @@ async function fetchExchangeRate(): Promise<number> {
         signal: AbortSignal.timeout(3000)
       });
 
-      const fallbackResponseTime = Date.now() - fallbackStartTime;
+      const fallback1ResponseTime = Date.now() - fallback1StartTime;
 
-      if (fallbackResponse.ok) {
-        const fallbackData = await fallbackResponse.json();
-        if (fallbackData && fallbackData.monitors && Array.isArray(fallbackData.monitors)) {
-          const bcvMonitor = fallbackData.monitors.find((monitor: any) =>
-            monitor.title && monitor.title.toLowerCase().includes('bcv')
+      if (fallback1Response.ok) {
+        const fallback1Data = await fallback1Response.json();
+        
+        // La estructura es: { usd: { ves: 269.06 } }
+        if (fallback1Data?.usd?.ves) {
+          const fallback1Rate = parseFloat(fallback1Data.usd.ves.toString());
+          
+          if (isValidExchangeRate(fallback1Rate)) {
+            await saveApiHealthLog(
+              'fawazahmed0_currency_api',
+              'success',
+              fallback1ResponseTime,
+              undefined,
+              fallback1Rate
+            );
+            return fallback1Rate;
+          }
+        }
+      }
+      
+      await saveApiHealthLog(
+        'fawazahmed0_currency_api',
+        'failed',
+        fallback1ResponseTime,
+        fallback1Response.ok ? 'VES rate not found in response' : `API Error: ${fallback1Response.status}`
+      );
+    } catch (fallback1Error: any) {
+      const fallback1ResponseTime = Date.now() - fallback1StartTime;
+      await saveApiHealthLog(
+        'fawazahmed0_currency_api',
+        'failed',
+        fallback1ResponseTime,
+        fallback1Error.message || 'Unknown error'
+      );
+      console.error('Fallback 1 (Fawazahmed0) API also failed:', fallback1Error);
+    }
+
+    // FALLBACK 2: Intentar con DollarVzla API para obtener BCV oficial
+    const fallback2StartTime = Date.now();
+    try {
+      const fallback2Response = await fetch('https://api.dollarvzla.com/v1/exchange-rates', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'MornaProject/1.0'
+        },
+        signal: AbortSignal.timeout(3000)
+      });
+
+      const fallback2ResponseTime = Date.now() - fallback2StartTime;
+
+      if (fallback2Response.ok) {
+        const fallback2Data = await fallback2Response.json();
+        
+        if (fallback2Data && fallback2Data.exchangeRates && Array.isArray(fallback2Data.exchangeRates)) {
+          const bcvRate = fallback2Data.exchangeRates.find((rate: any) =>
+            rate.sourceCode && rate.sourceCode.toLowerCase() === 'bcv'
           );
 
-          if (bcvMonitor && bcvMonitor.price) {
-            const fallbackRate = parseFloat(bcvMonitor.price);
-            if (isValidExchangeRate(fallbackRate)) {
+          if (bcvRate && bcvRate.value) {
+            const fallback2Rate = parseFloat(bcvRate.value);
+            if (isValidExchangeRate(fallback2Rate)) {
               await saveApiHealthLog(
-                'pydolarvenezuela',
+                'dollarvzla.com',
                 'success',
-                fallbackResponseTime,
+                fallback2ResponseTime,
                 undefined,
-                fallbackRate
+                fallback2Rate
               );
-              return fallbackRate;
+              return fallback2Rate;
             }
           }
         }
       }
       
-      // Si llegamos aquí, la API respondió pero no encontramos la tasa
       await saveApiHealthLog(
-        'pydolarvenezuela',
+        'dollarvzla.com',
         'failed',
-        fallbackResponseTime,
-        'BCV monitor not found in response'
+        fallback2ResponseTime,
+        fallback2Response.ok ? 'BCV rate not found in response' : `API Error: ${fallback2Response.status}`
       );
-    } catch (fallbackError: any) {
-      const fallbackResponseTime = Date.now() - fallbackStartTime;
+    } catch (fallback2Error: any) {
+      const fallback2ResponseTime = Date.now() - fallback2StartTime;
       await saveApiHealthLog(
-        'pydolarvenezuela',
+        'dollarvzla.com',
         'failed',
-        fallbackResponseTime,
-        fallbackError.message || 'Unknown error'
+        fallback2ResponseTime,
+        fallback2Error.message || 'Unknown error'
       );
-      console.error('Fallback BCV API also failed:', fallbackError);
-    }
-
-    // Segundo fallback: Usar una API alternativa para BCV
-    const altStartTime = Date.now();
-    try {
-      const altResponse = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'MornaProject/1.0'
-        },
-        signal: AbortSignal.timeout(3000)
-      });
-
-      const altResponseTime = Date.now() - altStartTime;
-
-      if (altResponse.ok) {
-        const altData = await altResponse.json();
-        if (altData && altData.rates && altData.rates.VES) {
-          const vesRate = parseFloat(altData.rates.VES);
-          if (isValidExchangeRate(vesRate)) {
-            await saveApiHealthLog(
-              'exchangerate-api',
-              'success',
-              altResponseTime,
-              undefined,
-              vesRate
-            );
-            return vesRate;
-          }
-        }
-      }
-      
-      await saveApiHealthLog(
-        'exchangerate-api',
-        'failed',
-        altResponseTime,
-        'VES rate not found in response'
-      );
-    } catch (altError: any) {
-      const altResponseTime = Date.now() - altStartTime;
-      await saveApiHealthLog(
-        'exchangerate-api',
-        'failed',
-        altResponseTime,
-        altError.message || 'Unknown error'
-      );
-      console.error('Alternative API also failed:', altError);
+      console.error('Fallback 2 (DollarVzla) API also failed:', fallback2Error);
     }
 
     throw error;
@@ -257,7 +240,7 @@ export async function GET(request: NextRequest) {
       // Guardar tasa exitosa en BD
       await saveExchangeRate(apiRate, apiSource, false, {
         success: true,
-        apis_used: ['dollarvzla', 'pydolarvenezuela', 'exchangerate-api']
+        apis_used: ['exchangerate-api', 'fawazahmed0_currency_api', 'dollarvzla']
       });
 
       // Limpiar registros antiguos ocasionalmente (1 de cada 50 requests)

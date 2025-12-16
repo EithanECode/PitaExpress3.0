@@ -27,10 +27,18 @@ export const useExchangeRateCNY = (options: UseExchangeRateCNYOptions = {}) => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [source, setSource] = useState<string>('');
+  const [fromDatabase, setFromDatabase] = useState<boolean>(false);
+  const [ageMinutes, setAgeMinutes] = useState<number | null>(null);
   const [isAutoUpdating, setIsAutoUpdating] = useState<boolean>(false);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef<boolean>(true);
+  const onRateUpdateRef = useRef(onRateUpdate);
+
+  // Actualizar ref cuando cambie
+  useEffect(() => {
+    onRateUpdateRef.current = onRateUpdate;
+  }, [onRateUpdate]);
 
   // Función estable para obtener la tasa actual (sin useCallback para evitar loops)
   const fetchRate = async (showLoading = true) => {
@@ -128,26 +136,73 @@ export const useExchangeRateCNY = (options: UseExchangeRateCNYOptions = {}) => {
 
   // Configurar/limpiar intervalos para auto-actualización
   useEffect(() => {
-
-
     if (autoUpdate) {
-
       setIsAutoUpdating(true);
 
-      // Obtener tasa inicial
+      console.log(`[useExchangeRateCNY] Iniciando auto-actualización cada ${interval / 1000 / 60} minutos`);
 
-      fetchRate(false);
+      // Obtener tasa inicial con force=true
+      fetch('/api/exchange-rate/cny?force=true', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(response => response.json())
+        .then((data: any) => {
+          if (data.success && data.rate) {
+            setRate(data.rate);
+            setLastUpdated(new Date(data.timestamp || new Date().toISOString()));
+            setSource(data.source || 'API');
+            setFromDatabase(data.from_database || false);
+            setAgeMinutes(data.age_minutes || null);
+            
+            if (onRateUpdateRef.current) {
+              onRateUpdateRef.current(data.rate);
+            }
+          }
+        })
+        .catch(error => {
+          console.error('[useExchangeRateCNY] Error en fetch inicial:', error);
+        });
 
-      // Configurar intervalo
+      // Configurar intervalo para actualizar cada 30 minutos con force=true
       intervalRef.current = setInterval(() => {
-
-        fetchRate(false); // No mostrar loading en actualizaciones automáticas
+        console.log(`[useExchangeRateCNY] Auto-actualización ejecutándose...`);
+        
+        // Usar force=true para forzar actualización desde API, no desde BD
+        fetch('/api/exchange-rate/cny?force=true', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+          .then(response => response.json())
+          .then((data: any) => {
+            if (data.success && data.rate) {
+              setRate(data.rate);
+              setLastUpdated(new Date(data.timestamp || new Date().toISOString()));
+              setSource(data.source || 'API');
+              setFromDatabase(data.from_database || false);
+              setAgeMinutes(data.age_minutes || null);
+              
+              if (onRateUpdateRef.current) {
+                onRateUpdateRef.current(data.rate);
+              }
+              
+              console.log(`[useExchangeRateCNY] ✅ Tasa CNY actualizada automáticamente: ${data.rate} CNY/USD`);
+            }
+          })
+          .catch(error => {
+            console.error('[useExchangeRateCNY] ❌ Error en auto-actualización:', error);
+          });
       }, interval);
 
     } else {
-
       setIsAutoUpdating(false);
       setLoading(false); // Desactivar loading cuando no hay auto-update
+
+      console.log('[useExchangeRateCNY] Auto-actualización desactivada');
 
       // Limpiar intervalo
       if (intervalRef.current) {
@@ -159,10 +214,7 @@ export const useExchangeRateCNY = (options: UseExchangeRateCNYOptions = {}) => {
       // El valor manual debe mantenerse desde localStorage/config
     }
 
-
-
     return () => {
-
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;

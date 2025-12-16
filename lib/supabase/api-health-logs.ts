@@ -33,17 +33,22 @@ export async function saveApiHealthLog(
   rateObtained?: number
 ): Promise<ApiHealthLog | null> {
   try {
+    console.log(`[saveApiHealthLog] Intentando guardar log para API: ${apiName}, status: ${status}`);
     const supabase = getSupabaseServiceRoleClient();
+
+    const insertData = {
+      api_name: apiName,
+      status,
+      response_time_ms: responseTimeMs || null,
+      error_message: errorMessage || null,
+      rate_obtained: rateObtained || null
+    };
+    
+    console.log(`[saveApiHealthLog] Datos a insertar:`, JSON.stringify(insertData, null, 2));
 
     const { data, error } = await supabase
       .from('api_health_logs')
-      .insert({
-        api_name: apiName,
-        status,
-        response_time_ms: responseTimeMs || null,
-        error_message: errorMessage || null,
-        rate_obtained: rateObtained || null
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -51,16 +56,30 @@ export async function saveApiHealthLog(
       console.error('❌ Error saving API health log:', error);
       console.error('   API Name:', apiName);
       console.error('   Status:', status);
-      console.error('   Error details:', JSON.stringify(error, null, 2));
+      console.error('   Error code:', error.code);
+      console.error('   Error message:', error.message);
+      console.error('   Error details:', error.details);
+      console.error('   Error hint:', error.hint);
+      console.error('   Full error:', JSON.stringify(error, null, 2));
       return null;
     }
 
-    console.log('✅ API health log saved:', { apiName, status, responseTimeMs, rateObtained });
+    console.log('✅ API health log saved successfully:', { 
+      id: data?.id, 
+      apiName, 
+      status, 
+      responseTimeMs, 
+      rateObtained,
+      createdAt: data?.created_at 
+    });
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Exception in saveApiHealthLog:', error);
     console.error('   API Name:', apiName);
     console.error('   Status:', status);
+    console.error('   Error type:', error?.constructor?.name);
+    console.error('   Error message:', error?.message);
+    console.error('   Error stack:', error?.stack);
     return null;
   }
 }
@@ -70,6 +89,7 @@ export async function saveApiHealthLog(
  */
 export async function getApiHealthStats(apiName: string): Promise<ApiHealthStats> {
   try {
+    console.log(`[getApiHealthStats] Iniciando búsqueda de logs para API: ${apiName}`);
     const supabase = getSupabaseServiceRoleClient();
 
     const twentyFourHoursAgo = new Date();
@@ -77,8 +97,8 @@ export async function getApiHealthStats(apiName: string): Promise<ApiHealthStats
     const twentyFourHoursAgoISO = twentyFourHoursAgo.toISOString();
 
     // Obtener todos los logs de las últimas 24 horas
-    console.log(`[Health] Buscando logs para '${apiName}' desde ${twentyFourHoursAgoISO}`);
-    console.log(`[Health] Hora actual: ${new Date().toISOString()}`);
+    console.log(`[getApiHealthStats] ${apiName}: Buscando logs desde ${twentyFourHoursAgoISO}`);
+    console.log(`[getApiHealthStats] ${apiName}: Hora actual: ${new Date().toISOString()}`);
     
     const { data: logs, error } = await supabase
       .from('api_health_logs')
@@ -87,8 +107,23 @@ export async function getApiHealthStats(apiName: string): Promise<ApiHealthStats
       .gte('created_at', twentyFourHoursAgoISO)
       .order('created_at', { ascending: false });
     
-    console.log(`[Health] ${apiName}: Query ejecutada. Error:`, error ? JSON.stringify(error) : 'null');
-    console.log(`[Health] ${apiName}: Logs retornados:`, logs?.length || 0);
+    if (error) {
+      console.error(`[getApiHealthStats] ${apiName}: ERROR en query:`, error);
+      console.error(`[getApiHealthStats] ${apiName}: Error code:`, error.code);
+      console.error(`[getApiHealthStats] ${apiName}: Error message:`, error.message);
+      console.error(`[getApiHealthStats] ${apiName}: Error details:`, error.details);
+      console.error(`[getApiHealthStats] ${apiName}: Error hint:`, error.hint);
+    } else {
+      console.log(`[getApiHealthStats] ${apiName}: Query exitosa. Logs encontrados: ${logs?.length || 0}`);
+      if (logs && logs.length > 0) {
+        console.log(`[getApiHealthStats] ${apiName}: Primeros logs:`, logs.slice(0, 3).map(l => ({
+          id: l.id,
+          status: l.status,
+          created_at: l.created_at,
+          rate: l.rate_obtained
+        })));
+      }
+    }
     
     // Debug: también verificar si hay logs con este nombre sin filtro de tiempo
     const { data: allLogs, error: allLogsError } = await supabase
@@ -240,14 +275,17 @@ export async function getApiHealthStats(apiName: string): Promise<ApiHealthStats
  */
 export async function getAllApiHealthStats(): Promise<ApiHealthStats[]> {
   try {
-    // APIs de BCV (tasa de cambio USD/VES)
-    const bcvApis = ['dollarvzla.com', 'pydolarvenezuela', 'exchangerate-api'];
+    // APIs de BCV (tasa de cambio USD/VES) - orden de prioridad de uso
+    const bcvApis = ['exchangerate-api', 'fawazahmed0_currency_api', 'dollarvzla.com'];
     
     // APIs de Binance P2P
     const binanceApis = ['binance_p2p_direct', 'pydolarvenezuela_binance', 'dollarvzla_binance'];
     
+    // APIs de CNY (tasa de cambio USD/CNY)
+    const cnyApis = ['exchangerate_api_cny', 'fixer_free_cny'];
+    
     // Todas las APIs
-    const allApis = [...bcvApis, ...binanceApis];
+    const allApis = [...bcvApis, ...binanceApis, ...cnyApis];
     
     console.log('[Health] Buscando estadísticas para:', allApis);
     

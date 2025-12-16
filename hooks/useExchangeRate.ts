@@ -182,7 +182,8 @@ export function useExchangeRate(options: UseExchangeRateOptions = {}) {
 
       if (data.success && data.rate) {
         setRate(data.rate);
-        setLastUpdated(new Date(data.timestamp || new Date().toISOString()));
+        // Usar el momento actual cuando se hace refresh manual para que muestre "Hace menos de 1 minuto"
+        setLastUpdated(new Date()); // Siempre usar fecha actual para refresh manual
         setSource(data.source || 'API');
         setFromDatabase(data.from_database || false);
         setAgeMinutes(data.age_minutes || null);
@@ -252,15 +253,70 @@ export function useExchangeRate(options: UseExchangeRateOptions = {}) {
         clearInterval(intervalRef.current);
       }
 
-      // Fetch inicial
-      fetchRate(false);
+      console.log(`[useExchangeRate] Iniciando auto-actualización cada ${interval / 1000 / 60} minutos`);
 
-      // Configurar intervalo
+      // Fetch inicial con force=true para obtener tasa fresca
+      fetch('/api/exchange-rate?force=true', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(response => response.json())
+        .then((data: ExchangeRateResponse) => {
+          if (data.success && data.rate) {
+            setRate(data.rate);
+            setLastUpdated(new Date(data.timestamp || new Date().toISOString()));
+            setSource(data.source || 'API');
+            setFromDatabase(data.from_database || false);
+            setAgeMinutes(data.age_minutes || null);
+            setWarning(data.warning || null);
+            
+            if (onRateUpdateRef.current) {
+              onRateUpdateRef.current(data.rate);
+            }
+          }
+        })
+        .catch(error => {
+          console.error('[useExchangeRate] Error en fetch inicial:', error);
+        });
+
+      // Configurar intervalo para actualizar cada 30 minutos con force=true
       intervalRef.current = setInterval(() => {
-        fetchRate(false);
+        console.log(`[useExchangeRate] Auto-actualización ejecutándose... (cada ${interval / 1000 / 60} minutos)`);
+        
+        // Usar force=true para forzar actualización desde API, no desde BD
+        fetch('/api/exchange-rate?force=true', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+          .then(response => response.json())
+          .then((data: ExchangeRateResponse) => {
+            if (data.success && data.rate) {
+              setRate(data.rate);
+              setLastUpdated(new Date(data.timestamp || new Date().toISOString()));
+              setSource(data.source || 'API');
+              setFromDatabase(data.from_database || false);
+              setAgeMinutes(data.age_minutes || null);
+              setWarning(data.warning || null);
+              
+              // Callback para actualizar el componente padre
+              if (onRateUpdateRef.current) {
+                onRateUpdateRef.current(data.rate);
+              }
+              
+              console.log(`[useExchangeRate] ✅ Tasa actualizada automáticamente: ${data.rate} Bs/USD desde ${data.source}`);
+            }
+          })
+          .catch(error => {
+            console.error('[useExchangeRate] ❌ Error en auto-actualización:', error);
+          });
       }, interval);
     } else {
       // Detener auto-actualización
+      console.log('[useExchangeRate] Auto-actualización desactivada');
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;

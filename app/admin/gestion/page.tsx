@@ -1141,6 +1141,50 @@ export default function ConfiguracionPage() {
 
             {/* TAB: Configuración Financiera */}
             <TabsContent value="financial" className="space-y-6 md:space-y-8">
+              {/* Margen de Ganancia - Primero */}
+              <div className="w-full flex justify-center">
+                <Card className={`shadow-lg border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm max-w-md w-full`}>
+                  <CardHeader>
+                    <CardTitle className={`flex items-center text-black dark:text-white text-base md:text-lg`}>
+                      <Percent className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
+                      {t('admin.management.financial.profitMarginTitle')}
+                    </CardTitle>
+                    <CardDescription className={`text-black dark:text-slate-300 text-sm`}>
+                      {t('admin.management.financial.profitabilityConfig')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="profit" className="text-sm md:text-base">{t('admin.management.financial.profitMargin')}</Label>
+                      <Input
+                        id="profit"
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={config.profitMargin}
+                        onChange={(e) => {
+                          let value = parseFloat(e.target.value);
+                          if (e.target.value === "") {
+                            updateConfig('profitMargin', 0);
+                            return;
+                          }
+                          if (isNaN(value)) value = 0;
+                          if (value < 0) value = 0;
+                          if (value > 100) value = 100;
+                          updateConfig('profitMargin', value);
+                        }}
+                        className={config.profitMargin < 0 || config.profitMargin > 100 ? 'border-red-400' : ''}
+                        disabled={isLoading}
+                      />
+                      {(config.profitMargin < 0 || config.profitMargin > 100) && (
+                        <p className={`text-xs text-red-600 dark:text-red-400`}>El margen debe estar entre 0% y 100%.</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Primera fila: Tasa Venezuela y Tasa China */}
               <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {/* Tarjeta Venezuela */}
                 <Card className={`shadow-lg border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm`}>
@@ -1609,49 +1653,6 @@ export default function ConfiguracionPage() {
                           </p>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Tercera fila: Margen de Ganancia (movido aquí) */}
-              <div className="w-full mt-6 flex justify-center">
-                <Card className={`shadow-lg border-0 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm max-w-md w-full`}>
-                  <CardHeader>
-                    <CardTitle className={`flex items-center text-black dark:text-white text-base md:text-lg`}>
-                      <Percent className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" />
-                      {t('admin.management.financial.profitMarginTitle')}
-                    </CardTitle>
-                    <CardDescription className={`text-black dark:text-slate-300 text-sm`}>
-                      {t('admin.management.financial.profitabilityConfig')}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="profit" className="text-sm md:text-base">{t('admin.management.financial.profitMargin')}</Label>
-                      <Input
-                        id="profit"
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={config.profitMargin}
-                        onChange={(e) => {
-                          let value = parseFloat(e.target.value);
-                          if (e.target.value === "") {
-                            updateConfig('profitMargin', 0);
-                            return;
-                          }
-                          if (isNaN(value)) value = 0;
-                          if (value < 0) value = 0;
-                          if (value > 100) value = 100;
-                          updateConfig('profitMargin', value);
-                        }}
-                        className={config.profitMargin < 0 || config.profitMargin > 100 ? 'border-red-400' : ''}
-                        disabled={isLoading}
-                      />
-                      {(config.profitMargin < 0 || config.profitMargin > 100) && (
-                        <p className={`text-xs text-red-600 dark:text-red-400`}>El margen debe estar entre 0% y 100%.</p>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
