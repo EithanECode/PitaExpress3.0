@@ -1,53 +1,53 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useTheme } from 'next-themes';
 
 interface LanguageSwitcherProps {
   position?: 'fixed-bottom-right' | 'inline';
   className?: string;
 }
 
-const containerStyles: Record<string, React.CSSProperties> = {
-  'fixed-bottom-right': {
-    position: 'fixed',
-    bottom: '16px',
-    right: '16px',
-    background: 'rgba(255,255,255,0.85)',
-    border: '1px solid #ccc',
-    borderRadius: '8px',
-    padding: '6px 10px',
-    fontSize: '0.85rem',
-    display: 'flex',
-    gap: '6px',
-    alignItems: 'center',
-    zIndex: 1000,
-    backdropFilter: 'blur(6px)'
-  },
-  inline: {}
-};
-
 export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ position = 'fixed-bottom-right', className }) => {
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const containerClasses = position === 'fixed-bottom-right' 
+    ? `fixed bottom-4 right-4 z-50 flex gap-2 items-center px-3 py-2 rounded-lg text-sm backdrop-blur-md shadow-lg transition-colors ${
+        mounted && theme === 'dark' 
+          ? 'bg-slate-800/80 border border-slate-700 text-slate-200' 
+          : 'bg-white/85 border border-slate-200 text-slate-700'
+      }`
+    : 'flex gap-2 items-center';
+
+  const selectClasses = `px-2 py-1 rounded border cursor-pointer transition-colors ${
+    mounted && theme === 'dark'
+      ? 'bg-slate-700 border-slate-600 text-slate-200'
+      : 'bg-white border-slate-300 text-slate-700'
+  }`;
+
+  const labelClasses = `font-medium flex items-center gap-1 ${
+    mounted && theme === 'dark' ? 'text-slate-200' : 'text-slate-700'
+  }`;
 
   return (
-    <div style={containerStyles[position]} className={className}>
-      <label htmlFor="lang-switch" style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
+    <div className={`${containerClasses} ${className || ''}`}>
+      <label htmlFor="lang-switch" className={labelClasses}>
         {t('auth.common.languageLabel')}
       </label>
       <select
         id="lang-switch"
         value={language}
         onChange={(e) => setLanguage(e.target.value as any)}
-        style={{
-          padding: '2px 6px',
-          borderRadius: '4px',
-          border: '1px solid #aaa',
-          background: '#fff',
-          cursor: 'pointer'
-        }}
+        className={selectClasses}
       >
         <option value="es">🇪🇸 Español</option>
         <option value="en">🇬🇧 English</option>

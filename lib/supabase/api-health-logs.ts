@@ -37,11 +37,11 @@ export async function saveApiHealthLog(
     const supabase = getSupabaseServiceRoleClient();
 
     const insertData = {
-      api_name: apiName,
-      status,
-      response_time_ms: responseTimeMs || null,
-      error_message: errorMessage || null,
-      rate_obtained: rateObtained || null
+        api_name: apiName,
+        status,
+        response_time_ms: responseTimeMs || null,
+        error_message: errorMessage || null,
+        rate_obtained: rateObtained || null
     };
     
     console.log(`[saveApiHealthLog] Datos a insertar:`, JSON.stringify(insertData, null, 2));

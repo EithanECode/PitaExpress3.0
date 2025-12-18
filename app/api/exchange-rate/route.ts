@@ -39,7 +39,7 @@ async function fetchExchangeRate(): Promise<number> {
     }
 
     const data = await response.json();
-    
+
     if (!data || !data.rates || !data.rates.VES) {
       await saveApiHealthLog(
         'exchangerate-api',
@@ -98,13 +98,13 @@ async function fetchExchangeRate(): Promise<number> {
           const fallback1Rate = parseFloat(fallback1Data.usd.ves.toString());
           
           if (isValidExchangeRate(fallback1Rate)) {
-            await saveApiHealthLog(
+              await saveApiHealthLog(
               'fawazahmed0_currency_api',
-              'success',
+                'success',
               fallback1ResponseTime,
-              undefined,
+                undefined,
               fallback1Rate
-            );
+              );
             return fallback1Rate;
           }
         }
@@ -152,13 +152,13 @@ async function fetchExchangeRate(): Promise<number> {
           if (bcvRate && bcvRate.value) {
             const fallback2Rate = parseFloat(bcvRate.value);
             if (isValidExchangeRate(fallback2Rate)) {
-              await saveApiHealthLog(
+            await saveApiHealthLog(
                 'dollarvzla.com',
-                'success',
+              'success',
                 fallback2ResponseTime,
-                undefined,
+              undefined,
                 fallback2Rate
-              );
+            );
               return fallback2Rate;
             }
           }
