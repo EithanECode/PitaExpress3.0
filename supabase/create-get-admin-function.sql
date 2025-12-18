@@ -6,11 +6,12 @@
 -- Borrar la función si existe (para poder recrearla)
 DROP FUNCTION IF EXISTS get_admin_id_by_email(TEXT);
 
--- Crear la función
+-- Crear la función con search_path fijo (seguridad)
 CREATE OR REPLACE FUNCTION get_admin_id_by_email(admin_email TEXT)
 RETURNS UUID
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, auth
 AS $$
 DECLARE
   admin_user_id UUID;

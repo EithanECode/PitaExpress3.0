@@ -532,6 +532,7 @@ export default function ConfiguracionPage() {
     try {
       const res = await fetch('/api/config', { cache: 'no-store' });
       const data = await res.json();
+      console.log('[Admin/Gestion] Config fetched from API:', data);
       if (data.success && data.config) {
         const db = data.config;
         const mapped: BusinessConfig = {
@@ -639,6 +640,7 @@ export default function ConfiguracionPage() {
         alerts_after_days: config.alertsAfterDays,
         admin_id: adminId
       };
+      console.log('[Admin/Gestion] Saving config to API:', configToSave);
       // Guardar configuración en base de datos a través de la API
       const response = await fetch('/api/config', {
         method: 'POST',

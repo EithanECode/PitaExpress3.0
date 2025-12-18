@@ -521,12 +521,17 @@ export default function PedidosChina() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.config?.profit_margin !== undefined && data.config.profit_margin !== null) {
+          console.log('[China/Orders] PROFIT MARGIN FETCHED:', data.config.profit_margin);
           return Number(data.config.profit_margin);
         }
+        console.warn('[China/Orders] PROFIT MARGIN not in config, data:', data);
+      } else {
+        console.error('[China/Orders] PROFIT MARGIN fetch error, status:', response.status);
       }
     } catch (error) {
       console.error('Error obteniendo margen de ganancia:', error);
     }
+    console.log('[China/Orders] PROFIT MARGIN FALLBACK: 25');
     // Fallback al valor por defecto si hay error
     return 25;
   }, []);
@@ -538,12 +543,17 @@ export default function PedidosChina() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.config?.air_shipping_rate !== undefined && data.config.air_shipping_rate !== null) {
+          console.log('[China/Orders] AIR RATE FETCHED:', data.config.air_shipping_rate);
           return Number(data.config.air_shipping_rate);
         }
+        console.warn('[China/Orders] AIR RATE not in config, data:', data);
+      } else {
+        console.error('[China/Orders] AIR RATE fetch error, status:', response.status);
       }
     } catch (error) {
       console.error('Error obteniendo tarifa de envío aéreo:', error);
     }
+    console.log('[China/Orders] AIR RATE FALLBACK: 10');
     // Fallback al valor por defecto si hay error
     return 10; // $10 por kg por defecto
   }, []);
@@ -555,12 +565,17 @@ export default function PedidosChina() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.config?.sea_shipping_rate !== undefined && data.config.sea_shipping_rate !== null) {
+          console.log('[China/Orders] SEA RATE FETCHED:', data.config.sea_shipping_rate);
           return Number(data.config.sea_shipping_rate);
         }
+        console.warn('[China/Orders] SEA RATE not in config, data:', data);
+      } else {
+        console.error('[China/Orders] SEA RATE fetch error, status:', response.status);
       }
     } catch (error) {
       console.error('Error obteniendo tarifa de envío marítimo:', error);
     }
+    console.log('[China/Orders] SEA RATE FALLBACK: 180');
     // Fallback al valor por defecto si hay error
     return 180; // $180 por m³ por defecto
   }, []);
@@ -1316,16 +1331,16 @@ export default function PedidosChina() {
         };
         console.error('Error actualizando pedidos:', errorInfo);
         console.error('Error completo (JSON):', JSON.stringify(ordersUpdateError, Object.getOwnPropertyNames(ordersUpdateError)));
-        
+
         // Revertir el estado de la caja si falló la actualización de pedidos
         await supabase
           .from('boxes')
           .update({ state: previousBoxState })
           .eq('box_id', boxId);
-        
-        toast({ 
-          title: t('chinese.ordersPage.toasts.sendBoxErrorTitle'), 
-          description: t('chinese.ordersPage.toasts.tryAgain') || 'No se pudieron actualizar los pedidos. Por favor intenta nuevamente.' 
+
+        toast({
+          title: t('chinese.ordersPage.toasts.sendBoxErrorTitle'),
+          description: t('chinese.ordersPage.toasts.tryAgain') || 'No se pudieron actualizar los pedidos. Por favor intenta nuevamente.'
         });
         return;
       }
@@ -1940,6 +1955,17 @@ export default function PedidosChina() {
     // Aplicar margen de ganancia: precioConMargen = precioBase × (1 + margen/100)
     // Ejemplo: $1000 × (1 + 25/100) = $1000 × 1.25 = $1250
     let totalUSDConMargen = totalUSDBase * (1 + currentProfitMargin / 100);
+
+    console.log('[China/Orders] Cotizar calculation start:', {
+      precioUnitario,
+      precioEnvio,
+      cantidad: pedido.cantidad,
+      totalCNY,
+      rate,
+      totalUSDBase,
+      profitMargin: currentProfitMargin,
+      totalUSDWithMargin: totalUSDConMargen
+    });
 
     // Si el pedido es aéreo, calcular y sumar el costo de envío aéreo
     const isAirShipping = orderData?.deliveryType === 'air' || orderData?.shippingType === 'air' || pedido.deliveryType === 'air' || pedido.shippingType === 'air';

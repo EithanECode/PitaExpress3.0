@@ -705,6 +705,22 @@ export default function MisPedidosPage() {
         }
       }
 
+      // DEBUG: Log de precios para cada pedido
+      console.log('[Cliente/MisPedidos] ========== PRECIOS DE PEDIDOS ==========');
+      mappedOrders.forEach((order, idx) => {
+        console.log(`[Cliente/MisPedidos] Pedido #${order.id}:`, {
+          totalQuote: order.totalQuote,
+          unitQuote: order.unitQuote,
+          shippingPrice: order.shippingPrice,
+          calculatedUSD: order.totalQuote !== null && order.totalQuote !== undefined
+            ? order.totalQuote
+            : ((order.unitQuote ?? 0) + (order.shippingPrice ?? 0)) / (cnyRate || 7.25),
+          cnyRate: cnyRate,
+          shippingType: order.shippingType
+        });
+      });
+      console.log('[Cliente/MisPedidos] ==========================================');
+
       // Exponer variables solicitadas
       setTrackingNumberMap(tnMap);
       setTrackingCompanyMap(tcMap);

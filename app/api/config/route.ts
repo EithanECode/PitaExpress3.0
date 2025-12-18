@@ -13,6 +13,9 @@ export async function GET(request: NextRequest) {
       .select('*')
       .limit(1)
       .single();
+
+    console.log('[API/Config] GET config from DB:', data);
+
     if (error) throw error;
     return NextResponse.json({
       success: true,
@@ -31,6 +34,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const updates = await request.json();
+    console.log('[API/Config] POST updates received:', updates);
     const supabase = getSupabaseServiceRoleClient();
     // Buscar si ya existe un registro global
     const { data: existing, error: fetchError } = await supabase
@@ -56,6 +60,8 @@ export async function POST(request: NextRequest) {
         .single();
     }
     if (upsertResult.error) throw upsertResult.error;
+
+    console.log('[API/Config] UPSERT success. Result:', upsertResult.data);
 
     // Notificar a administradores (no bloqueante)
     try {
@@ -87,10 +93,10 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error updating business config:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error.message || 'Failed to update configuration' 
-      }, 
+      {
+        success: false,
+        error: error.message || 'Failed to update configuration'
+      },
       { status: 500 }
     );
   }
