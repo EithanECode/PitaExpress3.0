@@ -439,22 +439,35 @@ const ConfirmationDialog: React.FC<{
   message: string;
 }> = ({ isOpen, onClose, onConfirm, title, message }) => {
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   if (!isOpen) return null;
+
+  const isDark = mounted && theme === 'dark';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-xl">
+      <div className={`${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white'} rounded-lg p-6 max-w-sm w-full shadow-xl`}>
         <div className="flex items-center">
-          <div className="bg-red-100 p-2 rounded-full">
-            <AlertTriangle className="h-6 w-6 text-red-600" />
+          <div className={`${isDark ? 'bg-red-900/30' : 'bg-red-100'} p-2 rounded-full`}>
+            <AlertTriangle className={`h-6 w-6 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
           </div>
-          <h3 className="text-lg font-bold text-gray-900 ml-4">{title}</h3>
+          <h3 className={`text-lg font-bold ml-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>{title}</h3>
         </div>
-        <p className="mt-4 text-sm text-gray-600">{message}</p>
+        <p className={`mt-4 text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{message}</p>
         <div className="mt-6 flex justify-end space-x-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+            className={`px-4 py-2 rounded-md transition-colors ${
+              isDark 
+                ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' 
+                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+            }`}
           >
             {t('venezuela.pagos.modal.reject.cancel')}
           </button>

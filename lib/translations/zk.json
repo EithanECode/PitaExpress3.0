@@ -658,12 +658,32 @@
         "stepTitles": {
           "productInfo": "产品信息",
           "shippingDetails": "运输详情",
-          "summaryConfirmation": "摘要与确认"
+          "summaryConfirmation": "摘要与确认",
+          "requestSummary": "请求摘要"
         },
         "stepDescriptions": {
           "productInfo": "告诉我们你想进口的产品",
           "shippingDetails": "配置你想如何接收订单",
-          "summaryConfirmation": "复核并确认你的请求"
+          "summaryConfirmation": "复核并确认你的请求",
+          "requestSummary": "发送前检查项目。"
+        },
+        "boxTab": "箱子",
+        "itemsInBox": "你的箱子中的物品",
+        "addAnotherProduct": "添加另一个产品",
+        "maxItems": "最多 5 个物品",
+        "emptyBoxMessage": "你的箱子是空的。添加产品以发送请求。",
+        "units": "单位",
+        "addToBox": "添加到箱子",
+        "sendRequest": "发送请求",
+        "processingQueue": "处理中...",
+        "removedFromBox": {
+          "title": "已删除",
+          "description": "项目已从箱子中移除。"
+        },
+        "error": {
+          "title": "发生错误！",
+          "message": "处理你的请求时出现问题。请重试。",
+          "close": "关闭"
         },
         "success": {
           "title": "订单已创建！",
@@ -720,6 +740,54 @@
           "in_transit": "包裹正在运往目的地",
           "customs": "包裹正在海关处理中",
           "delivered": "包裹已成功交付"
+        }
+      },
+      "cancelOrderModal": {
+        "title": "取消订单",
+        "question": "确定要取消此订单吗？",
+        "orderLabel": "订单 #",
+        "reasonLabel": "取消原因 *",
+        "reasonPlaceholder": "请说明您希望取消此订单的原因...",
+        "warning": "<strong>注意：</strong>一旦取消，订单将无法重新激活。将通知中国团队有关取消的信息。",
+        "keepOrder": "不，保留订单",
+        "cancel": "取消",
+        "cancelOrder": "是的，取消订单",
+        "cancelling": "取消中...",
+        "toasts": {
+          "success": {
+            "title": "订单已取消",
+            "description": "您的订单已成功取消"
+          },
+          "error": {
+            "title": "错误",
+            "description": "无法取消订单"
+          },
+          "reasonRequired": {
+            "title": "需要原因",
+            "description": "请说明您希望取消订单的原因"
+          }
+        }
+      },
+      "archiveHistoryModal": {
+        "title": "删除订单历史？",
+        "question": "确定要删除已完成/已取消订单的历史记录吗？",
+        "warning": "此操作不可撤销。",
+        "cancel": "取消",
+        "confirm": "是的，删除历史",
+        "archiving": "删除中...",
+        "button": "删除历史",
+        "buttonTitle": "删除历史",
+        "buttonTitleEmpty": "没有订单可删除（已交付或已取消）",
+        "toasts": {
+          "success": {
+            "title": "历史已清除",
+            "descriptionWithCount": "已从历史记录中删除 {{count}} 个已交付/已取消的订单。",
+            "descriptionEmpty": "没有订单可删除。"
+          },
+          "error": {
+            "title": "错误",
+            "description": "删除历史记录时出错：{{message}}"
+          }
         }
       },
       "reviews": {
@@ -2185,7 +2253,8 @@
         "approve": "批准",
         "reject": "拒绝",
         "undo": "撤销",
-        "send": "发送"
+        "send": "发送",
+        "deleteHistory": "删除历史"
       },
       "table": {
         "pendingApprovalTitle": "待审批支付",
@@ -2238,6 +2307,30 @@
           "message": "确定要拒绝此支付吗？此操作不可撤销。",
           "cancel": "取消",
           "confirm": "确认拒绝"
+        },
+        "deleteHistory": {
+          "title": "删除订单历史？",
+          "description": {
+            "admin": "此操作将永久删除超过 30 天的已取消和已交付订单。此操作不可撤销。",
+            "pagos": "此操作将从您的视图中隐藏已接受和已拒绝的支付。其他用户仍然可以看到它们。",
+            "default": "此操作将从您的视图中隐藏已取消和已交付的订单。其他用户仍然可以看到它们。"
+          },
+          "warning": {
+            "admin": "此操作不可撤销。",
+            "default": "此操作仅影响您的视图。"
+          },
+          "cancel": "取消",
+          "delete": "删除",
+          "deleting": "删除中...",
+          "success": {
+            "title": "历史已清除",
+            "descriptionWithCount": "已从历史记录中删除 {{count}} 个订单。",
+            "descriptionEmpty": "没有订单可删除。"
+          },
+          "error": {
+            "title": "错误",
+            "description": "删除历史记录时出错：{{message}}"
+          }
         }
       },
       "toasts": {

@@ -33,7 +33,7 @@ export default function PortalFeatures() {
   return (
     <section className="login-info-section portal-features">
       <div className="section-divider"></div>
-      <h2 className="section-title">{t('loginInfo.portalFeatures.title')}</h2>
+      <h2 className="section-title" suppressHydrationWarning>{t('loginInfo.portalFeatures.title')}</h2>
       <div className="features-list">
         {features.map((feature, index) => {
           const Icon = feature.icon;
@@ -43,10 +43,10 @@ export default function PortalFeatures() {
                 <Icon size={20} />
               </div>
               <div className="feature-content">
-                <h3 className="feature-title">
+                <h3 className="feature-title" suppressHydrationWarning>
                   {t(`loginInfo.portalFeatures.features.${feature.key}.title`)}
                 </h3>
-                <p className="feature-description">
+                <p className="feature-description" suppressHydrationWarning>
                   {t(`loginInfo.portalFeatures.features.${feature.key}.description`)}
                 </p>
               </div>

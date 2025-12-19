@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ArchiveHistoryButtonProps {
     role: 'client' | 'china' | 'vzla' | 'pagos' | 'admin';
@@ -23,6 +24,7 @@ export function ArchiveHistoryButton({
     variant = 'outline',
     size = 'sm',
 }: ArchiveHistoryButtonProps) {
+    const { t } = useTranslation();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isArchiving, setIsArchiving] = useState(false);
 
@@ -38,17 +40,17 @@ export function ArchiveHistoryButton({
             if (!res.ok) throw new Error(data.error);
 
             toast({
-                title: "Historial limpiado",
+                title: t('venezuela.pagos.modal.deleteHistory.success.title'),
                 description: data.count > 0
-                    ? `Se han eliminado ${data.count} pedidos del historial.`
-                    : "No hay pedidos para eliminar.",
+                    ? t('venezuela.pagos.modal.deleteHistory.success.descriptionWithCount', { count: data.count })
+                    : t('venezuela.pagos.modal.deleteHistory.success.descriptionEmpty'),
             });
             setIsModalOpen(false);
             onSuccess?.();
         } catch (e: any) {
             toast({
-                title: "Error",
-                description: 'Error al borrar historial: ' + e.message,
+                title: t('venezuela.pagos.modal.deleteHistory.error.title'),
+                description: t('venezuela.pagos.modal.deleteHistory.error.description', { message: e.message }),
                 variant: "destructive",
             });
         } finally {
@@ -59,12 +61,19 @@ export function ArchiveHistoryButton({
     // Message varies by role
     const getDescription = () => {
         if (role === 'admin') {
-            return 'Esta acción eliminará permanentemente los pedidos cancelados y entregados con más de 30 días de antigüedad. Esta acción no se puede deshacer.';
+            return t('venezuela.pagos.modal.deleteHistory.description.admin');
         }
         if (role === 'pagos') {
-            return 'Esta acción ocultará los pagos aceptados y rechazados de tu vista. Los demás usuarios seguirán viéndolos.';
+            return t('venezuela.pagos.modal.deleteHistory.description.pagos');
         }
-        return 'Esta acción ocultará los pedidos cancelados y entregados de tu vista. Los demás usuarios seguirán viéndolos.';
+        return t('venezuela.pagos.modal.deleteHistory.description.default');
+    };
+
+    const getWarning = () => {
+        if (role === 'admin') {
+            return t('venezuela.pagos.modal.deleteHistory.warning.admin');
+        }
+        return t('venezuela.pagos.modal.deleteHistory.warning.default');
     };
 
     return (
@@ -76,7 +85,7 @@ export function ArchiveHistoryButton({
                 onClick={() => setIsModalOpen(true)}
             >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Borrar Historial
+                {t('venezuela.pagos.actions.deleteHistory')}
             </Button>
 
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -84,7 +93,7 @@ export function ArchiveHistoryButton({
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <AlertTriangle className="h-5 w-5 text-red-500" />
-                            ¿Borrar historial de pedidos?
+                            {t('venezuela.pagos.modal.deleteHistory.title')}
                         </DialogTitle>
                         <DialogDescription className="pt-2">
                             {getDescription()}
@@ -93,7 +102,7 @@ export function ArchiveHistoryButton({
                     <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
                         <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" />
                         <span className="text-sm text-red-700 dark:text-red-300">
-                            {role === 'admin' ? 'Esta acción no se puede deshacer.' : 'Esta acción solo afecta tu vista.'}
+                            {getWarning()}
                         </span>
                     </div>
                     <DialogFooter className="gap-2 sm:gap-0">
@@ -102,7 +111,7 @@ export function ArchiveHistoryButton({
                             onClick={() => setIsModalOpen(false)}
                             disabled={isArchiving}
                         >
-                            Cancelar
+                            {t('venezuela.pagos.modal.deleteHistory.cancel')}
                         </Button>
                         <Button
                             variant="destructive"
@@ -112,12 +121,12 @@ export function ArchiveHistoryButton({
                             {isArchiving ? (
                                 <>
                                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Borrando...
+                                    {t('venezuela.pagos.modal.deleteHistory.deleting')}
                                 </>
                             ) : (
                                 <>
                                     <Trash2 className="h-4 w-4 mr-2" />
-                                    Borrar
+                                    {t('venezuela.pagos.modal.deleteHistory.delete')}
                                 </>
                             )}
                         </Button>

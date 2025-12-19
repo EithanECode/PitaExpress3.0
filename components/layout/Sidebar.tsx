@@ -1174,8 +1174,8 @@ export default function Sidebar({ isExpanded, setIsExpanded, isMobileMenuOpen = 
               `}>
               <div className="whitespace-nowrap">
                 <h1 className={`font-bold text-white ${responsiveConfig.titleSize}`}>Pita Express</h1>
-                <p className={`text-slate-400 ${responsiveConfig.subtitleSize}`}>{userInfo.name}</p>
-                <p className={`text-slate-400 ${responsiveConfig.subtitleSize}`}>{userInfo.email}</p>
+                <p className={`text-slate-400 ${responsiveConfig.subtitleSize}`} suppressHydrationWarning>{userInfo.name}</p>
+                <p className={`text-slate-400 ${responsiveConfig.subtitleSize}`} suppressHydrationWarning>{userInfo.email}</p>
               </div>
             </div>
           </div>
@@ -1217,10 +1217,10 @@ export default function Sidebar({ isExpanded, setIsExpanded, isMobileMenuOpen = 
               ${responsiveConfig.isMobile ? (isMobileMenuOpen ? 'w-auto opacity-100' : 'w-0 opacity-0') : (isExpanded ? 'w-auto opacity-100' : 'w-0 opacity-0')}
             `}>
                 <div className="whitespace-nowrap">
-                  <p className={`font-medium text-white ${responsiveConfig.userTextSize}`}>
+                  <p className={`font-medium text-white ${responsiveConfig.userTextSize}`} suppressHydrationWarning>
                     {userInfo.name}
                   </p>
-                  <p className={`text-slate-400 ${responsiveConfig.userSubtextSize}`}>
+                  <p className={`text-slate-400 ${responsiveConfig.userSubtextSize}`} suppressHydrationWarning>
                     {userInfo.email}
                   </p>
                 </div>

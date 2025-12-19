@@ -662,12 +662,32 @@
         "stepTitles": {
           "productInfo": "Product Information",
           "shippingDetails": "Shipping Details",
-          "summaryConfirmation": "Summary & Confirmation"
+          "summaryConfirmation": "Summary & Confirmation",
+          "requestSummary": "Request Summary"
         },
         "stepDescriptions": {
           "productInfo": "Tell us which product you want to import",
           "shippingDetails": "Configure how you want to receive your order",
-          "summaryConfirmation": "Review and confirm your request"
+          "summaryConfirmation": "Review and confirm your request",
+          "requestSummary": "Review the items before sending."
+        },
+        "boxTab": "Box",
+        "itemsInBox": "Items in your Box",
+        "addAnotherProduct": "Add Another Product",
+        "maxItems": "Maximum 5 items",
+        "emptyBoxMessage": "Your box is empty. Add products to send a request.",
+        "units": "units",
+        "addToBox": "Add to Box",
+        "sendRequest": "Send Request",
+        "processingQueue": "Processing...",
+        "removedFromBox": {
+          "title": "Deleted",
+          "description": "Item removed from box."
+        },
+        "error": {
+          "title": "An error occurred!",
+          "message": "There was a problem processing your request. Please try again.",
+          "close": "Close"
         },
         "success": {
           "title": "Order Created!",
@@ -724,6 +744,54 @@
           "in_transit": "The package is on its way to its destination",
           "customs": "The package is being processed in customs",
           "delivered": "The package has been successfully delivered"
+        }
+      },
+      "cancelOrderModal": {
+        "title": "Cancel Order",
+        "question": "Are you sure you want to cancel this order?",
+        "orderLabel": "Order #",
+        "reasonLabel": "Reason for cancellation *",
+        "reasonPlaceholder": "Please indicate why you wish to cancel this order...",
+        "warning": "<strong>Note:</strong> Once canceled, the order cannot be reactivated. China will be notified of the cancellation.",
+        "keepOrder": "No, keep order",
+        "cancel": "Cancel",
+        "cancelOrder": "Yes, cancel order",
+        "cancelling": "Cancelling...",
+        "toasts": {
+          "success": {
+            "title": "Order canceled",
+            "description": "Your order has been successfully canceled"
+          },
+          "error": {
+            "title": "Error",
+            "description": "Could not cancel the order"
+          },
+          "reasonRequired": {
+            "title": "Reason required",
+            "description": "Please indicate why you wish to cancel the order"
+          }
+        }
+      },
+      "archiveHistoryModal": {
+        "title": "Delete order history?",
+        "question": "Are you sure you want to delete the history of completed/canceled orders?",
+        "warning": "This action cannot be undone.",
+        "cancel": "Cancel",
+        "confirm": "Yes, delete history",
+        "archiving": "Deleting...",
+        "button": "Delete History",
+        "buttonTitle": "Delete history",
+        "buttonTitleEmpty": "No orders to delete (Delivered or Canceled)",
+        "toasts": {
+          "success": {
+            "title": "History cleared",
+            "descriptionWithCount": "{{count}} delivered/canceled orders have been removed from history.",
+            "descriptionEmpty": "No orders to delete."
+          },
+          "error": {
+            "title": "Error",
+            "description": "Error deleting history: {{message}}"
+          }
         }
       },
       "reviews": {
@@ -2197,7 +2265,8 @@
         "approve": "Approve",
         "reject": "Reject",
         "undo": "Undo",
-        "send": "Send"
+        "send": "Send",
+        "deleteHistory": "Delete History"
       },
       "table": {
         "pendingApprovalTitle": "Payments Pending Approval",
@@ -2250,6 +2319,30 @@
           "message": "Are you sure you want to reject this payment? This action cannot be undone.",
           "cancel": "Cancel",
           "confirm": "Confirm Rejection"
+        },
+        "deleteHistory": {
+          "title": "Delete order history?",
+          "description": {
+            "admin": "This action will permanently delete canceled and delivered orders older than 30 days. This action cannot be undone.",
+            "pagos": "This action will hide accepted and rejected payments from your view. Other users will still see them.",
+            "default": "This action will hide canceled and delivered orders from your view. Other users will still see them."
+          },
+          "warning": {
+            "admin": "This action cannot be undone.",
+            "default": "This action only affects your view."
+          },
+          "cancel": "Cancel",
+          "delete": "Delete",
+          "deleting": "Deleting...",
+          "success": {
+            "title": "History cleared",
+            "descriptionWithCount": "{{count}} orders have been removed from history.",
+            "descriptionEmpty": "There are no orders to delete."
+          },
+          "error": {
+            "title": "Error",
+            "description": "Error deleting history: {{message}}"
+          }
         }
       },
       "toasts": {

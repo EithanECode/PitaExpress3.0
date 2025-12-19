@@ -246,7 +246,7 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                                 onClick={() => handlers.openCancelOrderModal(order)}
                             >
                                 <XCircle className="h-3 w-3 mr-1" />
-                                Cancelar
+                                {t('client.recentOrders.cancelOrderModal.cancel')}
                             </Button>
                         )}
 

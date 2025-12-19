@@ -363,17 +363,17 @@ export default function MisPedidosPage() {
 
       // Notificar resultado con toast
       toast({
-        title: "Historial limpiado",
+        title: t('client.recentOrders.archiveHistoryModal.toasts.success.title'),
         description: data.count > 0
-          ? `Se han eliminado ${data.count} pedidos entregados/cancelados del historial.`
-          : "No hay pedidos para eliminar.",
+          ? t('client.recentOrders.archiveHistoryModal.toasts.success.descriptionWithCount', { count: data.count })
+          : t('client.recentOrders.archiveHistoryModal.toasts.success.descriptionEmpty'),
       });
       setIsArchiveModalOpen(false);
       fetchOrders(); // Recargar la lista
     } catch (e: any) {
       toast({
-        title: "Error",
-        description: 'Error al borrar historial: ' + e.message,
+        title: t('client.recentOrders.archiveHistoryModal.toasts.error.title'),
+        description: t('client.recentOrders.archiveHistoryModal.toasts.error.description', { message: e.message }),
         variant: "destructive",
       });
     } finally {
@@ -1218,8 +1218,8 @@ export default function MisPedidosPage() {
 
     if (!cancelReason.trim()) {
       toast({
-        title: 'Razón requerida',
-        description: 'Por favor indica por qué deseas cancelar el pedido',
+        title: t('client.recentOrders.cancelOrderModal.toasts.reasonRequired.title'),
+        description: t('client.recentOrders.cancelOrderModal.toasts.reasonRequired.description'),
         variant: 'destructive',
       });
       return;
@@ -1244,16 +1244,16 @@ export default function MisPedidosPage() {
       }
 
       toast({
-        title: 'Pedido cancelado',
-        description: 'Tu pedido ha sido cancelado exitosamente',
+        title: t('client.recentOrders.cancelOrderModal.toasts.success.title'),
+        description: t('client.recentOrders.cancelOrderModal.toasts.success.description'),
       });
 
       closeCancelOrderModal();
       fetchOrders();
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.message || 'No se pudo cancelar el pedido',
+        title: t('client.recentOrders.cancelOrderModal.toasts.error.title'),
+        description: error.message || t('client.recentOrders.cancelOrderModal.toasts.error.description'),
         variant: 'destructive',
       });
     } finally {
@@ -1832,8 +1832,8 @@ export default function MisPedidosPage() {
   const handleRemoveFromQueue = (index: number) => {
     setOrderQueue(prev => prev.filter((_, i) => i !== index));
     toast({
-      title: "Eliminado",
-      description: "Item eliminado de la caja.",
+      title: t('client.recentOrders.newOrder.removedFromBox.title'),
+      description: t('client.recentOrders.newOrder.removedFromBox.description'),
     });
     // Si la cola queda vacía, ¿volvemos al paso 1? O nos quedamos en 4 vacío con opción de agregar?
     // Mejor quedarse en 4, el usuario decidirá si agregar otro.
@@ -2014,7 +2014,7 @@ export default function MisPedidosPage() {
       case 1: return t('client.recentOrders.newOrder.stepTitles.productInfo');
       case 2: return t('client.recentOrders.newOrder.stepTitles.shippingDetails');
       case 3: return t('client.recentOrders.newOrder.stepTitles.summaryConfirmation');
-      case 4: return 'Resumen de Solicitud'; // TODO: i18n
+      case 4: return t('client.recentOrders.newOrder.stepTitles.requestSummary');
       default: return '';
     }
   };
@@ -2024,7 +2024,7 @@ export default function MisPedidosPage() {
       case 1: return t('client.recentOrders.newOrder.stepDescriptions.productInfo');
       case 2: return t('client.recentOrders.newOrder.stepDescriptions.shippingDetails');
       case 3: return t('client.recentOrders.newOrder.stepDescriptions.summaryConfirmation');
-      case 4: return 'Revisa los items antes de enviar.'; // TODO: i18n
+      case 4: return t('client.recentOrders.newOrder.stepDescriptions.requestSummary');
       default: return '';
     }
   };
@@ -2134,10 +2134,10 @@ export default function MisPedidosPage() {
                     </div>
                     <div className="text-center space-y-2">
                       <h3 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
-                        ¡Hubo un error!
+                        {t('client.recentOrders.newOrder.error.title')}
                       </h3>
                       <p className="text-slate-600 text-lg max-w-sm mx-auto">
-                        Hubo un problema al procesar tu solicitud. Por favor intenta nuevamente.
+                        {t('client.recentOrders.newOrder.error.message')}
                       </p>
                       <Button
                         onClick={() => {
@@ -2149,7 +2149,7 @@ export default function MisPedidosPage() {
                         }}
                         className="bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white shadow-lg mt-6"
                       >
-                        Cerrar
+                        {t('client.recentOrders.newOrder.error.close')}
                       </Button>
                     </div>
                   </div>
@@ -2183,7 +2183,7 @@ export default function MisPedidosPage() {
                               </div>
                               <span className={`text-xs mt-1 transition-colors duration-300 ${step <= currentStep ? (mounted && theme === 'dark' ? 'text-blue-400 font-medium' : 'text-blue-600 font-medium') : (mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500')
                                 }`}>
-                                {step === 1 ? t('client.recentOrders.newOrder.productTab') : step === 2 ? t('client.recentOrders.newOrder.shippingTab') : step === 3 ? t('client.recentOrders.newOrder.summaryTab') : 'Caja'}
+                                {step === 1 ? t('client.recentOrders.newOrder.productTab') : step === 2 ? t('client.recentOrders.newOrder.shippingTab') : step === 3 ? t('client.recentOrders.newOrder.summaryTab') : t('client.recentOrders.newOrder.boxTab')}
                               </span>
                             </div>
                           ))}
@@ -2512,7 +2512,7 @@ export default function MisPedidosPage() {
                       <div className="space-y-6">
                         <div className={`rounded-lg p-6 ${mounted && theme === 'dark' ? 'bg-slate-700' : 'bg-slate-50'}`}>
                           <div className="flex items-center justify-between mb-4">
-                            <h4 className={`font-semibold text-lg ${mounted && theme === 'dark' ? 'text-white' : ''}`}>Artículos en tu Caja ({orderQueue.length})</h4>
+                            <h4 className={`font-semibold text-lg ${mounted && theme === 'dark' ? 'text-white' : ''}`}>{t('client.recentOrders.newOrder.itemsInBox')} ({orderQueue.length})</h4>
                             <Button
                               variant="outline"
                               size="sm"
@@ -2521,14 +2521,14 @@ export default function MisPedidosPage() {
                               className="text-blue-500 border-blue-500 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <Plus className="w-4 h-4 mr-1" />
-                              {orderQueue.length >= 5 ? 'Máximo 5 artículos' : 'Agregar Otro Producto'}
+                              {orderQueue.length >= 5 ? t('client.recentOrders.newOrder.maxItems') : t('client.recentOrders.newOrder.addAnotherProduct')}
                             </Button>
                           </div>
 
                           {orderQueue.length === 0 ? (
                             <div className="text-center py-8 text-slate-500">
                               <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                              Tu caja está vacía. Añade productos para enviar una solicitud.
+                              {t('client.recentOrders.newOrder.emptyBoxMessage')}
                             </div>
                           ) : (
                             <div className="space-y-3">
@@ -2545,7 +2545,7 @@ export default function MisPedidosPage() {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className={`font-medium truncate ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{item.productName}</p>
-                                    <p className="text-sm text-slate-500 truncate">{item.quantity} unidades • {item.deliveryType === 'air' ? 'Aéreo' : 'Marítimo'}</p>
+                                    <p className="text-sm text-slate-500 truncate">{item.quantity} {t('client.recentOrders.newOrder.units')} • {item.deliveryType === 'air' ? t('client.recentOrders.newOrder.air') : t('client.recentOrders.newOrder.maritime')}</p>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <Button
@@ -2606,7 +2606,7 @@ export default function MisPedidosPage() {
                               className="bg-blue-600 text-white hover:bg-blue-700 border-transparent shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                             >
                               <ShoppingBag className="w-4 h-4 mr-2" />
-                              Añadir a la Caja
+                              {t('client.recentOrders.newOrder.addToBox')}
                             </Button>
                           )}
 
@@ -2639,12 +2639,12 @@ export default function MisPedidosPage() {
                                 {processingQueue ? (
                                   <div className="flex items-center">
                                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                                    Procesando...
+                                    {t('client.recentOrders.newOrder.processingQueue')}
                                   </div>
                                 ) : (
                                   <>
                                     <Send className="w-4 h-4 mr-2" />
-                                    Enviar Solicitud ({orderQueue.length})
+                                    {t('client.recentOrders.newOrder.sendRequest')} ({orderQueue.length})
                                   </>
                                 )}
                               </Button>
@@ -2777,10 +2777,10 @@ export default function MisPedidosPage() {
                     className="h-10 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => setIsArchiveModalOpen(true)}
                     disabled={archivableOrdersCount === 0}
-                    title={archivableOrdersCount === 0 ? "No hay pedidos para borrar (Entregados o Cancelados)" : "Borrar historial"}
+                    title={archivableOrdersCount === 0 ? t('client.recentOrders.archiveHistoryModal.buttonTitleEmpty') : t('client.recentOrders.archiveHistoryModal.buttonTitle')}
                   >
                     <Trash2 className="w-4 h-4 md:mr-2" />
-                    <span className="hidden md:inline">Borrar Historial</span>
+                    <span className="hidden md:inline">{t('client.recentOrders.archiveHistoryModal.button')}</span>
                   </Button>
                 </div>
               </div>
@@ -3880,10 +3880,10 @@ export default function MisPedidosPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <XCircle className="h-5 w-5 text-red-500" />
-              Cancelar Pedido
+              {t('client.recentOrders.cancelOrderModal.title')}
             </DialogTitle>
             <DialogDescription>
-              ¿Estás seguro de que deseas cancelar este pedido?
+              {t('client.recentOrders.cancelOrderModal.question')}
             </DialogDescription>
           </DialogHeader>
 
@@ -3894,27 +3894,25 @@ export default function MisPedidosPage() {
                   {selectedOrderForCancel.product}
                 </p>
                 <p className={`text-xs ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Pedido #{selectedOrderForCancel.id}
+                  {t('client.recentOrders.cancelOrderModal.orderLabel')}{selectedOrderForCancel.id}
                 </p>
               </div>
 
               <div>
                 <Label className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'text-slate-300' : ''}`}>
-                  Razón de cancelación *
+                  {t('client.recentOrders.cancelOrderModal.reasonLabel')}
                 </Label>
                 <Textarea
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
-                  placeholder="Por favor indica por qué deseas cancelar este pedido..."
+                  placeholder={t('client.recentOrders.cancelOrderModal.reasonPlaceholder')}
                   rows={3}
                   className="mt-2"
                 />
               </div>
 
               <div className={`p-3 rounded-lg ${mounted && theme === 'dark' ? 'bg-yellow-900/20 border border-yellow-700' : 'bg-yellow-50 border border-yellow-200'}`}>
-                <p className={`text-xs ${mounted && theme === 'dark' ? 'text-yellow-300' : 'text-yellow-800'}`}>
-                  <strong>Nota:</strong> Una vez cancelado, el pedido no podrá ser reactivado. Se notificará a China sobre la cancelación.
-                </p>
+                <p className={`text-xs ${mounted && theme === 'dark' ? 'text-yellow-300' : 'text-yellow-800'}`} dangerouslySetInnerHTML={{ __html: t('client.recentOrders.cancelOrderModal.warning') }} />
               </div>
 
               <div className="flex gap-3 pt-4">
@@ -3924,7 +3922,7 @@ export default function MisPedidosPage() {
                   disabled={cancellingOrder}
                   className="flex-1"
                 >
-                  No, mantener pedido
+                  {t('client.recentOrders.cancelOrderModal.cancel')}
                 </Button>
                 <Button
                   onClick={handleCancelOrder}
@@ -3934,12 +3932,12 @@ export default function MisPedidosPage() {
                   {cancellingOrder ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Cancelando...
+                      {t('client.recentOrders.cancelOrderModal.cancelling')}
                     </>
                   ) : (
                     <>
                       <XCircle className="h-4 w-4 mr-2" />
-                      Sí, cancelar pedido
+                      {t('client.recentOrders.cancelOrderModal.cancelOrder')}
                     </>
                   )}
                 </Button>
@@ -3955,18 +3953,18 @@ export default function MisPedidosPage() {
       < Dialog open={isArchiveModalOpen} onOpenChange={setIsArchiveModalOpen} >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>¿Borrar historial de pedidos?</DialogTitle>
+            <DialogTitle>{t('client.recentOrders.archiveHistoryModal.title')}</DialogTitle>
             <DialogDescription className="space-y-3">
-              <p>¿Estás seguro de que deseas borrar el historial de pedidos completados/cancelados?</p>
+              <p>{t('client.recentOrders.archiveHistoryModal.question')}</p>
               <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-md text-sm text-red-800 dark:text-red-200 flex gap-2">
                 <AlertTriangle className="w-5 h-5 shrink-0" />
-                <span>Esta acción no se puede deshacer.</span>
+                <span>{t('client.recentOrders.archiveHistoryModal.warning')}</span>
               </div>
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
             <Button variant="outline" onClick={() => setIsArchiveModalOpen(false)} disabled={isArchiving}>
-              Cancelar
+              {t('client.recentOrders.archiveHistoryModal.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -3974,7 +3972,7 @@ export default function MisPedidosPage() {
               disabled={isArchiving}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isArchiving ? 'Borrando...' : 'Sí, borrar historial'}
+              {isArchiving ? t('client.recentOrders.archiveHistoryModal.archiving') : t('client.recentOrders.archiveHistoryModal.confirm')}
             </Button>
           </div>
         </DialogContent>

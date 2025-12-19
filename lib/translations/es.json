@@ -579,12 +579,32 @@
         "stepTitles": {
           "productInfo": "Información del Producto",
           "shippingDetails": "Detalles del Envío",
-          "summaryConfirmation": "Resumen y Confirmación"
+          "summaryConfirmation": "Resumen y Confirmación",
+          "requestSummary": "Resumen de Solicitud"
         },
         "stepDescriptions": {
           "productInfo": "Cuéntanos qué producto deseas importar",
           "shippingDetails": "Configura cómo quieres recibir tu pedido",
-          "summaryConfirmation": "Revisa y confirma tu solicitud"
+          "summaryConfirmation": "Revisa y confirma tu solicitud",
+          "requestSummary": "Revisa los items antes de enviar."
+        },
+        "boxTab": "Caja",
+        "itemsInBox": "Artículos en tu Caja",
+        "addAnotherProduct": "Agregar Otro Producto",
+        "maxItems": "Máximo 5 artículos",
+        "emptyBoxMessage": "Tu caja está vacía. Añade productos para enviar una solicitud.",
+        "units": "unidades",
+        "addToBox": "Añadir a la Caja",
+        "sendRequest": "Enviar Solicitud",
+        "processingQueue": "Procesando...",
+        "removedFromBox": {
+          "title": "Eliminado",
+          "description": "Item eliminado de la caja."
+        },
+        "error": {
+          "title": "¡Hubo un error!",
+          "message": "Hubo un problema al procesar tu solicitud. Por favor intenta nuevamente.",
+          "close": "Cerrar"
         },
         "success": {
           "title": "¡Pedido Creado!",
@@ -641,6 +661,54 @@
           "in_transit": "El paquete está en camino a su destino",
           "customs": "El paquete está siendo procesado en aduana",
           "delivered": "El paquete ha sido entregado exitosamente"
+        }
+      },
+      "cancelOrderModal": {
+        "title": "Cancelar Pedido",
+        "question": "¿Estás seguro de que deseas cancelar este pedido?",
+        "orderLabel": "Pedido #",
+        "reasonLabel": "Razón de cancelación *",
+        "reasonPlaceholder": "Por favor indica por qué deseas cancelar este pedido...",
+        "warning": "<strong>Nota:</strong> Una vez cancelado, el pedido no podrá ser reactivado. Se notificará a China sobre la cancelación.",
+        "keepOrder": "No, mantener pedido",
+        "cancel": "Cancelar",
+        "cancelOrder": "Sí, cancelar pedido",
+        "cancelling": "Cancelando...",
+        "toasts": {
+          "success": {
+            "title": "Pedido cancelado",
+            "description": "Tu pedido ha sido cancelado exitosamente"
+          },
+          "error": {
+            "title": "Error",
+            "description": "No se pudo cancelar el pedido"
+          },
+          "reasonRequired": {
+            "title": "Razón requerida",
+            "description": "Por favor indica por qué deseas cancelar el pedido"
+          }
+        }
+      },
+      "archiveHistoryModal": {
+        "title": "¿Borrar historial de pedidos?",
+        "question": "¿Estás seguro de que deseas borrar el historial de pedidos completados/cancelados?",
+        "warning": "Esta acción no se puede deshacer.",
+        "cancel": "Cancelar",
+        "confirm": "Sí, borrar historial",
+        "archiving": "Borrando...",
+        "button": "Borrar Historial",
+        "buttonTitle": "Borrar historial",
+        "buttonTitleEmpty": "No hay pedidos para borrar (Entregados o Cancelados)",
+        "toasts": {
+          "success": {
+            "title": "Historial limpiado",
+            "descriptionWithCount": "Se han eliminado {{count}} pedidos entregados/cancelados del historial.",
+            "descriptionEmpty": "No hay pedidos para eliminar."
+          },
+          "error": {
+            "title": "Error",
+            "description": "Error al borrar historial: {{message}}"
+          }
         }
       }
     },
@@ -2522,7 +2590,8 @@
         "approve": "Aprobar",
         "reject": "Rechazar",
         "undo": "Deshacer",
-        "send": "Enviar"
+        "send": "Enviar",
+        "deleteHistory": "Borrar Historial"
       },
       "table": {
         "pendingApprovalTitle": "Pagos Pendientes de Aprobación",
@@ -2575,6 +2644,30 @@
           "message": "Estás seguro de que quieres rechazar este pago? Esta acción no se puede deshacer.",
           "cancel": "Cancelar",
           "confirm": "Confirmar Rechazo"
+        },
+        "deleteHistory": {
+          "title": "¿Borrar historial de pedidos?",
+          "description": {
+            "admin": "Esta acción eliminará permanentemente los pedidos cancelados y entregados con más de 30 días de antigüedad. Esta acción no se puede deshacer.",
+            "pagos": "Esta acción ocultará los pagos aceptados y rechazados de tu vista. Los demás usuarios seguirán viéndolos.",
+            "default": "Esta acción ocultará los pedidos cancelados y entregados de tu vista. Los demás usuarios seguirán viéndolos."
+          },
+          "warning": {
+            "admin": "Esta acción no se puede deshacer.",
+            "default": "Esta acción solo afecta tu vista."
+          },
+          "cancel": "Cancelar",
+          "delete": "Borrar",
+          "deleting": "Borrando...",
+          "success": {
+            "title": "Historial limpiado",
+            "descriptionWithCount": "Se han eliminado {{count}} pedidos del historial.",
+            "descriptionEmpty": "No hay pedidos para eliminar."
+          },
+          "error": {
+            "title": "Error",
+            "description": "Error al borrar historial: {{message}}"
+          }
         }
       },
       "toasts": {
