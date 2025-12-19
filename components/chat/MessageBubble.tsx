@@ -155,11 +155,11 @@ export const MessageBubble = memo(function MessageBubble({
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem onClick={() => setIsEditing(true)} className="cursor-pointer">
                                         <Pencil className="mr-2 h-3.5 w-3.5" />
-                                        Editar
+                                        {t('chat.messageActions.edit')}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => setShowDeleteAlert(true)} className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer">
                                         <Trash2 className="mr-2 h-3.5 w-3.5" />
-                                        Eliminar
+                                        {t('chat.messageActions.delete')}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>

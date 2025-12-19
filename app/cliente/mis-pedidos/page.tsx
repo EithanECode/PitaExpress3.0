@@ -3876,30 +3876,30 @@ export default function MisPedidosPage() {
 
       {/* Modal de Cancelar Pedido */}
       <Dialog open={isCancelOrderModalOpen} onOpenChange={setIsCancelOrderModalOpen}>
-        <DialogContent className="w-[95vw] sm:w-full max-w-md">
+        <DialogContent className={`w-[95vw] sm:w-full max-w-md ${mounted && theme === 'dark' ? 'bg-slate-800 border-slate-700' : ''}`}>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className={`flex items-center gap-2 ${mounted && theme === 'dark' ? 'text-white' : ''}`}>
               <XCircle className="h-5 w-5 text-red-500" />
               {t('client.recentOrders.cancelOrderModal.title')}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className={mounted && theme === 'dark' ? 'text-slate-300' : ''}>
               {t('client.recentOrders.cancelOrderModal.question')}
             </DialogDescription>
           </DialogHeader>
 
           {selectedOrderForCancel && (
             <div className="space-y-4">
-              <div className={`p-4 rounded-lg ${mounted && theme === 'dark' ? 'bg-slate-700' : 'bg-slate-50'}`}>
+              <div className={`p-4 rounded-lg ${mounted && theme === 'dark' ? 'bg-slate-700 border border-slate-600' : 'bg-slate-50 border border-slate-200'}`}>
                 <p className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
                   {selectedOrderForCancel.product}
                 </p>
-                <p className={`text-xs ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                <p className={`text-xs mt-1 ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
                   {t('client.recentOrders.cancelOrderModal.orderLabel')}{selectedOrderForCancel.id}
                 </p>
               </div>
 
               <div>
-                <Label className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'text-slate-300' : ''}`}>
+                <Label className={`text-sm font-semibold ${mounted && theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
                   {t('client.recentOrders.cancelOrderModal.reasonLabel')}
                 </Label>
                 <Textarea
@@ -3907,7 +3907,7 @@ export default function MisPedidosPage() {
                   onChange={(e) => setCancelReason(e.target.value)}
                   placeholder={t('client.recentOrders.cancelOrderModal.reasonPlaceholder')}
                   rows={3}
-                  className="mt-2"
+                  className={`mt-2 ${mounted && theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-red-500 focus:ring-red-500' : ''}`}
                 />
               </div>
 
@@ -3920,14 +3920,14 @@ export default function MisPedidosPage() {
                   variant="outline"
                   onClick={closeCancelOrderModal}
                   disabled={cancellingOrder}
-                  className="flex-1"
+                  className={`flex-1 ${mounted && theme === 'dark' ? 'border-slate-600 text-slate-200 hover:bg-slate-700 hover:text-white' : ''}`}
                 >
                   {t('client.recentOrders.cancelOrderModal.cancel')}
                 </Button>
                 <Button
                   onClick={handleCancelOrder}
                   disabled={cancellingOrder || !cancelReason.trim()}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {cancellingOrder ? (
                     <>

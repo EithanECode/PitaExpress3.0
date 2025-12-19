@@ -1634,7 +1634,13 @@
             "loading": "Loading boxes...",
             "noneTitle": "No boxes available",
             "noneSubtitle": "Create a box from the Boxes tab to pack.",
-            "select": "Select"
+            "select": "Select",
+            "boxTypes": {
+              "aereo": "Air",
+              "maritimo": "Maritime",
+              "mixto": "Mixed"
+            },
+            "onlyType": "Only {{type}}"
           },
           "labelWarning": {
             "title": "Before packaging",
@@ -1646,7 +1652,11 @@
             "toastTitleSuccess": "Label ready",
             "toastTitleError": "Generation error",
             "generating": "Generating...",
-            "accept": "Accept"
+            "accept": "Accept",
+            "important": "IMPORTANT",
+            "downloadBeforeContinue": "You must download the label before continuing",
+            "downloadedSuccessfully": "✓ Label downloaded successfully",
+            "downloadFirst": "Download the label first"
           },
           "deleteBox": {
             "title": "Delete box",
@@ -1694,6 +1704,8 @@
           "orderNoBoxTitle": "Order without box",
           "orderNoBoxDesc": "This order has no box assigned.",
           "orderUnpackNotAllowedDesc": "You can't unpack orders from a shipped container.",
+          "unpackOrdersFromShippedBoxDesc": "You can't unpack orders from a shipped box.",
+          "unpackOrdersFromShippedContainerDesc": "You can't unpack orders from a shipped container.",
           "orderUnpackedTitle": "Order unpacked",
           "orderUnpackedDesc": "Order #ORD-{{orderId}} released from box.",
           "containerSendNotAllowedDesc": "You can't delete a shipped container.",
@@ -1808,7 +1820,12 @@
         "rateRecoveredDescription": "{{rate}} {{currency}} (from DB{{age}})",
         "rateRecoveredDescriptionNoAge": "{{rate}} {{currency}} (from DB)",
         "rateUpdateError": "Error updating rate",
-        "warning": "Warning"
+        "warning": "Warning",
+        "binanceRateUpdated": "Binance Rate updated",
+        "binanceRateUpdatedDescription": "{{rate}} VES/USDT from {{source}}",
+        "binanceRateRecovered": "Binance Rate recovered",
+        "binanceRateRecoveredDescription": "{{rate}} VES/USDT ({{age}} min old)",
+        "binanceRateRecoveredDescriptionNoAge": "{{rate}} VES/USDT"
       },
       "notifications": {
         "notificationSystem": "Notification System",
@@ -1831,6 +1848,72 @@
         "configSaved": "Configuration saved",
         "configSavedDesc": "Business parameters have been updated successfully.",
         "configSavedGlobal": "Configuration saved globally. Changes will be available for all users."
+      },
+      "apiHealth": {
+        "generalStatus": "System General Status",
+        "lastUpdate": "Last update:",
+        "of": "of",
+        "apisFunctioning": "APIs functioning",
+        "information": "Information",
+        "testApis": "Test APIs",
+        "refresh": "Refresh",
+        "loadError": "Could not load API status",
+        "status": "Status:",
+        "lastSuccess": "Last success:",
+        "lastAttempt": "Last attempt:",
+        "lastFailure": "Last failure:",
+        "avgTime": "Average time:",
+        "successRate24h": "Success rate (24h):",
+        "currentRate": "Current rate:",
+        "successfulOf": "successful of",
+        "attempts": "attempts",
+        "currentSource": "Current Exchange Rate Source",
+        "currentSourceDesc": "Information about the exchange rate currently being used",
+        "source": "Source:",
+        "type": "Type:",
+        "rate": "Rate:",
+        "age": "Age:",
+        "externalApi": "External API",
+        "database": "Database",
+        "lessThanHour": "Less than 1 hour",
+        "hour": "hour",
+        "hours": "hours",
+        "day": "day",
+        "days": "days",
+        "ageWarning": "The current rate is more than 24 hours old. An update is recommended.",
+        "statusWorking": "Working",
+        "statusUnstable": "Unstable",
+        "statusDown": "Down",
+        "statusUnknown": "Unknown",
+        "never": "Never",
+        "lessThanMinute": "Less than 1 minute ago",
+        "minutesAgo": "{{count}} minute ago",
+        "minutesAgoPlural": "{{count}} minutes ago",
+        "hoursAgo": "{{count}} hour ago",
+        "hoursAgoPlural": "{{count}} hours ago",
+        "daysAgo": "{{count}} day ago",
+        "daysAgoPlural": "{{count}} days ago",
+        "failed": "failed",
+        "testingApis": "Testing APIs...",
+        "testingApisDesc": "Please wait while all APIs are being tested.",
+        "testsCompleted": "Tests completed",
+        "testsCompletedSuccess": "All APIs have been tested. Check the updated status above.",
+        "testsCompletedError": "Error testing some APIs. Check the updated status above.",
+        "testApisError": "Error testing APIs:",
+        "fetchError": "Could not get API status",
+        "infoModal": {
+          "title": "Information about API Status",
+          "description": "Reference guide to understand the status of exchange rate APIs",
+          "downApisTitle": "APIs Down During Business Days",
+          "downApisDesc": "If all APIs of a specific type (BCV, Binance or CNY) remain inactive during business days (Monday to Friday), please contact the system development team to perform a technical verification and resolve the issue.",
+          "maintenanceTitle": "Scheduled Maintenance - BCV APIs",
+          "maintenanceDesc": "Official exchange rates from the Central Bank of Venezuela (BCV) do not quote during weekends or holidays. If BCV APIs appear as \"down\" during these periods, this is completely normal and corresponds to scheduled maintenance of the banking system.",
+          "contactTitle": "When to Contact the Development Team",
+          "contactDesc": "It is recommended to contact the development team if the problem persists during business days or extends beyond a full weekend. The technical team will be able to perform a thorough review and apply the necessary corrections.",
+          "discrepancyTitle": "Discrepancy between API Status and System Amounts",
+          "discrepancyDesc": "If the BCV API appears as \"down\" in the monitoring panel, but the amounts shown in the finance module are correct, this may indicate a temporary discrepancy between the monitoring system and the actual API operation. In this case, verify the current exchange rate on the official website of the Central Bank of Venezuela and compare with the values shown in the system. If the rates match, it is likely a display issue in the monitoring logs or frontend, while the API continues to function correctly. It is recommended to wait one day to verify if the status updates automatically. If the problem persists after this period, contact the development team for a technical review of the monitoring system.",
+          "supportText": "For additional technical support, contact the system development team."
+        }
       },
       "summary": {
         "title": "Current Configuration Summary",
@@ -1914,6 +1997,12 @@
     "ajuste": "Adjust",
     "dias": "days",
     "eta": "Estimated time",
+    "priceDisplay": {
+      "price": "Price",
+      "rate": "Rate",
+      "updated": "Updated",
+      "refreshRate": "Refresh rate"
+    },
     "tarifa": "Rate",
     "costo": "Cost",
     "minimo": "Minimum",
@@ -2849,7 +2938,11 @@
           "accept": "Generate and assign",
           "generating": "Generating...",
           "toastTitleSuccess": "Label ready",
-          "downloaded": "Label generated"
+          "downloaded": "Label generated",
+          "important": "IMPORTANT",
+          "downloadBeforeContinue": "You must download the label before continuing",
+          "downloadedSuccessfully": "✓ Label downloaded successfully",
+          "downloadFirst": "Download the label first"
         },
         "quote": {
           "title": "Quote Order",
@@ -2945,14 +3038,20 @@
           "noneSubtitle": "When you assign orders to this box they will appear here.",
           "view": "View"
         },
-        "selectBoxForOrder": {
-          "title": "Select box for order #ORD-{{id}}",
-          "loading": "Loading boxes...",
-          "noneTitle": "No boxes available",
-          "noneSubtitle": "Create a box from the Boxes tab to pack.",
-          "select": "Select",
-          "cancel": "Cancel"
-        },
+          "selectBoxForOrder": {
+            "title": "Select box for order #ORD-{{id}}",
+            "loading": "Loading boxes...",
+            "noneTitle": "No boxes available",
+            "noneSubtitle": "Create a box from the Boxes tab to pack.",
+            "select": "Select",
+            "cancel": "Cancel",
+            "boxTypes": {
+              "aereo": "Air",
+              "maritimo": "Maritime",
+              "mixto": "Mixed"
+            },
+            "onlyType": "Only {{type}}"
+          },
         "proposeAlternative": {
           "title": "Propose Alternative",
           "subtitle": "Order #{{id}} - {{client}}",
@@ -3029,6 +3128,8 @@
         "orderNoBoxTitle": "Order without box",
         "orderNoBoxDesc": "This order has no box assigned.",
         "orderUnpackNotAllowedDesc": "You can't unpack orders from a shipped container.",
+        "unpackOrdersFromShippedBoxDesc": "You can't unpack orders from a shipped box.",
+        "unpackOrdersFromShippedContainerDesc": "You can't unpack orders from a shipped container.",
         "orderUnpackedTitle": "Order unpacked",
         "orderUnpackedDesc": "Order #ORD-{{orderId}} released from box.",
         "containerSendNotAllowedDesc": "You can't delete a shipped container.",
@@ -3187,13 +3288,36 @@
       "title": "Chat",
       "subtitle": "Manage your conversations with China users",
       "activeConversations": "Active Conversations",
-      "selectConversation": "Select a conversation to start chatting"
+      "selectConversation": "Select a conversation to start chatting",
+      "deleteChat": "Delete chat",
+      "pagination": {
+        "page": "Page {{current}} of {{total}}",
+        "previous": "Previous",
+        "next": "Next"
+      },
+      "deleteDialog": {
+        "title": "Delete chat?",
+        "description": "This action will hide the current history of this conversation. If you talk to this user again, a clean chat will be started.",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "deleting": "Deleting..."
+      }
     },
     "notFound": {
       "title": "Administrator not found",
       "message": "Could not connect with the administrator"
     },
     "loading": "Loading chat...",
-    "messageDeleted": "🚫 This message was deleted"
+    "messageDeleted": "🚫 This message was deleted",
+    "messageActions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "deleteConfirmation": {
+      "title": "Delete message?",
+      "description": "This action cannot be undone. The message will be deleted for everyone.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    }
   }
 }

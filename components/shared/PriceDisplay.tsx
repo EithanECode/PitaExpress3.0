@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface PriceDisplayProps {
   amount: number;
@@ -34,6 +35,7 @@ export function PriceDisplay({
   const { convert, currentRate, isLoading, error, lastUpdated, refreshRate } = useCurrencyConverter();
   // console.log('[PriceDisplay] Hook retornó - currentRate:', currentRate, 'isLoading:', isLoading, 'error:', error);
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -65,7 +67,7 @@ export function PriceDisplay({
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <DollarSign className={`h-5 w-5 ${mounted && theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
-              <span className={`font-medium ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-gray-700'}`}>Precio</span>
+              <span className={`font-medium ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-gray-700'}`}>{t('common.priceDisplay.price')}</span>
             </div>
             {showRefresh && (
               <TooltipProvider>
@@ -86,7 +88,7 @@ export function PriceDisplay({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Actualizar tasa</p>
+                    <p>{t('common.priceDisplay.refreshRate')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -106,9 +108,9 @@ export function PriceDisplay({
 
           {lastUpdated && (
             <div className={`text-xs mt-2 ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-              Tasa: {currentRate.toFixed(2)} Bs/USD
+              {t('common.priceDisplay.rate')}: {currentRate.toFixed(2)} Bs/USD
               <br />
-              Actualizado: {lastUpdated.toLocaleTimeString()}
+              {t('common.priceDisplay.updated')}: {lastUpdated.toLocaleTimeString()}
             </div>
           )}
         </div>

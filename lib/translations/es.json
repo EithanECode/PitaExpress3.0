@@ -1318,7 +1318,13 @@
     "english": "Inglés",
     "spanish": "Español",
     "dias": "días",
-    "eta": "Tiempo estimado"
+    "eta": "Tiempo estimado",
+    "priceDisplay": {
+      "price": "Precio",
+      "rate": "Tasa",
+      "updated": "Actualizado",
+      "refreshRate": "Actualizar tasa"
+    }
   },
   "admin": {
     "configuration": {
@@ -2075,7 +2081,13 @@
             "noneTitle": "No hay cajas disponibles",
             "noneSubtitle": "Crea una caja desde la pestaña Cajas para empaquetar.",
             "select": "Seleccionar",
-            "cancel": "Cancelar"
+            "cancel": "Cancelar",
+            "boxTypes": {
+              "aereo": "Aéreo",
+              "maritimo": "Marítimo",
+              "mixto": "Mixto"
+            },
+            "onlyType": "Solo {{type}}"
           },
           "labelWarning": {
             "title": "Antes de empaquetar",
@@ -2087,7 +2099,11 @@
             "toastTitleSuccess": "Etiqueta lista",
             "toastTitleError": "Error generando",
             "generating": "Generando...",
-            "accept": "Aceptar"
+            "accept": "Aceptar",
+            "important": "IMPORTANTE",
+            "downloadBeforeContinue": "Debes descargar la etiqueta antes de continuar",
+            "downloadedSuccessfully": "✓ Etiqueta descargada correctamente",
+            "downloadFirst": "Descarga la etiqueta primero"
           },
           "deleteBox": {
             "title": "Eliminar caja",
@@ -2133,6 +2149,8 @@
           "orderNoBoxTitle": "Pedido sin caja",
           "orderNoBoxDesc": "Este pedido no tiene caja asignada.",
           "orderUnpackNotAllowedDesc": "No puedes desempaquetar pedidos de un contenedor enviado.",
+          "unpackOrdersFromShippedBoxDesc": "No puedes desempaquetar pedidos de una caja enviada.",
+          "unpackOrdersFromShippedContainerDesc": "No puedes desempaquetar pedidos de un contenedor enviado.",
           "orderUnpackedTitle": "Pedido desempaquetado",
           "orderUnpackedDesc": "Pedido #ORD-{{orderId}} liberado de la caja.",
           "containerSendNotAllowedDesc": "No puedes eliminar un contenedor enviado.",
@@ -2243,7 +2261,12 @@
         "rateRecovered": "Tasa recuperada",
         "rateRecoveredDescription": "{{rate}} {{currency}}{{age}}",
         "rateRecoveredDescriptionNoAge": "{{rate}} {{currency}}",
-        "liveApi": "API en vivo"
+        "liveApi": "API en vivo",
+        "binanceRateUpdated": "Tasa Binance actualizada",
+        "binanceRateUpdatedDescription": "{{rate}} VES/USDT desde {{source}}",
+        "binanceRateRecovered": "Tasa Binance recuperada",
+        "binanceRateRecoveredDescription": "{{rate}} VES/USDT ({{age}} min de antigüedad)",
+        "binanceRateRecoveredDescriptionNoAge": "{{rate}} VES/USDT"
       },
       "notifications": {
         "notificationSystem": "Sistema de notificaciones",
@@ -2264,7 +2287,74 @@
       },
       "messages": {
         "configSaved": "Configuración guardada",
-        "configSavedDesc": "Los parámetros del negocio se han actualizado correctamente."
+        "configSavedDesc": "Los parámetros del negocio se han actualizado correctamente.",
+        "configSavedGlobal": "Configuración guardada globalmente. Los cambios estarán disponibles para todos los usuarios."
+      },
+      "apiHealth": {
+        "generalStatus": "Estado General del Sistema",
+        "lastUpdate": "Última actualización:",
+        "of": "de",
+        "apisFunctioning": "APIs funcionando",
+        "information": "Información",
+        "testApis": "Probar APIs",
+        "refresh": "Actualizar",
+        "loadError": "No se pudo cargar el estado de las APIs",
+        "status": "Estado:",
+        "lastSuccess": "Último éxito:",
+        "lastAttempt": "Último intento:",
+        "lastFailure": "Último fallo:",
+        "avgTime": "Tiempo promedio:",
+        "successRate24h": "Tasa de éxito (24h):",
+        "currentRate": "Tasa actual:",
+        "successfulOf": "exitosos de",
+        "attempts": "intentos",
+        "currentSource": "Fuente Actual de Tasa de Cambio",
+        "currentSourceDesc": "Información sobre la tasa de cambio que se está utilizando actualmente",
+        "source": "Fuente:",
+        "type": "Tipo:",
+        "rate": "Tasa:",
+        "age": "Antigüedad:",
+        "externalApi": "API Externa",
+        "database": "Base de Datos",
+        "lessThanHour": "Menos de 1 hora",
+        "hour": "hora",
+        "hours": "horas",
+        "day": "día",
+        "days": "días",
+        "ageWarning": "La tasa actual tiene más de 24 horas de antigüedad. Se recomienda actualizar.",
+        "statusWorking": "Funcionando",
+        "statusUnstable": "Inestable",
+        "statusDown": "Caída",
+        "statusUnknown": "Desconocido",
+        "never": "Nunca",
+        "lessThanMinute": "Hace menos de 1 minuto",
+        "minutesAgo": "Hace {{count}} minuto",
+        "minutesAgoPlural": "Hace {{count}} minutos",
+        "hoursAgo": "Hace {{count}} hora",
+        "hoursAgoPlural": "Hace {{count}} horas",
+        "daysAgo": "Hace {{count}} día",
+        "daysAgoPlural": "Hace {{count}} días",
+        "failed": "fallido",
+        "testingApis": "Probando APIs...",
+        "testingApisDesc": "Por favor espera mientras se prueban todas las APIs.",
+        "testsCompleted": "Pruebas completadas",
+        "testsCompletedSuccess": "Todas las APIs han sido probadas. Revisa el estado actualizado arriba.",
+        "testsCompletedError": "Error al probar algunas APIs. Revisa el estado actualizado arriba.",
+        "testApisError": "Error al probar las APIs:",
+        "fetchError": "No se pudo obtener el estado de las APIs",
+        "infoModal": {
+          "title": "Información sobre el Estado de las APIs",
+          "description": "Guía de referencia para entender el estado de las APIs de tasas de cambio",
+          "downApisTitle": "APIs Caídas Durante Días Hábiles",
+          "downApisDesc": "Si todas las APIs de un tipo específico (BCV, Binance o CNY) permanecen inactivas durante días hábiles (lunes a viernes), por favor contacte con el equipo de desarrollo del sistema para realizar una verificación técnica y resolver el problema.",
+          "maintenanceTitle": "Mantenimiento Programado - APIs BCV",
+          "maintenanceDesc": "Las tasas de cambio oficiales del Banco Central de Venezuela (BCV) no cotizan durante los fines de semana ni días festivos. Si las APIs de BCV aparecen como \"caídas\" durante estos períodos, esto es completamente normal y corresponde a un mantenimiento programado del sistema bancario.",
+          "contactTitle": "Cuándo Contactar al Equipo de Desarrollo",
+          "contactDesc": "Se recomienda contactar con el equipo de desarrollo si el problema persiste durante días hábiles o se extiende más allá de un fin de semana completo. El equipo técnico podrá realizar una revisión exhaustiva y aplicar las correcciones necesarias.",
+          "discrepancyTitle": "Discrepancia entre Estado de API y Montos del Sistema",
+          "discrepancyDesc": "Si la API de BCV aparece como \"caída\" en el panel de monitoreo, pero los montos mostrados en el módulo de finanzas son correctos, esto puede indicar una discrepancia temporal entre el sistema de monitoreo y el funcionamiento real de la API. En este caso, verifique la tasa de cambio actual en la página oficial del Banco Central de Venezuela y compare con los valores que aparecen en el sistema. Si las tasas coinciden, es probable que se trate de un problema de visualización en los logs de monitoreo o en el frontend, mientras que la API continúa funcionando correctamente. Se recomienda esperar un día para verificar si el estado se actualiza automáticamente. Si el problema persiste después de este período, contacte con el equipo de desarrollo para una revisión técnica del sistema de monitoreo.",
+          "supportText": "Para soporte técnico adicional, comuníquese con el equipo de desarrollo del sistema."
+        }
       },
       "summary": {
         "title": "Resumen de la Configuración Actual",
@@ -2979,7 +3069,11 @@
           "accept": "Aceptar",
           "generating": "Generando...",
           "toastTitleSuccess": "Etiqueta lista",
-          "downloaded": "Etiqueta generada"
+          "downloaded": "Etiqueta generada",
+          "important": "IMPORTANTE",
+          "downloadBeforeContinue": "Debes descargar la etiqueta antes de continuar",
+          "downloadedSuccessfully": "✓ Etiqueta descargada correctamente",
+          "downloadFirst": "Descarga la etiqueta primero"
         },
         "quote": {
           "title": "Cotizar Pedido",
@@ -3081,7 +3175,13 @@
           "noneTitle": "No hay cajas disponibles",
           "noneSubtitle": "Crea una caja desde la pestaña Cajas para empaquetar.",
           "select": "Seleccionar",
-          "cancel": "Cancelar"
+          "cancel": "Cancelar",
+          "boxTypes": {
+            "aereo": "Aéreo",
+            "maritimo": "Marítimo",
+            "mixto": "Mixto"
+          },
+          "onlyType": "Solo {{type}}"
         },
         "proposeAlternative": {
           "title": "Proponer Alternativa",
@@ -3159,6 +3259,8 @@
         "orderNoBoxTitle": "Pedido sin caja",
         "orderNoBoxDesc": "Este pedido no tiene caja asignada.",
         "orderUnpackNotAllowedDesc": "No puedes desempaquetar pedidos de un contenedor enviado.",
+        "unpackOrdersFromShippedBoxDesc": "No puedes desempaquetar pedidos de una caja enviada.",
+        "unpackOrdersFromShippedContainerDesc": "No puedes desempaquetar pedidos de un contenedor enviado.",
         "orderUnpackedTitle": "Pedido desempaquetado",
         "orderUnpackedDesc": "Pedido #ORD-{{orderId}} liberado de la caja.",
         "containerSendNotAllowedDesc": "No puedes eliminar un contenedor enviado.",
@@ -3298,7 +3400,20 @@
       "title": "Chat",
       "subtitle": "Gestiona tus conversaciones con usuarios de China",
       "activeConversations": "Conversaciones Activas",
-      "selectConversation": "Selecciona una conversación para comenzar a chatear"
+      "selectConversation": "Selecciona una conversación para comenzar a chatear",
+      "deleteChat": "Eliminar chat",
+      "pagination": {
+        "page": "Página {{current}} de {{total}}",
+        "previous": "Anterior",
+        "next": "Siguiente"
+      },
+      "deleteDialog": {
+        "title": "¿Eliminar chat?",
+        "description": "Esta acción ocultará el historial actual de esta conversación. Si vuelves a hablar con este usuario, se iniciará un chat limpio.",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "deleting": "Eliminando..."
+      }
     },
     "notFound": {
       "title": "No se encontró el administrador",
@@ -3306,6 +3421,10 @@
     },
     "loading": "Cargando chat...",
     "messageDeleted": "Este mensaje fue eliminado",
+    "messageActions": {
+      "edit": "Editar",
+      "delete": "Eliminar"
+    },
     "deleteConfirmation": {
       "title": "¿Eliminar mensaje?",
       "description": "Esta acción no se puede deshacer. El mensaje será eliminado para todos.",

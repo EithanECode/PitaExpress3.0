@@ -28,6 +28,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useState, useEffect, useCallback } from 'react';
 import { useTheme } from 'next-themes';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ChatListProps {
     onSelectConversation: (userId: string, userName: string) => void;
@@ -47,6 +48,7 @@ export function ChatList({ onSelectConversation, selectedUserId, currentUserId }
     const [deleting, setDeleting] = useState(false);
     const supabase = getSupabaseBrowserClient();
     const { theme } = useTheme();
+    const { t } = useTranslation();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -389,7 +391,7 @@ export function ChatList({ onSelectConversation, selectedUserId, currentUserId }
                                                 }}
                                             >
                                                 <Trash2 className="mr-2 h-4 w-4" />
-                                                Eliminar chat
+                                                {t('chat.list.deleteChat')}
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -404,7 +406,7 @@ export function ChatList({ onSelectConversation, selectedUserId, currentUserId }
             {totalPages > 1 && (
                 <div className={`flex items-center justify-between pt-4 border-t ${mounted && theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
                     <p className={`text-sm ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>
-                        Página {currentPage} de {totalPages}
+                        {t('chat.list.pagination.page', { current: currentPage, total: totalPages })}
                     </p>
                     <div className="flex gap-2">
                         <Button
@@ -415,7 +417,7 @@ export function ChatList({ onSelectConversation, selectedUserId, currentUserId }
                             className="h-8"
                         >
                             <ChevronLeft className="h-4 w-4 mr-1" />
-                            Anterior
+                            {t('chat.list.pagination.previous')}
                         </Button>
                         <Button
                             variant="outline"
@@ -424,7 +426,7 @@ export function ChatList({ onSelectConversation, selectedUserId, currentUserId }
                             disabled={currentPage === totalPages}
                             className="h-8"
                         >
-                            Siguiente
+                            {t('chat.list.pagination.next')}
                             <ChevronRight className="h-4 w-4 ml-1" />
                         </Button>
                     </div>
@@ -435,14 +437,13 @@ export function ChatList({ onSelectConversation, selectedUserId, currentUserId }
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>¿Eliminar chat?</AlertDialogTitle>
+                        <AlertDialogTitle>{t('chat.list.deleteDialog.title')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Esta acción ocultará el historial actual de esta conversación.
-                            Si vuelves a hablar con este usuario, se iniciará un chat limpio.
+                            {t('chat.list.deleteDialog.description')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+                        <AlertDialogCancel disabled={deleting}>{t('chat.list.deleteDialog.cancel')}</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDeleteConversation}
                             disabled={deleting}
@@ -451,10 +452,10 @@ export function ChatList({ onSelectConversation, selectedUserId, currentUserId }
                             {deleting ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Eliminando...
+                                    {t('chat.list.deleteDialog.deleting')}
                                 </>
                             ) : (
-                                'Eliminar'
+                                t('chat.list.deleteDialog.delete')
                             )}
                         </AlertDialogAction>
                     </AlertDialogFooter>

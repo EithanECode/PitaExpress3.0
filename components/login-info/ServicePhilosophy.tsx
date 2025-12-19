@@ -24,9 +24,9 @@ export default function ServicePhilosophy() {
 
   return (
     <section className="login-info-section service-philosophy">
-      <h2 className="section-title">{t('loginInfo.servicePhilosophy.title')}</h2>
-      <p className="philosophy-slogan">{t('loginInfo.servicePhilosophy.slogan')}</p>
-      <p className="philosophy-intro">{t('loginInfo.servicePhilosophy.intro')}</p>
+      <h2 className="section-title" suppressHydrationWarning>{t('loginInfo.servicePhilosophy.title')}</h2>
+      <p className="philosophy-slogan" suppressHydrationWarning>{t('loginInfo.servicePhilosophy.slogan')}</p>
+      <p className="philosophy-intro" suppressHydrationWarning>{t('loginInfo.servicePhilosophy.intro')}</p>
       <div className="values-list">
         {values.map((value) => {
           const Icon = value.icon;
@@ -36,10 +36,10 @@ export default function ServicePhilosophy() {
                 <Icon size={20} />
               </div>
               <div className="value-content">
-                <h3 className="value-title">
+                <h3 className="value-title" suppressHydrationWarning>
                   {t(`loginInfo.servicePhilosophy.values.${value.key}.title`)}
                 </h3>
-                <p className="value-description">
+                <p className="value-description" suppressHydrationWarning>
                   {t(`loginInfo.servicePhilosophy.values.${value.key}.description`)}
                 </p>
               </div>

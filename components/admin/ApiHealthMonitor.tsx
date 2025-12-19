@@ -82,8 +82,8 @@ export default function ApiHealthMonitor() {
     } catch (error: any) {
       console.error('Error fetching health data:', error);
       toast({
-        title: 'Error',
-        description: 'No se pudo obtener el estado de las APIs',
+        title: t('common.error'),
+        description: t('admin.management.apiHealth.fetchError'),
         variant: 'destructive'
       });
     } finally {
@@ -110,8 +110,8 @@ export default function ApiHealthMonitor() {
       setRefreshing(true);
       
       toast({
-        title: 'Probando APIs...',
-        description: 'Por favor espera mientras se prueban todas las APIs.',
+        title: t('admin.management.apiHealth.testingApis'),
+        description: t('admin.management.apiHealth.testingApisDesc'),
       });
 
       // Llamar al endpoint de health POST que probará todas las APIs individualmente
@@ -122,7 +122,7 @@ export default function ApiHealthMonitor() {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Error al probar APIs');
+        throw new Error(errorData.error || t('admin.management.apiHealth.testApisError'));
       }
       
       const result = await response.json();
@@ -137,16 +137,16 @@ export default function ApiHealthMonitor() {
       await fetchHealthData();
       
       toast({
-        title: 'Pruebas completadas',
+        title: t('admin.management.apiHealth.testsCompleted'),
         description: result.success 
-          ? 'Todas las APIs han sido probadas. Revisa el estado actualizado arriba.'
-          : 'Error al probar algunas APIs. Revisa el estado actualizado arriba.',
+          ? t('admin.management.apiHealth.testsCompletedSuccess')
+          : t('admin.management.apiHealth.testsCompletedError'),
       });
     } catch (error: any) {
       console.error('Error probando APIs:', error);
       toast({
-        title: 'Error',
-        description: 'Error al probar las APIs: ' + (error.message || 'Error desconocido'),
+        title: t('common.error'),
+        description: t('admin.management.apiHealth.testApisError') + ' ' + (error.message || t('common.unknownError')),
         variant: 'destructive'
       });
     } finally {
@@ -172,18 +172,18 @@ export default function ApiHealthMonitor() {
     switch (status) {
       case 'up':
       case 'healthy':
-        return <Badge className="bg-green-500">Funcionando</Badge>;
+        return <Badge className="bg-green-500">{t('admin.management.apiHealth.statusWorking')}</Badge>;
       case 'degraded':
-        return <Badge className="bg-yellow-500">Inestable</Badge>;
+        return <Badge className="bg-yellow-500">{t('admin.management.apiHealth.statusUnstable')}</Badge>;
       case 'down':
-        return <Badge className="bg-red-500">Caída</Badge>;
+        return <Badge className="bg-red-500">{t('admin.management.apiHealth.statusDown')}</Badge>;
       default:
-        return <Badge variant="outline">Desconocido</Badge>;
+        return <Badge variant="outline">{t('admin.management.apiHealth.statusUnknown')}</Badge>;
     }
   };
 
   const formatTimeAgo = (dateString?: string) => {
-    if (!dateString) return 'Nunca';
+    if (!dateString) return t('admin.management.apiHealth.never');
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -191,10 +191,16 @@ export default function ApiHealthMonitor() {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return 'Hace menos de 1 minuto';
-    if (diffMins < 60) return `Hace ${diffMins} minuto${diffMins > 1 ? 's' : ''}`;
-    if (diffHours < 24) return `Hace ${diffHours} hora${diffHours > 1 ? 's' : ''}`;
-    return `Hace ${diffDays} día${diffDays > 1 ? 's' : ''}`;
+    if (diffMins < 1) return t('admin.management.apiHealth.lessThanMinute');
+    if (diffMins < 60) return diffMins === 1 
+      ? t('admin.management.apiHealth.minutesAgo', { count: diffMins })
+      : t('admin.management.apiHealth.minutesAgoPlural', { count: diffMins });
+    if (diffHours < 24) return diffHours === 1
+      ? t('admin.management.apiHealth.hoursAgo', { count: diffHours })
+      : t('admin.management.apiHealth.hoursAgoPlural', { count: diffHours });
+    return diffDays === 1
+      ? t('admin.management.apiHealth.daysAgo', { count: diffDays })
+      : t('admin.management.apiHealth.daysAgoPlural', { count: diffDays });
   };
 
   const getApiDisplayName = (apiName: string): string => {
@@ -226,7 +232,7 @@ export default function ApiHealthMonitor() {
       <Alert>
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          No se pudo cargar el estado de las APIs
+          {t('admin.management.apiHealth.loadError')}
         </AlertDescription>
       </Alert>
     );
@@ -240,7 +246,7 @@ export default function ApiHealthMonitor() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {getStatusIcon(healthData.overall_status)}
-              <CardTitle>Estado General del Sistema</CardTitle>
+              <CardTitle>{t('admin.management.apiHealth.generalStatus')}</CardTitle>
             </div>
             <div className="flex gap-2">
               <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
@@ -251,17 +257,17 @@ export default function ApiHealthMonitor() {
                     className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                   >
                     <Info className="w-4 h-4 mr-2" />
-                    Información
+                    {t('admin.management.apiHealth.information')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <Info className="w-5 h-5 text-blue-600" />
-                      Información sobre el Estado de las APIs
+                      {t('admin.management.apiHealth.infoModal.title')}
                     </DialogTitle>
                     <DialogDescription>
-                      Guía de referencia para entender el estado de las APIs de tasas de cambio
+                      {t('admin.management.apiHealth.infoModal.description')}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
@@ -269,10 +275,9 @@ export default function ApiHealthMonitor() {
                       <div className="flex gap-3">
                         <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
                         <div>
-                          <h4 className="font-semibold text-sm mb-1">APIs Caídas Durante Días Hábiles</h4>
+                          <h4 className="font-semibold text-sm mb-1">{t('admin.management.apiHealth.infoModal.downApisTitle')}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Si todas las APIs de un tipo específico (BCV, Binance o CNY) permanecen inactivas durante días hábiles (lunes a viernes), 
-                            por favor contacte con el equipo de desarrollo del sistema para realizar una verificación técnica y resolver el problema.
+                            {t('admin.management.apiHealth.infoModal.downApisDesc')}
                           </p>
                         </div>
                       </div>
@@ -280,11 +285,9 @@ export default function ApiHealthMonitor() {
                       <div className="flex gap-3">
                         <Clock className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
                         <div>
-                          <h4 className="font-semibold text-sm mb-1">Mantenimiento Programado - APIs BCV</h4>
+                          <h4 className="font-semibold text-sm mb-1">{t('admin.management.apiHealth.infoModal.maintenanceTitle')}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Las tasas de cambio oficiales del Banco Central de Venezuela (BCV) no cotizan durante los fines de semana 
-                            ni días festivos. Si las APIs de BCV aparecen como &quot;caídas&quot; durante estos períodos, esto es completamente 
-                            normal y corresponde a un mantenimiento programado del sistema bancario.
+                            {t('admin.management.apiHealth.infoModal.maintenanceDesc')}
                           </p>
                         </div>
                       </div>
@@ -292,11 +295,9 @@ export default function ApiHealthMonitor() {
                       <div className="flex gap-3">
                         <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                         <div>
-                          <h4 className="font-semibold text-sm mb-1">Cuándo Contactar al Equipo de Desarrollo</h4>
+                          <h4 className="font-semibold text-sm mb-1">{t('admin.management.apiHealth.infoModal.contactTitle')}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Se recomienda contactar con el equipo de desarrollo si el problema persiste durante días hábiles o 
-                            se extiende más allá de un fin de semana completo. El equipo técnico podrá realizar una revisión 
-                            exhaustiva y aplicar las correcciones necesarias.
+                            {t('admin.management.apiHealth.infoModal.contactDesc')}
                           </p>
                         </div>
                       </div>
@@ -304,16 +305,9 @@ export default function ApiHealthMonitor() {
                       <div className="flex gap-3">
                         <Database className="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" />
                         <div>
-                          <h4 className="font-semibold text-sm mb-1">Discrepancia entre Estado de API y Montos del Sistema</h4>
+                          <h4 className="font-semibold text-sm mb-1">{t('admin.management.apiHealth.infoModal.discrepancyTitle')}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Si la API de BCV aparece como &quot;caída&quot; en el panel de monitoreo, pero los montos mostrados en el módulo 
-                            de finanzas son correctos, esto puede indicar una discrepancia temporal entre el sistema de monitoreo 
-                            y el funcionamiento real de la API. En este caso, verifique la tasa de cambio actual en la página 
-                            oficial del Banco Central de Venezuela y compare con los valores que aparecen en el sistema. Si las 
-                            tasas coinciden, es probable que se trate de un problema de visualización en los logs de monitoreo o 
-                            en el frontend, mientras que la API continúa funcionando correctamente. Se recomienda esperar un día 
-                            para verificar si el estado se actualiza automáticamente. Si el problema persiste después de este período, 
-                            contacte con el equipo de desarrollo para una revisión técnica del sistema de monitoreo.
+                            {t('admin.management.apiHealth.infoModal.discrepancyDesc')}
                           </p>
                         </div>
                       </div>
@@ -321,7 +315,7 @@ export default function ApiHealthMonitor() {
                     
                     <div className="mt-6 pt-4 border-t">
                       <p className="text-xs text-muted-foreground italic">
-                        Para soporte técnico adicional, comuníquese con el equipo de desarrollo del sistema.
+                        {t('admin.management.apiHealth.infoModal.supportText')}
                       </p>
                     </div>
                   </div>
@@ -336,7 +330,7 @@ export default function ApiHealthMonitor() {
                 className="bg-blue-500 hover:bg-blue-600 text-white border-blue-500"
               >
                 <Activity className="w-4 h-4 mr-2" />
-                Probar APIs
+                {t('admin.management.apiHealth.testApis')}
               </Button>
             <Button
               variant="outline"
@@ -345,19 +339,19 @@ export default function ApiHealthMonitor() {
               disabled={refreshing}
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-              Actualizar
+              {t('admin.management.apiHealth.refresh')}
             </Button>
             </div>
           </div>
           <CardDescription>
-            Última actualización: {formatTimeAgo(healthData.last_update)}
+            {t('admin.management.apiHealth.lastUpdate')} {formatTimeAgo(healthData.last_update)}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
             {getStatusBadge(healthData.overall_status)}
             <span className="text-sm text-muted-foreground">
-              {healthData.apis.filter(a => a.status === 'up').length} de {healthData.apis.length} APIs funcionando
+              {healthData.apis.filter(a => a.status === 'up').length} {t('admin.management.apiHealth.of')} {healthData.apis.length} {t('admin.management.apiHealth.apisFunctioning')}
             </span>
           </div>
         </CardContent>
@@ -405,52 +399,52 @@ export default function ApiHealthMonitor() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Estado:</span>
+                <span className="text-sm text-muted-foreground">{t('admin.management.apiHealth.status')}</span>
                 {getStatusBadge(api.status)}
               </div>
               
               {api.last_success && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Último éxito:</span>
+                  <span className="text-muted-foreground">{t('admin.management.apiHealth.lastSuccess')}</span>
                   <span className="text-green-600 dark:text-green-400">{formatTimeAgo(api.last_success)}</span>
                 </div>
               )}
               
               {api.last_failure && !api.last_success && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Último intento:</span>
-                  <span className="text-red-600 dark:text-red-400">{formatTimeAgo(api.last_failure)} (fallido)</span>
+                  <span className="text-muted-foreground">{t('admin.management.apiHealth.lastAttempt')}</span>
+                  <span className="text-red-600 dark:text-red-400">{formatTimeAgo(api.last_failure)} ({t('admin.management.apiHealth.failed')})</span>
                 </div>
               )}
               
               {api.last_failure && api.last_success && new Date(api.last_failure) > new Date(api.last_success) && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Último fallo:</span>
+                  <span className="text-muted-foreground">{t('admin.management.apiHealth.lastFailure')}</span>
                   <span className="text-yellow-600 dark:text-yellow-400">{formatTimeAgo(api.last_failure)}</span>
                 </div>
               )}
               
               {api.response_time_avg && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Tiempo promedio:</span>
+                  <span className="text-muted-foreground">{t('admin.management.apiHealth.avgTime')}</span>
                   <span>{Math.round(api.response_time_avg)}ms</span>
                 </div>
               )}
               
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Tasa de éxito (24h):</span>
+                <span className="text-muted-foreground">{t('admin.management.apiHealth.successRate24h')}</span>
                 <span className="font-semibold">{api.success_rate_24h.toFixed(1)}%</span>
               </div>
               
               {api.current_rate && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Tasa actual:</span>
+                  <span className="text-muted-foreground">{t('admin.management.apiHealth.currentRate')}</span>
                   <span className="font-semibold">{api.current_rate.toFixed(2)} VES/USD</span>
                 </div>
               )}
               
               <div className="text-xs text-muted-foreground pt-2 border-t">
-                {api.successful_attempts_24h} exitosos de {api.total_attempts_24h} intentos
+                {api.successful_attempts_24h} {t('admin.management.apiHealth.successfulOf')} {api.total_attempts_24h} {t('admin.management.apiHealth.attempts')}
               </div>
             </CardContent>
           </Card>
@@ -462,40 +456,40 @@ export default function ApiHealthMonitor() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Database className="w-5 h-5" />
-            <CardTitle>Fuente Actual de Tasa de Cambio</CardTitle>
+            <CardTitle>{t('admin.management.apiHealth.currentSource')}</CardTitle>
           </div>
           <CardDescription>
-            Información sobre la tasa de cambio que se está utilizando actualmente
+            {t('admin.management.apiHealth.currentSourceDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Fuente:</span>
+            <span className="text-sm text-muted-foreground">{t('admin.management.apiHealth.source')}</span>
             <Badge variant="outline">{healthData.current_source.source_name}</Badge>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Tipo:</span>
+            <span className="text-sm text-muted-foreground">{t('admin.management.apiHealth.type')}</span>
             <Badge variant={healthData.current_source.type === 'api' ? 'default' : 'secondary'}>
-              {healthData.current_source.type === 'api' ? 'API Externa' : 'Base de Datos'}
+              {healthData.current_source.type === 'api' ? t('admin.management.apiHealth.externalApi') : t('admin.management.apiHealth.database')}
             </Badge>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Tasa:</span>
+            <span className="text-sm text-muted-foreground">{t('admin.management.apiHealth.rate')}</span>
             <span className="text-lg font-bold">{healthData.current_source.rate.toFixed(2)} VES/USD</span>
           </div>
           
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Antigüedad:</span>
+            <span className="text-sm text-muted-foreground">{t('admin.management.apiHealth.age')}</span>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
               <span>
                 {healthData.current_source.age_hours < 1 
-                  ? 'Menos de 1 hora'
+                  ? t('admin.management.apiHealth.lessThanHour')
                   : healthData.current_source.age_hours < 24
-                  ? `${healthData.current_source.age_hours} hora${healthData.current_source.age_hours > 1 ? 's' : ''}`
-                  : `${Math.floor(healthData.current_source.age_hours / 24)} día${Math.floor(healthData.current_source.age_hours / 24) > 1 ? 's' : ''}`
+                  ? `${healthData.current_source.age_hours} ${healthData.current_source.age_hours === 1 ? t('admin.management.apiHealth.hour') : t('admin.management.apiHealth.hours')}`
+                  : `${Math.floor(healthData.current_source.age_hours / 24)} ${Math.floor(healthData.current_source.age_hours / 24) === 1 ? t('admin.management.apiHealth.day') : t('admin.management.apiHealth.days')}`
                 }
               </span>
             </div>
@@ -505,7 +499,7 @@ export default function ApiHealthMonitor() {
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                La tasa actual tiene más de 24 horas de antigüedad. Se recomienda actualizar.
+                {t('admin.management.apiHealth.ageWarning')}
               </AlertDescription>
             </Alert>
           )}

@@ -1624,7 +1624,13 @@
             "noneTitle": "无可用箱子",
             "noneSubtitle": "在箱子标签中创建一个箱子以打包。",
             "select": "选择",
-            "cancel": "取消"
+            "cancel": "取消",
+            "boxTypes": {
+              "aereo": "空运",
+              "maritimo": "海运",
+              "mixto": "混合"
+            },
+            "onlyType": "仅 {{type}}"
           },
           "labelWarning": {
             "title": "打包前",
@@ -1636,7 +1642,11 @@
             "toastTitleSuccess": "标签就绪",
             "toastTitleError": "生成错误",
             "generating": "生成中...",
-            "accept": "生成并分配"
+            "accept": "生成并分配",
+            "important": "重要",
+            "downloadBeforeContinue": "继续前必须下载标签",
+            "downloadedSuccessfully": "✓ 标签已成功下载",
+            "downloadFirst": "请先下载标签"
           },
           "deleteBox": {
             "title": "删除箱子",
@@ -1684,6 +1694,8 @@
           "orderNoBoxTitle": "订单无箱子",
           "orderNoBoxDesc": "此订单未分配箱子。",
           "orderUnpackNotAllowedDesc": "你不能从已发货的集装箱中解包订单。",
+          "unpackOrdersFromShippedBoxDesc": "你不能从已发货的箱子中解包订单。",
+          "unpackOrdersFromShippedContainerDesc": "你不能从已发货的集装箱中解包订单。",
           "orderUnpackedTitle": "订单已解包",
           "orderUnpackedDesc": "订单 #ORD-{{orderId}} 已从箱子释放。",
           "containerSendNotAllowedDesc": "你不能删除已发货的集装箱。",
@@ -1798,7 +1810,12 @@
         "rateRecoveredDescription": "{{rate}} {{currency}} (来自数据库{{age}})",
         "rateRecoveredDescriptionNoAge": "{{rate}} {{currency}} (来自数据库)",
         "rateUpdateError": "更新汇率时出错",
-        "warning": "警告"
+        "warning": "警告",
+        "binanceRateUpdated": "币安汇率已更新",
+        "binanceRateUpdatedDescription": "{{rate}} VES/USDT 来自 {{source}}",
+        "binanceRateRecovered": "币安汇率已恢复",
+        "binanceRateRecoveredDescription": "{{rate}} VES/USDT ({{age}} 分钟前)",
+        "binanceRateRecoveredDescriptionNoAge": "{{rate}} VES/USDT"
       },
       "notifications": {
         "notificationSystem": "通知系统",
@@ -1821,6 +1838,72 @@
         "configSaved": "配置已保存",
         "configSavedDesc": "业务参数已成功更新。",
         "configSavedGlobal": "配置已全局保存。更改将对所有用户可用。"
+      },
+      "apiHealth": {
+        "generalStatus": "系统总体状态",
+        "lastUpdate": "最后更新：",
+        "of": "个，共",
+        "apisFunctioning": "个 API 运行中",
+        "information": "信息",
+        "testApis": "测试 API",
+        "refresh": "刷新",
+        "loadError": "无法加载 API 状态",
+        "status": "状态：",
+        "lastSuccess": "最后成功：",
+        "lastAttempt": "最后尝试：",
+        "lastFailure": "最后失败：",
+        "avgTime": "平均时间：",
+        "successRate24h": "成功率 (24小时)：",
+        "currentRate": "当前汇率：",
+        "successfulOf": "次成功，共",
+        "attempts": "次尝试",
+        "currentSource": "当前汇率来源",
+        "currentSourceDesc": "关于当前正在使用的汇率信息",
+        "source": "来源：",
+        "type": "类型：",
+        "rate": "汇率：",
+        "age": "时效：",
+        "externalApi": "外部 API",
+        "database": "数据库",
+        "lessThanHour": "不到 1 小时",
+        "hour": "小时",
+        "hours": "小时",
+        "day": "天",
+        "days": "天",
+        "ageWarning": "当前汇率超过 24 小时。建议更新。",
+        "statusWorking": "运行中",
+        "statusUnstable": "不稳定",
+        "statusDown": "已停止",
+        "statusUnknown": "未知",
+        "never": "从未",
+        "lessThanMinute": "不到 1 分钟前",
+        "minutesAgo": "{{count}} 分钟前",
+        "minutesAgoPlural": "{{count}} 分钟前",
+        "hoursAgo": "{{count}} 小时前",
+        "hoursAgoPlural": "{{count}} 小时前",
+        "daysAgo": "{{count}} 天前",
+        "daysAgoPlural": "{{count}} 天前",
+        "failed": "失败",
+        "testingApis": "正在测试 API...",
+        "testingApisDesc": "请等待所有 API 测试完成。",
+        "testsCompleted": "测试完成",
+        "testsCompletedSuccess": "所有 API 已测试完成。请查看上方更新的状态。",
+        "testsCompletedError": "部分 API 测试出错。请查看上方更新的状态。",
+        "testApisError": "测试 API 时出错：",
+        "fetchError": "无法获取 API 状态",
+        "infoModal": {
+          "title": "关于 API 状态的信息",
+          "description": "理解汇率 API 状态的参考指南",
+          "downApisTitle": "工作日内 API 停止",
+          "downApisDesc": "如果特定类型（BCV、币安或 CNY）的所有 API 在工作日（周一到周五）保持非活动状态，请联系系统开发团队进行技术验证并解决问题。",
+          "maintenanceTitle": "计划维护 - BCV API",
+          "maintenanceDesc": "委内瑞拉中央银行 (BCV) 的官方汇率在周末或节假日不报价。如果 BCV API 在这些期间显示为\"停止\"，这是完全正常的，对应于银行系统的计划维护。",
+          "contactTitle": "何时联系开发团队",
+          "contactDesc": "如果问题在工作日持续存在或延伸超过整个周末，建议联系开发团队。技术团队将能够进行全面审查并应用必要的更正。",
+          "discrepancyTitle": "API 状态与系统金额之间的差异",
+          "discrepancyDesc": "如果 BCV API 在监控面板中显示为\"停止\"，但财务模块中显示的金额是正确的，这可能表明监控系统与实际 API 操作之间存在临时差异。在这种情况下，请验证委内瑞拉中央银行官方网站上的当前汇率，并与系统中显示的值进行比较。如果汇率匹配，则可能是监控日志或前端的显示问题，而 API 继续正常运行。建议等待一天以验证状态是否自动更新。如果问题在此期间后仍然存在，请联系开发团队对监控系统进行技术审查。",
+          "supportText": "如需额外技术支持，请联系系统开发团队。"
+        }
       },
       "summary": {
         "title": "当前配置摘要",
@@ -1904,6 +1987,12 @@
     "ajuste": "调整",
     "dias": "天",
     "eta": "预计时间",
+    "priceDisplay": {
+      "price": "价格",
+      "rate": "汇率",
+      "updated": "更新时间",
+      "refreshRate": "刷新汇率"
+    },
     "tarifa": "费率",
     "costo": "成本",
     "minimo": "最小",
@@ -2839,7 +2928,11 @@
           "accept": "生成并分配",
           "generating": "生成中...",
           "toastTitleSuccess": "标签就绪",
-          "downloaded": "标签已生成"
+          "downloaded": "标签已生成",
+          "important": "重要",
+          "downloadBeforeContinue": "继续前必须下载标签",
+          "downloadedSuccessfully": "✓ 标签已成功下载",
+          "downloadFirst": "请先下载标签"
         },
         "quote": {
           "title": "订单报价",
@@ -2941,7 +3034,13 @@
           "noneTitle": "无可用箱子",
           "noneSubtitle": "在箱子标签中创建一个箱子以打包。",
           "select": "选择",
-          "cancel": "取消"
+          "cancel": "取消",
+          "boxTypes": {
+            "aereo": "空运",
+            "maritimo": "海运",
+            "mixto": "混合"
+          },
+          "onlyType": "仅 {{type}}"
         },
         "proposeAlternative": {
           "title": "提出替代方案",
@@ -3019,6 +3118,8 @@
         "orderNoBoxTitle": "订单无箱子",
         "orderNoBoxDesc": "此订单未分配箱子。",
         "orderUnpackNotAllowedDesc": "你不能从已发货的集装箱中解包订单。",
+        "unpackOrdersFromShippedBoxDesc": "你不能从已发货的箱子中解包订单。",
+        "unpackOrdersFromShippedContainerDesc": "你不能从已发货的集装箱中解包订单。",
         "orderUnpackedTitle": "订单已解包",
         "orderUnpackedDesc": "订单 #ORD-{{orderId}} 已从箱子释放。",
         "containerSendNotAllowedDesc": "你不能删除已发货的集装箱。",
@@ -3178,12 +3279,35 @@
       "title": "聊天",
       "subtitle": "管理与中国用户的对话",
       "activeConversations": "活跃对话",
-      "selectConversation": "选择一个对话开始聊天"
+      "selectConversation": "选择一个对话开始聊天",
+      "deleteChat": "删除聊天",
+      "pagination": {
+        "page": "第 {{current}} / {{total}} 页",
+        "previous": "上一页",
+        "next": "下一页"
+      },
+      "deleteDialog": {
+        "title": "删除聊天？",
+        "description": "此操作将隐藏此对话的当前历史记录。如果您再次与此用户交谈，将开始一个新的聊天。",
+        "cancel": "取消",
+        "delete": "删除",
+        "deleting": "删除中..."
+      }
     },
     "notFound": {
       "title": "未找到管理员",
       "message": "无法连接到管理员"
     },
-    "loading": "加载聊天中..."
+    "loading": "加载聊天中...",
+    "messageActions": {
+      "edit": "编辑",
+      "delete": "删除"
+    },
+    "deleteConfirmation": {
+      "title": "删除消息？",
+      "description": "此操作无法撤销。消息将被所有人删除。",
+      "cancel": "取消",
+      "confirm": "删除"
+    }
   }
 }

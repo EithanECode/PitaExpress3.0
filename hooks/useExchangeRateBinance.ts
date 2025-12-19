@@ -90,14 +90,14 @@ export function useExchangeRateBinance(options: UseExchangeRateBinanceOptions = 
 
         if (showToast && toastRef.current) {
           const title = data.from_database 
-            ? 'Tasa Binance recuperada' 
-            : 'Tasa Binance actualizada';
+            ? t('admin.management.financial.binanceRateRecovered')
+            : t('admin.management.financial.binanceRateUpdated');
           
           const description = data.from_database 
             ? (data.age_minutes 
-                ? `${data.rate.toFixed(2)} VES/USDT (${data.age_minutes} min de antigüedad)`
-                : `${data.rate.toFixed(2)} VES/USDT`)
-            : `${data.rate.toFixed(2)} VES/USDT desde ${data.source}`;
+                ? t('admin.management.financial.binanceRateRecoveredDescription', { rate: data.rate.toFixed(2), age: data.age_minutes })
+                : t('admin.management.financial.binanceRateRecoveredDescriptionNoAge', { rate: data.rate.toFixed(2) }))
+            : t('admin.management.financial.binanceRateUpdatedDescription', { rate: data.rate.toFixed(2), source: data.source || 'Binance P2P' });
           
           toastRef.current({
             title,
@@ -110,7 +110,7 @@ export function useExchangeRateBinance(options: UseExchangeRateBinanceOptions = 
           if (data.warning && showToast) {
             setTimeout(() => {
               toastRef.current?.({
-                title: "⚠️ Advertencia",
+                title: t('admin.management.financial.warning'),
                 description: data.warning,
                 variant: "destructive",
                 duration: 6000,

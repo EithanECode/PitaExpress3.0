@@ -40,7 +40,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ position = '
 
   return (
     <div className={`${containerClasses} ${className || ''}`}>
-      <label htmlFor="lang-switch" className={labelClasses}>
+      <label htmlFor="lang-switch" className={labelClasses} suppressHydrationWarning>
         {t('auth.common.languageLabel')}
       </label>
       <select

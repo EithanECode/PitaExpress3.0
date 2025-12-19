@@ -3433,7 +3433,7 @@ export default function PedidosChina() {
                         .eq('container_id', id);
                       if (error) {
                         console.error('Error al eliminar contenedor:', error);
-                        toast({ title: t('chinese.ordersPage.toasts.deleteContainerErrorTitle'), description: t('chinese.ordersPage.toasts.tryAgain') });
+                        toast({ title: t('chinese.ordersPage.toasts.containerDeleteErrorTitle'), description: t('chinese.ordersPage.toasts.tryAgain') });
                         return;
                       }
                       toast({ title: t('chinese.ordersPage.toasts.containerDeletedTitle'), description: t('chinese.ordersPage.toasts.containerDeletedDesc') });
@@ -3635,7 +3635,9 @@ export default function PedidosChina() {
 
                     if (orderType && boxType && orderType !== boxType && boxType !== 'Mixto') {
                       isCompatible = false;
-                      incompatibleReason = `Solo ${boxType}`;
+                      const boxTypeKey = boxType.toLowerCase() as 'aereo' | 'maritimo';
+                      const translatedBoxType = t(`chinese.ordersPage.modals.selectBoxForOrder.boxTypes.${boxTypeKey}`, { defaultValue: boxType });
+                      incompatibleReason = t('chinese.ordersPage.modals.selectBoxForOrder.onlyType', { type: translatedBoxType, defaultValue: `Solo ${boxType}` });
                     }
 
                     return (
@@ -3649,7 +3651,7 @@ export default function PedidosChina() {
                               <h3 className={`font-semibold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>#BOX-{id}</h3>
                               {boxType && (
                                 <Badge variant="outline" className={`ml-2 text-xs ${boxType === 'Aereo' ? 'text-sky-500 border-sky-500' : 'text-blue-600 border-blue-600'}`}>
-                                  {boxType}
+                                  {t(`chinese.ordersPage.modals.selectBoxForOrder.boxTypes.${boxType.toLowerCase() as 'aereo' | 'maritimo' | 'mixto'}`, { defaultValue: boxType })}
                                 </Badge>
                               )}
                             </div>
@@ -3715,14 +3717,14 @@ export default function PedidosChina() {
                   </div>
                   <div className="flex-1">
                     <p className={`text-base font-bold mb-2 ${mounted && theme === 'dark' ? 'text-red-300' : 'text-red-800'}`}>
-                      ⚠️ IMPORTANTE
+                      ⚠️ {t('chinese.ordersPage.modals.labelWarning.important', { defaultValue: 'IMPORTANTE' })}
                     </p>
                     <p className={`text-sm font-semibold leading-relaxed ${mounted && theme === 'dark' ? 'text-red-200' : 'text-red-700'}`}>
                       {t('chinese.ordersPage.modals.labelWarning.description', { defaultValue: 'Asegúrate de poner la etiqueta al producto antes de empaquetar.' })}
                     </p>
                     {!labelDownloaded && (
                       <p className={`text-xs mt-2 font-medium ${mounted && theme === 'dark' ? 'text-red-300/80' : 'text-red-600/80'}`}>
-                        Debes descargar la etiqueta antes de continuar
+                        {t('chinese.ordersPage.modals.labelWarning.downloadBeforeContinue', { defaultValue: 'Debes descargar la etiqueta antes de continuar' })}
                       </p>
                     )}
                   </div>
@@ -3738,7 +3740,7 @@ export default function PedidosChina() {
                   <div className="flex items-center gap-2">
                     <CheckCircle className={`h-5 w-5 ${mounted && theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} />
                     <p className={`text-sm font-medium ${mounted && theme === 'dark' ? 'text-green-300' : 'text-green-700'}`}>
-                      ✓ Etiqueta descargada correctamente
+                      {t('chinese.ordersPage.modals.labelWarning.downloadedSuccessfully', { defaultValue: '✓ Etiqueta descargada correctamente' })}
                     </p>
                   </div>
                 </div>
@@ -3815,7 +3817,7 @@ export default function PedidosChina() {
                   ) : (
                     <>
                       <AlertTriangle className="h-4 w-4 mr-2" />
-                      Descarga la etiqueta primero
+                      {t('chinese.ordersPage.modals.labelWarning.downloadFirst', { defaultValue: 'Descarga la etiqueta primero' })}
                     </>
                   )}
                 </Button>

@@ -1281,7 +1281,7 @@ export default function Sidebar({ isExpanded, setIsExpanded, isMobileMenuOpen = 
               transition-all duration-150 ease-out overflow-hidden
               ${responsiveConfig.isMobile ? (isMobileMenuOpen ? 'w-auto opacity-100' : 'w-0 opacity-0') : (isExpanded ? 'w-auto opacity-100' : 'w-0 opacity-0')}
             `}>
-                <span className="font-medium whitespace-nowrap">{t('sidebar.logout')}</span>
+                <span className="font-medium whitespace-nowrap" suppressHydrationWarning>{t('sidebar.logout')}</span>
               </div>
             </button>
           </div>
