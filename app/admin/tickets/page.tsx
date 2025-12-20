@@ -80,13 +80,13 @@ const MOCK_TICKETS: Ticket[] = [
 const BarcodeDisplay = ({ code }: { code: string }) => {
     return (
         <div className="flex flex-col items-center gap-1">
-            <div className="flex items-center gap-[1px] bg-white px-2 py-1 rounded">
+            <div className="flex items-center gap-[1px] bg-white px-3 py-2 rounded">
                 {code.split('').map((char, idx) => (
                     <div
                         key={idx}
-                        className="h-12 bg-black"
+                        className="h-16 bg-black"
                         style={{
-                            width: char === '*' ? '3px' : ['0', '1'].includes(char) ? '2px' : '2.5px'
+                            width: char === '*' ? '6px' : ['0', '1'].includes(char) ? '4px' : '5px'
                         }}
                     />
                 ))}
