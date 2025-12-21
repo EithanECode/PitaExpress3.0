@@ -119,8 +119,11 @@
         .barcode-text {
             font-size: 20px;
             color: #4b5563;
-            letter-spacing: 8px;
             font-family: 'CustomArial', sans-serif;
+            margin-top: 5px;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
         }
 
         .controls {
@@ -216,74 +219,13 @@
                     <div class="separator" style="width: 100%;"></div>
 
                     <!-- Barcode -->
-                    <div class="barcode-container">
-                        <div class="barcode">
-                            <!-- Código de barras denso -->
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-medium"></div>
-                            <div class="bar bar-thin"></div>
-                            <div class="bar bar-thick"></div>
+                    <div class="barcode-container" style="width: 60%; margin: 0 auto;">
+                        <div class="barcode" id="generated-barcode">
+                            <!-- Se llenará con JS -->
                         </div>
-                        <div class="barcode-text">PL0004211225</div>
+                        <div class="barcode-text" id="barcode-text-container">
+                            <!-- Se llenará con JS -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -299,6 +241,40 @@
             <p>Abre este archivo en el navegador y presiona el botón para ver la vista previa de impresión</p>
         </div>
     </div>
+    </div>
+
+    <script>
+        // Script para generar código de barras denso y ancho
+        const container = document.getElementById('generated-barcode');
+        const totalBars = 120; // Reducido para ajustarse a las líneas rojas (menos ancho)
+
+        for (let i = 0; i < totalBars; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+
+            // Randomizar ancho para parecer real
+            const r = Math.random();
+            if (r < 0.5) bar.classList.add('bar-thin');
+            else if (r < 0.85) bar.classList.add('bar-medium');
+            else bar.classList.add('bar-thick');
+
+            container.appendChild(bar);
+        }
+
+        // Script para distribuir texto
+        const textContainer = document.getElementById('barcode-text-container');
+        const code = "PL0004211225";
+
+        // Limpiar
+        textContainer.innerHTML = '';
+
+        // Crear spans
+        for (let char of code) {
+            const span = document.createElement('span');
+            span.textContent = char;
+            textContainer.appendChild(span);
+        }
+    </script>
 </body>
 
 </html>
