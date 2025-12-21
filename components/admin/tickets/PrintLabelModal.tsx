@@ -18,18 +18,18 @@ interface PrintLabelModalProps {
 const BarcodeDisplay = ({ code }: { code: string }) => {
     return (
         <div className="flex flex-col items-center gap-1">
-            <div className="flex items-center gap-[1px] bg-white px-3 py-2 rounded">
+            <div className="flex items-center gap-[2px] bg-white px-4 py-3 rounded print:gap-[1px]">
                 {code.split('').map((char, idx) => (
                     <div
                         key={idx}
-                        className="h-16 bg-black print:h-24"
+                        className="h-16 bg-black print:h-32"
                         style={{
-                            width: char === '*' ? '6px' : ['0', '1'].includes(char) ? '4px' : '5px'
+                            width: char === '*' ? '8px' : ['0', '1'].includes(char) ? '6px' : '7px'
                         }}
                     />
                 ))}
             </div>
-            <span className="text-xs font-mono text-slate-600">*{code}*</span>
+            <span className="text-sm font-mono text-slate-600 tracking-widest print:text-base">{code}</span>
         </div>
     );
 };
@@ -130,6 +130,10 @@ export default function PrintLabelModal({ open, onOpenChange, ticket, onSuccess 
             {/* Print-only content */}
             <style jsx global>{`
         @media print {
+          @page {
+            size: 11.69in 4.26in;
+            margin: 0;
+          }
           body * {
             visibility: hidden;
           }
@@ -138,9 +142,15 @@ export default function PrintLabelModal({ open, onOpenChange, ticket, onSuccess 
           }
           .print-label {
             position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
+            left: 0;
+            top: 0;
+            width: 11.69in;
+            height: 4.26in;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5in;
           }
         }
       `}</style>
