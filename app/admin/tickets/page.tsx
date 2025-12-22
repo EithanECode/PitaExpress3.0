@@ -266,15 +266,10 @@ export default function TicketsPage() {
                                                             </Badge>
                                                         </td>
                                                         <td className="py-4 px-6 text-center">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => handleHistory(ticket)}
-                                                                className="h-8"
-                                                            >
-                                                                <History className="h-4 w-4 mr-1" />
+                                                            <div className="flex items-center justify-center h-8 text-sm text-slate-600 dark:text-slate-400">
+                                                                <History className="h-4 w-4 mr-2" />
                                                                 {ticket.print_count || 0}
-                                                            </Button>
+                                                            </div>
                                                         </td>
                                                         <td className="py-4 px-6">
                                                             <div className="flex items-center justify-center">
@@ -335,14 +330,10 @@ export default function TicketsPage() {
                                                     <span className={`text-sm ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
                                                         Historial:
                                                     </span>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => handleHistory(ticket)}
-                                                    >
-                                                        <History className="h-4 w-4 mr-1" />
+                                                    <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
+                                                        <History className="h-4 w-4 mr-2" />
                                                         {ticket.print_count || 0} impresiones
-                                                    </Button>
+                                                    </div>
                                                 </div>
                                             </div>
 
