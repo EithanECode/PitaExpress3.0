@@ -1,10 +1,20 @@
 import { useEffect, useCallback } from 'react';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
-export function useRealtimeAdmin(onOrdersUpdate: () => void, onUsersUpdate: () => void, onAlertsUpdate: () => void) {
+export function useRealtimeAdmin(
+  onOrdersUpdate: () => void,
+  onUsersUpdate: () => void,
+  onAlertsUpdate: () => void,
+  enabled: boolean = true
+) {
   const supabase = getSupabaseBrowserClient();
 
   useEffect(() => {
+    // Skip subscription if not enabled
+    if (!enabled) {
+      return;
+    }
+
     // Suscripción para orders
     const ordersChannel = supabase
       .channel('admin-orders-changes')
@@ -62,5 +72,6 @@ export function useRealtimeAdmin(onOrdersUpdate: () => void, onUsersUpdate: () =
       supabase.removeChannel(usersChannel);
       supabase.removeChannel(alertsChannel);
     };
-  }, [supabase, onOrdersUpdate, onUsersUpdate, onAlertsUpdate]);
+  }, [supabase, onOrdersUpdate, onUsersUpdate, onAlertsUpdate, enabled]);
 }
+
