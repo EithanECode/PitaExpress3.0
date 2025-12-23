@@ -3118,20 +3118,20 @@
           "noneSubtitle": "When you assign orders to this box they will appear here.",
           "view": "View"
         },
-          "selectBoxForOrder": {
-            "title": "Select box for order #ORD-{{id}}",
-            "loading": "Loading boxes...",
-            "noneTitle": "No boxes available",
-            "noneSubtitle": "Create a box from the Boxes tab to pack.",
-            "select": "Select",
-            "cancel": "Cancel",
-            "boxTypes": {
-              "aereo": "Air",
-              "maritimo": "Maritime",
-              "mixto": "Mixed"
-            },
-            "onlyType": "Only {{type}}"
+        "selectBoxForOrder": {
+          "title": "Select box for order #ORD-{{id}}",
+          "loading": "Loading boxes...",
+          "noneTitle": "No boxes available",
+          "noneSubtitle": "Create a box from the Boxes tab to pack.",
+          "select": "Select",
+          "cancel": "Cancel",
+          "boxTypes": {
+            "aereo": "Air",
+            "maritimo": "Maritime",
+            "mixto": "Mixed"
           },
+          "onlyType": "Only {{type}}"
+        },
         "proposeAlternative": {
           "title": "Propose Alternative",
           "subtitle": "Order #{{id}} - {{client}}",
@@ -3160,7 +3160,11 @@
           }
         },
         "cancelOrder": {
-          "confirm": "Are you sure you want to cancel this order?"
+          "title": "Cancel Order",
+          "description": "Are you sure you want to cancel this order? This action cannot be undone.",
+          "cancelButton": "Cancel",
+          "goBack": "Go Back",
+          "confirmCancel": "Yes, cancel order"
         },
         "deleteBox": {
           "title": "Delete box",

@@ -3294,7 +3294,11 @@
           }
         },
         "cancelOrder": {
-          "confirm": "¿Estás seguro de que quieres cancelar este pedido?"
+          "title": "Cancelar Pedido",
+          "description": "¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.",
+          "cancelButton": "Cancelar",
+          "goBack": "Volver",
+          "confirmCancel": "Sí, cancelar pedido"
         },
         "deleteBox": {
           "title": "Eliminar caja",

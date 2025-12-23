@@ -3150,7 +3150,11 @@
           }
         },
         "cancelOrder": {
-          "confirm": "您确定要取消此订单吗？"
+          "title": "取消订单",
+          "description": "您确定要取消此订单吗？此操作无法撤销。",
+          "cancelButton": "取消",
+          "goBack": "返回",
+          "confirmCancel": "是的，取消订单"
         },
         "deleteBox": {
           "title": "删除箱子",

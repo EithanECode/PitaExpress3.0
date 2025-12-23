@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Toaster } from '@/components/ui/toaster';
 import { toast } from '@/hooks/use-toast';
 import ProposeAlternativeModal from '@/components/china/ProposeAlternativeModal';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ArchiveHistoryButton } from '@/components/shared/ArchiveHistoryButton';
 // PDF
 import jsPDF from 'jspdf';
@@ -339,10 +340,8 @@ export default function PedidosChina() {
     }
   }
 
-  // Cancelar pedido
+  // Cancelar pedido (se llama después de confirmar en el modal)
   const handleCancelOrder = async (orderId: number) => {
-    if (!confirm(t('chinese.ordersPage.modals.cancelOrder.confirm', { defaultValue: '¿Estás seguro de que quieres cancelar este pedido?' }))) return;
-
     try {
       const supabase = getSupabaseBrowserClient();
       const { error } = await supabase
@@ -356,6 +355,7 @@ export default function PedidosChina() {
         title: t('chinese.ordersPage.toasts.orderCancelled', { defaultValue: 'Pedido cancelado' }),
         description: t('chinese.ordersPage.toasts.orderCancelledDesc', { defaultValue: 'El pedido ha sido marcado como cancelado.' }),
       });
+      setModalCancelOrder({ open: false });
       fetchPedidos(currentPage);
     } catch (error: any) {
       console.error('Error cancelling order:', error);
@@ -367,6 +367,9 @@ export default function PedidosChina() {
   };
   // Modal proponer alternativa
   const [modalPropAlternativa, setModalPropAlternativa] = useState<{ open: boolean; pedido?: Pedido }>({ open: false });
+
+  // Modal cancelar pedido
+  const [modalCancelOrder, setModalCancelOrder] = useState<{ open: boolean; pedidoId?: number; pedidoName?: string }>({ open: false });
 
   const [modalCotizar, setModalCotizar] = useState<{
     open: boolean,
@@ -1273,9 +1276,9 @@ export default function PedidosChina() {
 
       if (!response.ok) {
         console.error('Error enviando caja:', result);
-        toast({ 
-          title: t('chinese.ordersPage.toasts.sendBoxErrorTitle'), 
-          description: result.error || t('chinese.ordersPage.toasts.tryAgain') || 'No se pudo enviar la caja. Por favor intenta nuevamente.' 
+        toast({
+          title: t('chinese.ordersPage.toasts.sendBoxErrorTitle'),
+          description: result.error || t('chinese.ordersPage.toasts.tryAgain') || 'No se pudo enviar la caja. Por favor intenta nuevamente.'
         });
         return;
       }
@@ -1693,14 +1696,14 @@ export default function PedidosChina() {
     };
 
     return (
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 justify-between rounded-xl transition-all duration-300">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 justify-between rounded-xl transition-all duration-300">
         {/* Columna izquierda */}
-        <div className="flex items-start sm:items-center gap-4 flex-1 min-w-0">
-          <div className={`p-3 rounded-lg shrink-0 ${mounted && theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
-            <Package className={`h-5 w-5 ${mounted && theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`} />
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+          <div className={`p-2 sm:p-3 rounded-lg shrink-0 ${mounted && theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
+            <Package className={`h-4 w-4 sm:h-5 sm:w-5 ${mounted && theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`} />
           </div>
-          <div className="space-y-1 w-full min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="space-y-0.5 sm:space-y-1 w-full min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <h3 className={`font-semibold text-sm sm:text-base ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>#ORD-{p.id}</h3>
               {renderAlternativeBadge()}
               {/* Badge estado principal */}
@@ -1715,22 +1718,22 @@ export default function PedidosChina() {
               )}
             </div>
             <p className={`text-xs sm:text-sm truncate max-w-full ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{p.producto}</p>
-            <div className={`flex flex-wrap gap-x-4 gap-y-1 text-[11px] sm:text-xs ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-              <span className="flex items-center gap-1 min-w-[110px]">
-                <User className="h-3 w-3" /> {p.cliente}
+            <div className={`flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-0.5 text-[10px] sm:text-xs ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              <span className="flex items-center gap-1">
+                <User className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> {p.cliente}
               </span>
               <span className="flex items-center gap-1">
-                <Tag className="h-3 w-3" /> {t('chinese.ordersPage.orders.qtyShort', { defaultValue: 'Cant' })}: {p.cantidad}
+                <Tag className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> {t('chinese.ordersPage.orders.qtyShort', { defaultValue: 'Cant' })}: {p.cantidad}
               </span>
               <span className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" /> {new Date(p.fecha).toLocaleDateString('es-ES')}
+                <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" /> {new Date(p.fecha).toLocaleDateString('es-ES')}
               </span>
             </div>
           </div>
         </div>
 
         {/* Columna derecha / acciones */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
           {p.precio && (
             <div className="hidden sm:block text-right space-y-1">
               <PriceDisplayWithCNY
@@ -1741,17 +1744,17 @@ export default function PedidosChina() {
               />
             </div>
           )}
-          <div className="flex w-full sm:w-auto flex-wrap items-center gap-2 justify-end sm:justify-end">
+          <div className="flex w-full sm:w-auto flex-wrap items-center gap-1.5 sm:gap-2 justify-start sm:justify-end">
             {p.estado === 'enviado' && (p.numericState ?? 0) < 6 && (
               <Button
                 size="sm"
-                className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700"
+                className="h-7 sm:h-8 px-2 sm:px-3 flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-[10px] sm:text-xs"
                 onClick={() => {
                   setModalEmpaquetar({ open: true, pedidoId: p.id });
                   if (boxes.length === 0) fetchBoxes();
                 }}
               >
-                <Boxes className="h-4 w-4" />
+                <Boxes className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">{t('chinese.ordersPage.orders.pack', { defaultValue: 'Empaquetar' })}</span>
               </Button>
             )}
@@ -1759,7 +1762,7 @@ export default function PedidosChina() {
               <Button
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-1 text-amber-700 border-amber-300 hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-7 sm:h-8 px-2 sm:px-3 flex items-center gap-1 text-amber-700 border-amber-300 hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed text-[10px] sm:text-xs"
                 disabled={(p.numericState ?? 0) >= 9}
                 onClick={() => {
                   if ((p.numericState ?? 0) >= 9) return;
@@ -1767,7 +1770,7 @@ export default function PedidosChina() {
                 }}
               >
                 <span className="hidden sm:inline">{t('chinese.ordersPage.orders.unpack', { defaultValue: 'Desempaquetar' })}</span>
-                <Boxes className="h-4 w-4 sm:hidden" aria-label="Desempaquetar" />
+                <Boxes className="h-3.5 w-3.5 sm:hidden" aria-label="Desempaquetar" />
               </Button>
             )}
             <Button
@@ -1781,9 +1784,9 @@ export default function PedidosChina() {
                   toast({ title: t('chinese.ordersPage.orders.pdfMissingToastTitle', { defaultValue: 'PDF no disponible' }) });
                 }
               }}
-              className="flex items-center gap-1"
+              className="h-7 sm:h-8 px-2 sm:px-3 flex items-center gap-1 text-[10px] sm:text-xs"
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">{t('chinese.ordersPage.orders.view', { defaultValue: 'Ver' })}</span>
             </Button>
 
@@ -1796,11 +1799,11 @@ export default function PedidosChina() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`h-7 md:h-8 px-3 md:px-4 text-xs font-semibold transition-all duration-300 ${mounted && theme === 'dark' ? 'border-red-600 text-red-300 hover:bg-red-900/30 hover:border-red-500' : 'border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300'}`}
-                    onClick={() => handleCancelOrder(p.id)}
+                    className={`h-7 sm:h-8 px-2 sm:px-3 text-[10px] sm:text-xs font-semibold transition-all duration-300 ${mounted && theme === 'dark' ? 'border-red-600 text-red-300 hover:bg-red-900/30 hover:border-red-500' : 'border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300'}`}
+                    onClick={() => setModalCancelOrder({ open: true, pedidoId: p.id, pedidoName: p.producto })}
                   >
-                    <XCircle className="h-3 w-3 mr-1" />
-                    {t('chinese.ordersPage.modals.selectBoxForOrder.cancel', { defaultValue: 'Cancelar' })}
+                    <XCircle className="h-3 w-3 sm:mr-1" />
+                    <span className="hidden sm:inline">{t('chinese.ordersPage.modals.cancelOrder.cancelButton', { defaultValue: 'Cancelar' })}</span>
                   </Button>
 
                   <Button
@@ -1821,19 +1824,19 @@ export default function PedidosChina() {
                       pesoInput: p.weight ? p.weight.toString() : '',
                     })}
                     size="sm"
-                    className="flex items-center gap-1 bg-orange-600 hover:bg-orange-700"
+                    className="h-7 sm:h-8 px-2 sm:px-3 flex items-center gap-1 bg-orange-600 hover:bg-orange-700 text-[10px] sm:text-xs"
                   >
-                    <Calculator className="h-4 w-4" />
+                    <Calculator className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span className="hidden sm:inline">{t('chinese.ordersPage.orders.quote', { defaultValue: 'Cotizar' })}</span>
                   </Button>
                   {p.alternativeStatus !== 'accepted' && (
                     <Button
                       onClick={() => setModalPropAlternativa({ open: true, pedido: p })}
                       size="sm"
-                      className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700"
+                      className="h-7 sm:h-8 px-2 sm:px-3 flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-[10px] sm:text-xs"
                       title={t('chinese.ordersPage.tooltips.proposeAlternative', { defaultValue: 'Proponer alternativa' })}
                     >
-                      <Send className="h-4 w-4" />
+                      <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       <span className="hidden sm:inline">{t('chinese.ordersPage.orders.proposeAlternative', { defaultValue: 'Alternativa' })}</span>
                     </Button>
                   )}
@@ -3887,6 +3890,59 @@ export default function PedidosChina() {
           </div>
         )}
       </div>
+
+      {/* Modal Cancelar Pedido */}
+      <Dialog open={modalCancelOrder.open} onOpenChange={(open) => setModalCancelOrder({ ...modalCancelOrder, open })}>
+        <DialogContent className={`max-w-md ${mounted && theme === 'dark' ? 'bg-slate-800' : ''}`}>
+          <DialogHeader>
+            <DialogTitle className={`flex items-center gap-2 ${mounted && theme === 'dark' ? 'text-white' : ''}`}>
+              <XCircle className="h-5 w-5 text-red-500" />
+              {t('chinese.ordersPage.modals.cancelOrder.title', { defaultValue: 'Cancelar Pedido' })}
+            </DialogTitle>
+            <DialogDescription className={mounted && theme === 'dark' ? 'text-slate-300' : ''}>
+              {t('chinese.ordersPage.modals.cancelOrder.description', { defaultValue: '¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.' })}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className={`p-4 rounded-lg border ${mounted && theme === 'dark' ? 'bg-slate-700/50 border-slate-600' : 'bg-slate-50 border-slate-200'}`}>
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${mounted && theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
+                <Package className={`h-5 w-5 ${mounted && theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`} />
+              </div>
+              <div>
+                <p className={`font-semibold ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                  #ORD-{modalCancelOrder.pedidoId}
+                </p>
+                <p className={`text-sm truncate max-w-[250px] ${mounted && theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                  {modalCancelOrder.pedidoName}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setModalCancelOrder({ open: false })}
+              className={mounted && theme === 'dark' ? 'border-slate-600 hover:bg-slate-700' : ''}
+            >
+              {t('chinese.ordersPage.modals.cancelOrder.goBack', { defaultValue: 'Volver' })}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (modalCancelOrder.pedidoId) {
+                  handleCancelOrder(modalCancelOrder.pedidoId);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              <XCircle className="h-4 w-4 mr-2" />
+              {t('chinese.ordersPage.modals.cancelOrder.confirmCancel', { defaultValue: 'Sí, cancelar pedido' })}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal Proponer Alternativa */}
       <ProposeAlternativeModal
