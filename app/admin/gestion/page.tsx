@@ -1051,7 +1051,7 @@ export default function ConfiguracionPage() {
           </Alert>
 
           <Tabs defaultValue="shipping" className="space-y-6 md:space-y-8">
-            <TabsList className={`grid w-full grid-cols-1 md:grid-cols-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm place-items-center`}>
+            <TabsList className={`grid w-full grid-cols-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm place-items-center`}>
               <TabsTrigger value="shipping" className="flex items-center space-x-2 text-xs md:text-sm">
                 <Package className="w-4 h-4" />
                 <span>{t('admin.management.tabs.shipping')}</span>
