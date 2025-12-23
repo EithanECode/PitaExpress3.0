@@ -64,19 +64,21 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
     };
 
     return (
-        <div className={`p-4 md:p-6 rounded-xl border hover:shadow-md transition-all duration-300 group ${mounted && theme === 'dark' ? 'bg-gradient-to-r from-slate-700 to-slate-600 border-slate-600' : 'bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200'}`}>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 mb-4">
-                <div className="flex items-center gap-4 md:gap-6">
-                    <div className={`p-3 rounded-lg shrink-0 ${mounted && theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
-                        <Package className={`h-5 w-5 ${mounted && theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`} />
-                    </div>
-                    <div className="flex flex-col">
-                        <p className={`font-bold text-sm md:text-base ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>#ORD-{order.id}</p>
-                        <p className={`text-sm font-medium ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{order.product}</p>
+        <div className={`p-3 sm:p-4 md:p-6 rounded-xl border hover:shadow-md transition-all duration-300 group ${mounted && theme === 'dark' ? 'bg-gradient-to-r from-slate-700 to-slate-600 border-slate-600' : 'bg-gradient-to-r from-slate-50 to-slate-100 border-slate-200'}`}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-6 mb-3 sm:mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 md:gap-6">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        <div className={`p-2 sm:p-3 rounded-lg shrink-0 ${mounted && theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-100'}`}>
+                            <Package className={`h-4 w-4 sm:h-5 sm:w-5 ${mounted && theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`} />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <p className={`font-bold text-sm md:text-base ${mounted && theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>#ORD-{order.id}</p>
+                            <p className={`text-xs sm:text-sm font-medium truncate ${mounted && theme === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}>{order.product}</p>
+                        </div>
                     </div>
                     {/* Un solo badge basado en stateNum; fallback al badge de status si no hay stateNum */}
                     {typeof order.stateNum === 'number' ? (
-                        <Badge className={`text-xs md:text-sm font-semibold px-3 py-1 transition-colors hover:brightness-110 hover:ring-1 ${mounted && theme === 'dark' ? (
+                        <Badge className={`text-[10px] sm:text-xs md:text-sm font-semibold px-2 sm:px-3 py-0.5 sm:py-1 w-fit shrink-0 transition-colors hover:brightness-110 hover:ring-1 ${mounted && theme === 'dark' ? (
                             order.stateNum === -2 ? 'bg-red-900/30 text-red-300 border-red-700 hover:bg-red-900/50 hover:ring-red-500/20' :
                                 order.stateNum === -1 ? 'bg-orange-900/30 text-orange-300 border-orange-700 hover:bg-orange-900/50 hover:ring-orange-500/20' :
                                     order.stateNum === 13 ? 'bg-emerald-900/30 text-emerald-300 border-emerald-700 hover:bg-emerald-900/50 hover:ring-emerald-500/20' :
@@ -122,7 +124,7 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                                                                             t('client.recentOrders.statuses.pending')}
                         </Badge>
                     ) : (
-                        <Badge className={`${getStatusColor(order.status)} text-xs md:text-sm font-semibold px-3 py-1`}>
+                        <Badge className={`${getStatusColor(order.status)} text-[10px] sm:text-xs md:text-sm font-semibold px-2 sm:px-3 py-0.5 sm:py-1 w-fit shrink-0`}>
                             {getStatusText(order.status)}
                         </Badge>
                     )}
@@ -217,7 +219,7 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                             )
                         })()}
                     </div>
-                    <div className="flex gap-2 md:gap-3">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3">
                         {/* Botón para revisar alternativa pendiente */}
                         {(() => {
                             const alternative = alternatives.find(alt => {
@@ -227,11 +229,12 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                             return alternative && (
                                 <Button
                                     size="sm"
-                                    className="h-7 md:h-8 px-3 md:px-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                    className="h-7 md:h-8 px-2 sm:px-3 md:px-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white text-[10px] sm:text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                                     onClick={() => handlers.openReviewAlternativeModal(order)}
                                 >
                                     <AlertTriangle className="h-3 w-3 mr-1 animate-pulse" />
-                                    Revisar Alternativa
+                                    <span className="hidden sm:inline">Revisar Alternativa</span>
+                                    <span className="sm:hidden">Alternativa</span>
                                 </Button>
                             );
                         })()}
@@ -242,41 +245,41 @@ export const ClientOrderCard: React.FC<ClientOrderCardProps> = ({
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className={`h-7 md:h-8 px-3 md:px-4 text-xs font-semibold transition-all duration-300 ${mounted && theme === 'dark' ? 'border-red-600 text-red-300 hover:bg-red-900/30 hover:border-red-500' : 'border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300'}`}
+                                className={`h-7 md:h-8 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-semibold transition-all duration-300 ${mounted && theme === 'dark' ? 'border-red-600 text-red-300 hover:bg-red-900/30 hover:border-red-500' : 'border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300'}`}
                                 onClick={() => handlers.openCancelOrderModal(order)}
                             >
-                                <XCircle className="h-3 w-3 mr-1" />
-                                {t('client.recentOrders.cancelOrderModal.cancel')}
+                                <XCircle className="h-3 w-3 sm:mr-1" />
+                                <span className="hidden sm:inline">{t('client.recentOrders.cancelOrderModal.cancel')}</span>
                             </Button>
                         )}
 
                         {(order.status === 'quoted' || order.stateNum === -1) && (
                             <Button
                                 size="sm"
-                                className="h-7 md:h-8 px-3 md:px-4 bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                className="h-7 md:h-8 px-2 sm:px-3 md:px-4 bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white text-[10px] sm:text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                                 onClick={() => handlers.handlePaymentClick(order)}
                             >
-                                <DollarSign className="h-3 w-3 mr-1" />
-                                {order.stateNum === -1 ? t('client.recentOrders.actions.payAgain') : t('client.recentOrders.actions.pay')}
+                                <DollarSign className="h-3 w-3 sm:mr-1" />
+                                <span className="hidden sm:inline">{order.stateNum === -1 ? t('client.recentOrders.actions.payAgain') : t('client.recentOrders.actions.pay')}</span>
                             </Button>
                         )}
                         <Button
                             variant="outline"
                             size="sm"
-                            className={`h-7 md:h-8 px-3 md:px-4 text-xs font-semibold transition-all duration-300 ${mounted && theme === 'dark' ? 'border-slate-600 text-blue-300 hover:bg-slate-700 hover:border-slate-500' : 'border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'}`}
+                            className={`h-7 md:h-8 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-semibold transition-all duration-300 ${mounted && theme === 'dark' ? 'border-slate-600 text-blue-300 hover:bg-slate-700 hover:border-slate-500' : 'border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'}`}
                             onClick={() => handlers.handleViewDetails(order)}
                         >
-                            <Eye className="h-3 w-3 mr-1" />
-                            {t('client.recentOrders.actions.view')}
+                            <Eye className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">{t('client.recentOrders.actions.view')}</span>
                         </Button>
                         <Button
                             variant="outline"
                             size="sm"
-                            className={`h-7 md:h-8 px-3 md:px-4 text-xs font-semibold transition-all duration-300 ${mounted && theme === 'dark' ? 'border-slate-600 text-orange-300 hover:bg-slate-700 hover:border-slate-500' : 'border-orange-200 text-orange-700 hover:bg-orange-50 hover:border-orange-300'}`}
+                            className={`h-7 md:h-8 px-2 sm:px-3 md:px-4 text-[10px] sm:text-xs font-semibold transition-all duration-300 ${mounted && theme === 'dark' ? 'border-slate-600 text-orange-300 hover:bg-slate-700 hover:border-slate-500' : 'border-orange-200 text-orange-700 hover:bg-orange-50 hover:border-orange-300'}`}
                             onClick={() => handlers.openTrackingModal(order)}
                         >
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {t('client.recentOrders.actions.track')}
+                            <MapPin className="h-3 w-3 sm:mr-1" />
+                            <span className="hidden sm:inline">{t('client.recentOrders.actions.track')}</span>
                         </Button>
                     </div>
                 </div>
