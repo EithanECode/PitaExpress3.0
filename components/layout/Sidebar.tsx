@@ -343,7 +343,7 @@ const SidebarMenuItem = memo(function SidebarMenuItem({
         onClick={handleClick}
         className={`
             w-full flex items-center ${(responsiveConfig.isMobile || responsiveConfig.isTablet) ? (isMobileMenuOpen ? 'space-x-3 px-4 py-3' : `justify-center ${responsiveConfig.buttonPadding}`) : (isExpanded ? 'space-x-3 px-4 py-3' : `justify-center ${responsiveConfig.buttonPadding}`)} rounded-xl
-            transition-all duration-120 ease-out group relative
+            transition-[transform,background-color,color] duration-120 ease-out group relative
             active:scale-95 will-change-transform
             ${isActive
             ? 'bg-gradient-to-r from-blue-600/25 to-indigo-600/25 text-white shadow-md border border-blue-500/30'
@@ -354,17 +354,17 @@ const SidebarMenuItem = memo(function SidebarMenuItem({
         {/* Indicador activo */}
         <div className={`
           absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-blue-500 to-indigo-500 rounded-r-full
-          transition-all duration-150 ease-out will-change-transform
+          transition-[transform,opacity] duration-150 ease-out will-change-transform
           ${isActive ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'}
         `} />
 
         <div className={`${responsiveConfig.iconContainerSize} flex items-center justify-center rounded-lg`}>
           <Icon
-            className={`${responsiveConfig.iconSize} ${item.color} transition-all duration-150 ease-out ${isActive ? 'scale-105' : 'scale-100'}`}
+            className={`${responsiveConfig.iconSize} ${item.color} transition-transform duration-150 ease-out ${isActive ? 'scale-105' : 'scale-100'}`}
           />
         </div>
         <div className={`
-          transition-all duration-150 ease-out overflow-hidden will-change-auto
+          transition-[width,opacity] duration-150 ease-out overflow-hidden
           ${responsiveConfig.isMobile ? (isMobileMenuOpen ? 'w-auto opacity-100' : 'w-0 opacity-0') : (isExpanded ? 'w-auto opacity-100' : 'w-0 opacity-0')}
         `}>
           <div className="flex items-center justify-between whitespace-nowrap">
@@ -519,7 +519,7 @@ export default function Sidebar({ isExpanded, setIsExpanded, isMobileMenuOpen = 
 
   // === Realtime hooks for dynamic updates ===
 
-  // Admin realtime
+  // Admin realtime - only enabled when role is admin
   useRealtimeAdmin(
     () => {
       // Orders update callback
@@ -565,7 +565,8 @@ export default function Sidebar({ isExpanded, setIsExpanded, isMobileMenuOpen = 
       if (userRole === 'admin') {
         // Refetch admin alerts count
       }
-    }
+    },
+    userRole === 'admin' // enabled parameter
   );
 
   // China realtime
@@ -582,7 +583,7 @@ export default function Sidebar({ isExpanded, setIsExpanded, isMobileMenuOpen = 
     if (userRole !== 'china' || !chinaCtx?.chinaId) return;
     const id = window.setInterval(() => {
       refetchChinaActiveOrders();
-    }, 10000); // 10s
+    }, 30000); // 30s - reduced from 10s for performance
     return () => window.clearInterval(id);
   }, [userRole, chinaCtx?.chinaId, refetchChinaActiveOrders]);
 
@@ -649,7 +650,7 @@ export default function Sidebar({ isExpanded, setIsExpanded, isMobileMenuOpen = 
     const id = window.setInterval(() => {
       refetchVzlaActiveOrders();
       refetchVzlaPendingPayments();
-    }, 10000); // 10s
+    }, 30000); // 30s - reduced from 10s for performance
     return () => window.clearInterval(id);
   }, [userRole, vzlaCtx?.vzlaId, refetchVzlaActiveOrders, refetchVzlaPendingPayments]);
 
